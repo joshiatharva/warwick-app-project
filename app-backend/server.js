@@ -1,20 +1,25 @@
-const express = require('express'),
-      bodyParser = require('body-parser'),
-      // database = require('./config/db/db'),
-      // userRoute = require('./routes/user'),
-      // cors = require('cors'),
-      // jwt = require('_helper/jwt'),
-      // errorHandler = require('_helper/error_handler');
-      port = process.env.PORT || 3000;
+const express = require('express');
+const app = express();
+const mongoose = require('mongoose');
+const port = 3000;
 
-var app = express();
+const authRoute = require('./routes/auth');
 
-// app.use(bodyParser.json());
-// app.use(cors());
-// app.use(userRoute);
+// All middleware
+app.use(express.json());
+
+mongoose.connect(
+  'mongodb+srv://root:test@cluster0-fkf5l.mongodb.net/test?retryWrites=true&w=majority',
+  { useNewUrlParser: true },
+  () => console.log('DB conn established!')
+);
 
 app.get('/', function (req, res) {
   res.send("Hello World");
 });
 
+app.use('/api/user', authRoute);
+
 app.listen(port, () => console.log(`API listening on port ${port}!`));
+
+module.exports = app;
