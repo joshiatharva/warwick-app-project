@@ -6,8 +6,9 @@
 * Set as booleans - possibility of errors if Strings
 
 */
-
 const mongoose = require('mongoose');
+
+
 const questionSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -15,17 +16,10 @@ const questionSchema = new mongoose.Schema({
         min: 3,
         max: 255
     },
-    true_false: {
-        type: Boolean,
+    type: {
+        type: String,
         required: true,
-    },
-    multi_choice: {
-        type: Boolean,
-        required: true,
-    },
-    normal_answer: {
-        type: Boolean,
-        required: true,
+        enum: ["true_false", "multi_choice", "normal_answer"]
     },
     question: {
         type: String, 
@@ -33,11 +27,13 @@ const questionSchema = new mongoose.Schema({
         min: 5,
         max: 255
     }, 
+    options: {
+        type: [String],
+        required: true
+    },
     answer: {
         type: String,
-        required: true, 
-        min: 1,
-        max: 255
+        required: true
     },
     solution: {
         type: String,
@@ -54,8 +50,22 @@ const questionSchema = new mongoose.Schema({
         min: 1,
         max: 255
     },
-    accesses: Number,
-    correct: Number
+    accesses: {
+        type: Number,
+        default: 0,
+    },
+    correct: {
+        type: Number,
+        default: 0,
+    },
+    created_at: {
+        type: Date,
+        default: Date.now()
+    },
+    updated_at: {
+        type: Date,
+        default: Date.now()
+    }
 });
 
 module.exports = mongoose.model('question', questionSchema);

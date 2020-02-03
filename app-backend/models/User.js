@@ -30,7 +30,16 @@ const userSchema = new mongoose.Schema({
     required: true,
     min: 1,
     max: 55
-  }
+  },
+  last_ten_questions: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Questions',
+  }],
+  saved_questions: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Questions',
+  }]
+
 });
 
 module.exports = mongoose.model('User', userSchema);

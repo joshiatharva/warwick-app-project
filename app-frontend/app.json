@@ -17,6 +17,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "scheme": "myapp",
     "updates": {
       "fallbackToCacheTimeout": 0
     },

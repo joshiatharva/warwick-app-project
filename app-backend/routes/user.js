@@ -34,6 +34,19 @@ router.get('/statistics', async (req, res) => {
     }
 });
 
+router.get('/questions', async (req, res) => {
+    var token = req.headers.authorization.split(" ")[1];
+    if (isValidated(token)) {
+        try {
+            var user_id = jwt.verify({token, "This is secret"});
+            var user = await User.find({id: user_id._id});
+            return res.send({"questions": user.saved_questions});
+        } catch (err) {
+            console.log(err);
+        }
+    }
+});
+
 
 
 

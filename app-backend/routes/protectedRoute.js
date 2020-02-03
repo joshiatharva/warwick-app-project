@@ -6,7 +6,6 @@ const mongoose = require('mongoose');
 module.exports = function isValidated(token) {
     if (token) {
         try {
-            console.log(token);
             var payload = jwt.verify(token, "This is secret");
             return true;
         } catch (err) {
