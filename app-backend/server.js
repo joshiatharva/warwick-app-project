@@ -11,6 +11,7 @@ const port = 3000;
 
 const authRoute = require('./routes/auth');
 const questionRoute = require('./routes/questions');
+const userRoute = require('./routes/user');
 
 // const privateKey = fs.readFileSync('../app-frontend/server/server.key', 'utf8');
 // const certificate = fs.readFileSync('../app-frontend/server/server.csr', 'utf8');
@@ -41,8 +42,10 @@ app.use('/auth', authRoute);
 
 app.use('/questions', questionRoute);
 
+app.use('/user', userRoute);
+
 app.listen(port, () => {
-  console.log(`Server listening on port ${port}! YEEET`);
+  console.log(`Server listening on port ${port}`);
 });
 
 // var server = https.createServer(credentials, app);

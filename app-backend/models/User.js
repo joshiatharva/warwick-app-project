@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Question = require('./Question');
 
 const userSchema = new mongoose.Schema({
   firstname: {
@@ -31,15 +32,26 @@ const userSchema = new mongoose.Schema({
     min: 1,
     max: 55
   },
-  last_ten_questions: [{
+  question_history: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Questions',
+    ref: 'Question',
   }],
   saved_questions: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Questions',
-  }]
-
+    ref: 'Question',
+  }],
+  last_sign_in: {
+    type: Date,
+    default: Date.now()
+  }, 
+  last_sign_out: {
+    type: Date,
+  },
+  no_of_sessions: {
+    type: Number,
+    default: 0
+  },
+  last_10_sessions_length: [Date],
 });
 
 module.exports = mongoose.model('User', userSchema);

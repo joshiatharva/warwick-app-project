@@ -41,6 +41,10 @@ const userScoreSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId, 
       ref: 'User'
     },
+    username: {
+      type: String,
+      ref: 'User'
+    },
     tf: difficultySchema,
     multi_choice: difficultySchema,
     normal: difficultySchema

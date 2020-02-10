@@ -27,43 +27,45 @@ async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(422).json(errors.array());
+  } else {
+    if (req.body.passwordconf !== req.body.password) {
+      return res.status(422).send({"msg": "Passwords don't match"})
+    }
+    const emailExists = await User.findOne({ email: req.body.email });
+    if (emailExists) {
+      return res.status(400).send({'msg': 'Email already exists'});
+    }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(req.body.password, salt);
+    const user = new User({
+      firstname: req.body.firstname,
+      lastname: req.body.lastname,
+      username: req.body.username,
+      password: hashedPassword,
+      email: req.body.email
+    }); 
+    try {  
+      await user.save();
+      const user_forgot_password = new User_forgot_password({
+        user_id: user._id,
+        username: user.username
+      });
+      const user_scores = new User_scores({
+        user_id: user._id,
+        username: user.username,
+        tf: new difficulty({}),
+        multi_choice: new difficulty({}),
+        normal: new difficulty({})
+      });
+      await user_forgot_password.save();
+      await user_scores.save();
+      const token = jwt.sign({_id: user._id}, "This is secret");
+      return res.send({"success": true, "msg": "Successful", "token": token});
+    } catch (err) {
+      res.status(400).send(err);
+    }
   }
-  if (req.body.passwordconf !== req.body.password) {
-    return res.status(422).send({"msg": "Passwords don't match"})
-  }
-  const emailExists = await User.findOne({ email: req.body.email });
-  if (emailExists) {
-    return res.status(400).send({'msg': 'Email already exists'});
-  }
-
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(req.body.password, salt);
-  const user = new User({
-    firstname: req.body.firstname,
-    lastname: req.body.lastname,
-    username: req.body.username,
-    password: hashedPassword,
-    email: req.body.email
-  }); 
-  try {  
-    await user.save();
-
-    const user_forgot_password = new User_forgot_password({
-      user_id: user._id
-    });
-    const user_scores = new User_scores({
-      user_id: user._id,
-      tf: new difficulty({}),
-      multi_choice: new difficulty({}),
-      normal: new difficulty({})
-    });
-    await user_forgot_password.save();
-    await user_scores.save();
-    const token = jwt.sign({_id: user._id}, "This is secret");
-    return res.send({"success": true, "msg": "Successful", "token": token});
-  } catch (err) {
-    res.status(400).send(err);
-  }
+  
 });
 
 router.get('/login', async (req, res) => {
@@ -108,11 +110,9 @@ async (req, res) => {
   }
   var time = 60;
   if (req.body.remember === true) {
-    time = '1d';
+    time = time * 15;
   }
-  const token = jwt.sign({_id: user._id}, "This is secret"
-  ,{ expiresIn: time }
-  );
+  const token = jwt.sign({_id: user._id}, "This is secret", { expiresIn: time });
   console.log("Login successful");
   return res.status(200).send({'success': "true", 'msg': 'Login successful', 'token': token});
 });
@@ -175,6 +175,27 @@ router.post('/reset/:token', async (req, res) => {
     return res.send({"msg": err});
   }
 });
+
+router.get('/logout', async(req,res) => {
+    var token = req.headers.authorization.split(" ")[1]
+    try {
+      var data = jwt.verify(token, "This is secret");
+      var user = await User.findById(token);
+      signin = user.last_sign_in;
+      signout = user.last_sign_out;
+      let timeinbetween = signin.toDate() - signout.toDate();
+      await User.update({_id: token}, { $set: {last_sign_out: Date.now()}}  );
+      console.log(Date.now());
+      console.log(`Signin time: ${signin}\nSignout time: ${signout}\nTime in between: ${timeinbetween}`);
+      if (data.expiresIn == 900) {
+        return res.send({"success": true, "remember": true});
+      }
+      return res.send({"success": true, "remember": false});
+    } catch (err) {
+      console.log(err);
+    }
+
+})
 
 module.exports = router;
 

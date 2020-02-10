@@ -3,15 +3,15 @@ const Question = require('../models/Question');
 const isValidated = require("./protectedRoute");
 const jwt = require('jsonwebtoken');
 const User_scores = require("../models/User_scores");
+const User = require('../models/User');
 
 router.get('/all', async (req, res) => {
     var token = req.headers.authorization.split(" ")[1]; 
     if (isValidated(token)) {
         let questions = await Question.find({});
-        console.log(questions);
-        res.send(questions);
+        return res.send(questions);
     } else {
-        res.status(200).send({"message":"Unauthorized"});
+        return res.status(200).send({"message":"Unauthorized"});
     }
 });
 
@@ -152,6 +152,26 @@ router.post('/marks', async (req, res) => {
         }  
     }
     return res.send({"message": "Token invalid; please revalidate", "error": "Invalid token", "success": false});
+
+});
+
+router.post('/save', async(req,res) => {
+    var q_id = req.body.question_id;
+    console.log(q_id);
+    var token = req.headers.authorization.split(" ")[1];
+    if (isValidated(token)) {
+        try {
+            var id = jwt.verify(token, "This is secret");
+            await User.updateOne({_id: id}, { $addToSet: { saved_questions: q_id} });
+            var user = await User.findOne({_id: id});
+            console.log("Pushed: " + user.saved_questions);
+            return res.send({"message": "Successful", "success": true});
+        } catch(err) {
+            console.log(err);
+        }
+    }
+    let u = await User.findOne({_id: id._id});
+    console.log(u);
 });
 
 
