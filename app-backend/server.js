@@ -33,7 +33,7 @@ mongoose.connect(
 
 
 app.get('/', function (req, res) {
-  res.send("Hello World!");
+  return res.json("Hello World!");
 });
 
 app.use(bodyParser.urlencoded({ extended: true }));

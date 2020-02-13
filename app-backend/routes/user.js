@@ -42,8 +42,8 @@ router.get('/questions', async (req, res) => {
         try {
             var user_id = jwt.verify(token, "This is secret");
             const user = await User.findOne({_id: user_id});
-            console.log(user);
             var questions = await Question.find({_id: { $in: user.saved_questions }});
+            console.log(questions);
             return res.send(questions);
         } catch (err) {
             console.log(err);

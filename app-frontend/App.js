@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View,  FlatList, AsyncStorage, Picker, ActivityIndicator, TouchableOpacity, ScrollView, Dimensions, Platform, Alert} from 'react-native';
+import { StyleSheet, Text, View,  FlatList, AsyncStorage, Picker, ActivityIndicator, TouchableOpacity, ScrollView, Dimensions, Platform, Alert } from 'react-native';
 import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import { createBottomTabNavigator, createMaterialTopTabNavigator } from 'react-navigation-tabs';
@@ -60,9 +60,11 @@ class Welcome extends Component {
         } else {
           this.setState({isVerified: false});
           console.log("Token present, expired");
+          await AsyncStorage.removeItem("id"); 
         }
       } catch (err) {
         alert(err);
+        console.log(err);
       }
     } else {
       this.setState({isVerified: false});
@@ -79,11 +81,12 @@ class Welcome extends Component {
   //   let navPath = path.charAt(0).toUpperCase();
   //   this.props.navigation.navigate(navPath, {token: token});
   // }
+  
 
   render() {
     if (this.state.isVerified) {
       return (
-        <View>
+        <View style={styles.welcome}>
           <Button title="Login" onPress={() => this.props.navigation.navigate("Home")} />
           <Button title="Haven't got an account? Register here!" onPress={() => this.props.navigation.navigate("Register")} />
           <Button title="Forgot Password? Click here" onPress={() => this.props.navigation.navigate("Forgot")} /> 
@@ -91,7 +94,7 @@ class Welcome extends Component {
       );
     } else {
       return (
-        <View>
+        <View style={styles.welcome}>
           <Button title="Login" onPress={() => this.props.navigation.navigate("Login")} />
           <Button title="Haven't got an account? Register here!" onPress={() => this.props.navigation.navigate("Register")} />
           <Button title="Forgot Password? Click here" onPress={() => this.props.navigation.navigate("Forgot")} /> 
@@ -202,7 +205,7 @@ class Register extends Component {
           alert(res.errors);
         }
       } catch (err) {
-        alert(err);
+        console.log(err);
       }
   }
 
@@ -232,6 +235,7 @@ class Home extends Component {
         <View>
           <Text>Math component here</Text>
           <MathFormulaeComponent />
+          <DFADrawingComponent />
         </View>
     );
   }
@@ -280,7 +284,7 @@ class ForgotPassword extends Component {
       );
     } else if (this.state.received && !this.state.error) {
       <View>
-    <Text>Your email has been sent to your account at {this.state.email}!</Text>
+        <Text>Your email has been sent to your account at {this.state.email}!</Text>
       </View>
     }
   }
@@ -313,7 +317,7 @@ class ForgotPasswordForm extends Component {
 
   async sendData() {
     let token = 12345;
-    let response = await fetch(`http://192.168.0.16:3000/auth/reset/${token}`, {
+    let response = await fetch(`http://192.168.0.16:3000:3000/auth/reset/${token}`, {
       method: "POST",
       headers: {
         Accept: 'application/json',
@@ -396,7 +400,7 @@ class Questions extends Component {
   async saveQuestion(id) {
     try {
       const token = await AsyncStorage.getItem("id");
-      let response = await fetch(`http://192.168.0.16:3000/questions/save`,{
+      let response = await fetch('http://192.168.0.16:3000/questions/save',{
         method: 'POST',
         headers: {
           Accept: 'application/json',
@@ -412,8 +416,6 @@ class Questions extends Component {
     } catch (err) {
       console.log(err);
     }
-    
-    
   }
 
   render() {
@@ -444,6 +446,109 @@ class Questions extends Component {
   }
 }
 
+class AdminQuestions extends Component { 
+  constructor(props) {
+    super(props);
+    this.state = {
+      questions: [],
+      isLoading: true,
+      error: null,
+      search: '',
+      type: 'all'
+    }
+  }
+
+  async componentDidMount() {
+    try {
+      const token = await AsyncStorage.getItem("id");
+      let response = await fetch('http://192.168.0.16:3000/questions/all', {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+      });
+      let json = await response.json();
+      this.setState({questions: json, isLoading: false});
+    } catch (err) {
+      console.log("Error occured");
+      this.setState({error: err});
+    }
+  }
+
+  async sendData() {
+    const token = await AsyncStorage.getItem("id");
+    try {
+      let response = await fetch(`http://192.168.0.16:3000/questions/${this.state.type}/${this.state.search}`, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,  
+        }
+      });
+      let res = await response.json();
+      if (res.success) {
+        this.setState({questions: res.json});
+      }
+    } catch (err) {
+      console.log("Error occurred: " + err);
+    }
+
+  }
+
+  async saveQuestion(id) {
+    try {
+      const token = await AsyncStorage.getItem("id");
+      let response = await fetch('http://192.168.0.16:3000/questions/save',{
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({
+          "question_id": id
+        })
+      });
+      let res = await response.json();
+      console.log(res.message);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  render() {
+      return (
+        <ScrollView>
+          <SearchBar 
+          onChangeText={(item) => this.setState({search: item})}
+          onClearText={()=> this.setState({search: ''})}
+          lightTheme
+          placeholder='Enter here....'
+          /> 
+          <Button title="Apply" onPress={(item) => this.sendData(item)} />
+          <FlatList 
+            data={this.state.questions}
+            renderItem = {({item, index}) =>
+              <View> 
+                <TouchableOpacity style={styles.container} onPress={() => Alert.alert('Add Question?', 'Add this Question to your Favourites?', [ {text: 'No', onPress: () => console.log("refused")}, {text: 'Yes', onPress: () => this.saveQuestion(item._id)}])}>
+                  <Card>
+                    <Text>{item.name}</Text>
+                    <Text>{item.topic}</Text>
+                    <Text>{item.difficulty}</Text> 
+                  </Card>
+                </TouchableOpacity>
+              </View>
+            }
+            keyExtractor={this.state.questions.name}
+          />
+        </ScrollView>
+      );
+  }
+}
+
 class MathFormulaeComponent extends Component {
   constructor(props) {
     super(props);
@@ -452,13 +557,29 @@ class MathFormulaeComponent extends Component {
       loaded: false
     }
   }
+
   render() {
+    const inlineStyle = `
+    html, body {
+      display: flex;
+      background-color: #fafafa;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    .katex {
+      font-size: 4em;
+      margin: 0;
+      display: flex;
+    }`;
+
     return (
-      <View>
-        <Text>Type your formula here:</Text>
-        <Input onChangeText={(text) => this.setState({formula: text})} />
         <Katex 
           expression="\sqrt{a^2 - b^2}"
+          style={styles.katex}
+          inlineStyle={inlineStyle}
           displayMode={false}
           throwOnError={false}
           errorColor="#f00"
@@ -467,22 +588,35 @@ class MathFormulaeComponent extends Component {
           onLoad ={() => this.setState({loaded: true})}
           onError={(err) => console.log(err)}       
         />
-      </View>
     );
   }
 }
 
 class DFADrawingComponent extends Component {
-  
+  constructor(){
+    this.ctx = null;
+  }
+
   handleCanvas = (canvas) => {
-    const ctx = canvas.getContext('2d');
-    ctx.fill
+    this.ctx = canvas.getContext("2d"); 
+  }
+
+  drawCircle = (evt) => {
+    console.log("Tap " + ctx);
+    ctx.beginPath();
+    ctx.arc(evt.pageX, evt.pageY, 12, 0, Math.PI*2, true);
+    ctx.stroke();
+    alert(evt.pageX + ", " + evt.page);
   }
 
   render() {
     return (
-      <View>
-        <Canvas ref={this.handleCanvas()} />
+      <View
+        onStartShouldSetResponder={(evt) => true}
+        onResponderRelease={this.drawCircle}
+        style={styles.container}
+      >
+        <Canvas ref={this.handleCanvas} />
       </View>
     )
   }
@@ -511,6 +645,7 @@ class Favourites extends Component {
       });
       const json = await response.json();
       this.setState({questions: json, isLoading: false});
+      console.log("Success + yeet");
     } catch (err) {
       console.log("Error occured");
       this.setState({error: err});
@@ -637,6 +772,7 @@ class Quiz extends Component {
   }
 
   isCorrect(value) {
+    this.setState({answered: true});
     if (value === this.state.questions.answer[0]) {
       this.setState({correct: true});
     } else {
@@ -652,9 +788,9 @@ class Quiz extends Component {
             <Text>{this.state.questions.question}</Text>
             <Button title="True" onPress={() => this.isCorrect(true)} />
             <Button title="False" onPress={() => this.isCorrect(false)} />
-              {this.state.isAnswered && (
+              {this.state.answered && (
               <View>
-                <AnswerScheme isAnswered={this.state.answered} />
+                <AnswerScheme isAnswered={this.state.answered} answer={this.state.answer[0]} answerScheme={this.state.solution} correct={this.state.correct} />
                 <Button title="Click here to finish!" onPress={() => this.props.navigation.navigate("DataUpload", {
                   question_id: this.state.questions._id,
                   correct: this.state.correct,
@@ -673,9 +809,9 @@ class Quiz extends Component {
             <Button title={this.state.questions.options[2]} value="C" onPress={() => this.isCorrect(this.state.questions.options[2])} />
             <Button title={this.state.questions.options[3]} value="D" onPress={() => this.isCorrect(this.state.questions.options[3])} />
             <Text style={styles.question}> {this.state.questions.question}</Text>
-            {this.state.isAnswered && (
+            {this.state.answered && (
               <View>
-                <AnswerScheme isAnswered={this.state.answered} answerScheme={this.state.questions.solution} answer={this.state.questions.answer[0]} />
+                <AnswerScheme isAnswered={this.state.answered} answerScheme={this.state.questions.solution} answer={this.state.questions.answer[0]} correct={this.state.correct} />
                 <Button title="Click here to Submit your Answer!"
                         onPress={() => this.props.navigation.navigate("DataUpload", 
                         {
@@ -690,12 +826,12 @@ class Quiz extends Component {
       } else if (this.state.questions.type === "normal_answer") {
         return (
           <View>
-            <Text> {this.state.questions.question}</ Text>
+            <Text> {this.state.questions.question}</Text>
             <Input placeholder="Answer here" onChangeText={(item) => this.setState({normalAnswer: item})}/>
             <Button title="Check answer" onPress={() => this.isCorrect(this.state.normalAnswer)} />
-            {this.state.isAnswered && (
+            {this.state.answered && (
               <View>
-              <AnswerScheme isAnswered={this.state.answered} answerScheme={this.state.questions.solution} answer={this.state.questions.answer[0]}/>
+              <AnswerScheme isAnswered={this.state.answered} answerScheme={this.state.questions.solution} answer={this.state.questions.answer[0]} correct={this.state.correct} />
               <Button title="Click here to Submit your Answer!"
                       onPress={() => this.props.navigation.navigate("DataUpload", {
                         question_id: this.state.questions._id,
@@ -712,9 +848,9 @@ class Quiz extends Component {
             <Text> {this.state.questions.question}</Text>
             <Input placeholder="Answer here" onChangeText={(answer) => this.setState({normalAnswer: answer})}/>
             <Button title="Check answer" onPress={() => this.isCorrect(this.state.normalAnswer)} />
-            {this.state.isAnswered && (
+            {this.state.answered && (
               <View>
-              <AnswerScheme isAnswered={this.state.answered} answerScheme={this.state.questions.solution} answer={this.state.questions.answer[0]} />
+              <AnswerScheme isAnswered={this.state.answered} answerScheme={this.state.questions.solution} answer={this.state.questions.answer[0]} correct={this.state.correct}/>
               <Button title="Click here to Submit your Answer!" onPress={() => this.props.navigation.navigate("DataUpload",{
                   question_id: this.state.questions._id,
                   correct: this.state.correct,
@@ -741,7 +877,7 @@ class AnswerScheme extends Component {
       return (
         <View>
           {this.props.correct && (
-            <Text>Congratulations! The answer was indeed {this.props.answer}!</Text>
+            <Text>Congratulations! The answer was {this.props.answer}!</Text>
           )}
           {!this.props.correct && (
             <Text>Sorry! The answer was {this.props.answer}!</Text>
@@ -885,7 +1021,6 @@ class Personal extends Component {
       }
     });
     let res = await response.json();
-    this.s
 
   }
 
@@ -933,7 +1068,7 @@ class DataUpload extends Component {
   async sendData() {
     let token = await AsyncStorage.getItem("id");
     try {
-      let response = await fetch('http://192.168.0.16:3000/marks', {
+      let response = await fetch('http://192.168.0.16:3000/questions/marks', {
         method: "POST",
         headers: {
           Accept: 'application/json',
@@ -969,6 +1104,39 @@ class DataUpload extends Component {
     );
   }
 }
+
+// const AdminTabNavigator = createBottomTabNavigator({
+//   Home, 
+//   adminQuestionSwitchNavigator, 
+//   Favourites, 
+//   profileNavigator
+// });
+
+// const adminQuestionSwitchNavigator = createSwitchNavigator({
+//   adminQuestionStackNavigator: adminQuestionStackNavigator,
+//   DataUpload: DataUpload,
+//   Home: {
+//     screen: Home,
+//   }
+// });
+
+// adminQuestionSwitchNavigator.navigationOptions = {
+//   tabBarLabel: 'Questions',
+//   initialRouteName: 'Questions'
+// };
+
+// const adminQuestionStackNavigator = createStackNavigator({
+//   Questions: {
+//     screen: Questions,
+//   },
+//   MakeQuestion: {
+//     screen: MakeQuestion,
+//   },
+//   EditQuestion: {
+//     screen: EditQuestion,
+//   },
+//   Quiz: Quiz,
+// });
 
 const AuthStack = createStackNavigator({
   Welcome: {
@@ -1042,15 +1210,6 @@ const HomepageTabNavigator = createBottomTabNavigator({
   profileNavigator
 });
 
-
-
-
-// const HomepageDrawerNavigator =  createDrawerNavigator({
-//   Homepage: {
-//     screen: HomepageStackNavigator
-//   }
-// });
-
 const AppSwitchNavigator = createSwitchNavigator({
   Auth: AuthStack, 
   ForgotPassword: {
@@ -1059,6 +1218,7 @@ const AppSwitchNavigator = createSwitchNavigator({
 
   },
   Homepage: HomepageTabNavigator,
+  // AdminHomepage: AdminTabNavigator,
   Welcome: Welcome
 });
 
@@ -1080,6 +1240,11 @@ const AppContainer = createAppContainer(AppSwitchNavigator);
 
 
 const styles = StyleSheet.create({
+  welcome: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
   container: {
     flex: 1,
     alignItems: 'center',
@@ -1126,5 +1291,10 @@ const styles = StyleSheet.create({
     flex: 1,
     margin: 1,
     height: WIDTH / 2
-  }
+  },
+  katex: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
 });

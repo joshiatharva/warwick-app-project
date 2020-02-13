@@ -19,7 +19,7 @@ const questionSchema = new mongoose.Schema({
     type: {
         type: String,
         required: true,
-        enum: ["true_false", "multi_choice", "normal_answer"]
+        ref: "Type",
     },
     question: {
         type: String, 
@@ -47,8 +47,7 @@ const questionSchema = new mongoose.Schema({
     topic: {
         type: String,
         required: true,
-        min: 1,
-        max: 255
+        ref: "Topic",
     },
     accesses: {
         type: Number,

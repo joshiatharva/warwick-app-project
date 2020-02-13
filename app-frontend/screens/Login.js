@@ -1,14 +1,5 @@
 import React, { Component } from 'react';
 import { StyleSheet, Text, View, Button, FlatList, AsyncStorage, Picker, ActivityIndicator } from 'react-native';
-import { createAppContainer, createSwitchNavigator } from 'react-navigation';
-import { createStackNavigator } from 'react-navigation-stack';
-import { createBottomTabNavigator } from 'react-navigation-tabs';
-import { createDrawerNavigator } from 'react-navigation-drawer';
-
-import Search from './components/Search';
-import Questions from './components/Questions';
-import Local from './components/Local';
-import Profile from './components/Profile';
 
 export default class Login extends Component {
   constructor(props) {
@@ -16,55 +7,57 @@ export default class Login extends Component {
     this.state = {
       username: '',
       password: '',
+      remember: false,
     }
   }
 
-  sendData = () => {
-    const data = this.state;
-    fetch('localhost:3000/api/user/login', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-    })
-    .then((response) => response.json())
-    .then((res) => {
-      if (res.success === true) {
-        const id_token = res.id_token;
-        AsyncStorage.setItem('id', id_token);
-        this.props.navigator.navigate('Home');
+  async sendData() {
+    console.log(`Username: ${this.state.username}\nPassword: ${this.state.password}\nRemember: ${this.state.remember}`);
+    try {
+      let response = await fetch('http://192.168.0.16:3000/auth/login', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer'
+        },
+          body: JSON.stringify({
+          "username": this.state.username,
+          "password": this.state.password,
+          "remember": this.state.remember
+        })
+      });
+      let res = await response.json()
+      if (res.success === "true") {
+        const id_token = res.token;
+        await AsyncStorage.setItem('id', id_token);
+        // if (res.remember === true) {
+        //   await AsyncStorage.setItem('remember', true);
+        // }
+        this.props.navigation.navigate('Home');
+        console.log(res);
       } else {
-        alert(res.message);
+        console.log (res.message);
       }
-    }).catch((err) => alert(err));
+    } catch (err) {
+      console.log(err);
+    }
   }
+
   render() {
-    return (
-      <View style={styles.container}>
-        <TextInput placeholder='Username' value="username" onChangeText={(username) => this.setState(username)} />
-        <TextInput placeholder='Password' value="password" secureTextEntry={true} onChangeText={(password) => this.setState(password)} />
-        <Button 
-          title="Signin" 
-          onPress={this.sendData.bind(this)}
-          // onPress={this.props.navigation.navigate("Home")}
-        />
-      </View>
-    );
+    if (this.state.isVerified) {
+      this.props.navigation.navigate("Home");
+      return null;
+    } else {
+      return (
+        <View style={styles.container}>
+          <Input placeholder='Username' style={{backgroundColor: 'red'}} onChangeText={(item) => this.setState({username: item})} />
+          <Input placeholder='Password' secureTextEntry={true} onChangeText={(item) => this.setState({password: item})} />
+          <CheckBox center title='Remember Me' checked={this.state.remember} checkedColor='blue' onPress={() => this.setState({remember: !this.state.remember})}/>
+          <Button title="Signin" onPress={() => this.sendData()} />
+        </View>
+      );
+    }
   }
 }
-
-const HomepageTabNavigator = createBottomTabNavigator({
-    Home,
-    Search,
-    Questions,
-    Local,
-    Profile
-    },{
-    navigationOptions: ({ navigation }) => {
-      const { pageName } = navigation.state.routes[navigation.state.index];
-      return { headerTitle: pageName };
-    }
-});
   

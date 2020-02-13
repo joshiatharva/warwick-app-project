@@ -43,20 +43,28 @@ async (req, res) => {
       username: req.body.username,
       password: hashedPassword,
       email: req.body.email
-    }); 
+    });
+    const topics = await Topics.find({}).name;
+    const type = await Type.find({}).name;
+    
     try {  
       await user.save();
       const user_forgot_password = new User_forgot_password({
         user_id: user._id,
         username: user.username
       });
+
       const user_scores = new User_scores({
         user_id: user._id,
         username: user.username,
-        tf: new difficulty({}),
-        multi_choice: new difficulty({}),
-        normal: new difficulty({})
       });
+
+      for (topic in topics) {
+        for (type in types) {
+          user_scores.update({user_id: user._id}, {$set: { "data.topic": topic, "data.type": type, "data.scores": new difficulty({})} });
+        }
+      }
+
       await user_forgot_password.save();
       await user_scores.save();
       const token = jwt.sign({_id: user._id}, "This is secret");
@@ -66,6 +74,13 @@ async (req, res) => {
     }
   }
   
+});
+
+router.get('/yeet', async (req, res) => {
+  const topics = await Topics.find({}).name;
+  const type = await Type.find({}).name;
+  console.log(topics);
+  console.log(type);
 });
 
 router.get('/login', async (req, res) => {

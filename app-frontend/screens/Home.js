@@ -5,37 +5,27 @@ import { createStackNavigator } from 'react-navigation-stack';
 import { createBottomTabNavigator } from 'react-navigation-tabs';
 import { createDrawerNavigator } from 'react-navigation-drawer';
 
+import MathFormulaeComponent from ''
+
 export default class Home extends Component {
   render() {
     return (
-      <View style={styles.container}>
-        <Text>Welcome back!</Text>
-      </View>
+        // <WebView
+        //   originWhitelist={['*']}
+        //   source={test}
+        //   javaScriptEnabled={true}
+        // />
+        <View>
+          <Text>Math component here</Text>
+          <MathFormulaeComponent />
+        </View>
     );
   }
 }
 
 export const HomepageTabNavigator = createBottomTabNavigator({
-    Home,
-    Search,
-    Questions,
-    Local,
-    Profile
-    },{
-    navigationOptions: ({ navigation }) => {
-      const { pageName } = navigation.state.routes[navigation.state.index];
-      return { headerTitle: pageName };
-    }
-});
-
-export const HomepageStackNavigator = createStackNavigator({
-    HomepageTabNavigator: HomepageTabNavigator,
-    questionSwitchNavigator: questionSwitchNavigator
-    
-});
-  
-export const HomepageDrawerNavigator =  createDrawerNavigator({
-    Homepage: {
-      screen: HomepageStackNavigator
-    }
+  Home,
+  questionSwitchNavigator,
+  Favourites,
+  profileNavigator
 });

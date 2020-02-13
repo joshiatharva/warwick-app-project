@@ -45,9 +45,17 @@ const userScoreSchema = new mongoose.Schema({
       type: String,
       ref: 'User'
     },
-    tf: difficultySchema,
-    multi_choice: difficultySchema,
-    normal: difficultySchema
+    data: {
+      type: {
+        type: String,
+        ref: 'Type',
+      },
+      topic: {
+        type: String,
+        ref: 'Topic'
+      },
+      scores: difficultySchema,
+    },
   });
 
   module.exports.difficulty = mongoose.model('difficulty', difficultySchema);
