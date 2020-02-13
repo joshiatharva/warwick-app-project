@@ -1,5 +1,7 @@
 const router = require('express').Router();
 const User = require('../models/User');
+const Topics = require('../models/Topics');
+const Type = require('../models/Types');
 const { body, validationResult, sanitizeBody } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -44,8 +46,8 @@ async (req, res) => {
       password: hashedPassword,
       email: req.body.email
     });
-    const topics = await Topics.find({}).name;
-    const type = await Type.find({}).name;
+    const topics = await Topics.find({});
+    const types = await Type.find({});
     
     try {  
       await user.save();
@@ -59,9 +61,9 @@ async (req, res) => {
         username: user.username,
       });
 
-      for (topic in topics) {
-        for (type in types) {
-          user_scores.update({user_id: user._id}, {$set: { "data.topic": topic, "data.type": type, "data.scores": new difficulty({})} });
+      for (i=0; i< topics.length; i++) {
+        for (j=0; j<types.length; j++) {
+          user_scores.update({user_id: user._id}, {$set: { "data.topic": topics[i].name, "data.type": types[j].name, "data.scores": new difficulty({})} });
         }
       }
 
@@ -77,10 +79,10 @@ async (req, res) => {
 });
 
 router.get('/yeet', async (req, res) => {
-  const topics = await Topics.find({}).name;
-  const type = await Type.find({}).name;
-  console.log(topics);
+  const topics = await Topics.find({});
+  const type = await Type.find({});
   console.log(type);
+  return res.send(topics[0].name);
 });
 
 router.get('/login', async (req, res) => {
