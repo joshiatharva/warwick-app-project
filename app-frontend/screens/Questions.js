@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, Button, FlatList, AsyncStorage, Picker, Activit
 import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 
-class Questions extends Component {
+export default class Questions extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -18,7 +18,7 @@ class Questions extends Component {
   async componentDidMount() {
     try {
       const token = await AsyncStorage.getItem("id");
-      let response = await fetch('http://192.168.0.16:3000/questions/all', {
+      let response = await fetch('http://192.168.0.12:3000/questions/all', {
         method: 'GET',
         headers: {
           Accept: 'application/json',
@@ -37,7 +37,7 @@ class Questions extends Component {
   async sendData() {
     const token = await AsyncStorage.getItem("id");
     try {
-      let response = await fetch(`http://192.168.0.16/questions/${this.state.type}/${this.state.search}`, {
+      let response = await fetch(`http://192.168.0.12:3000/questions/${this.state.type}/${this.state.search}`, {
         method: 'GET',
         headers: {
           Accept: 'application/json',
@@ -58,7 +58,7 @@ class Questions extends Component {
   async saveQuestion(id) {
     try {
       const token = await AsyncStorage.getItem("id");
-      let response = await fetch('http://192.168.0.16:3000/questions/save',{
+      let response = await fetch('http://192.168.0.12:3000/questions/save',{
         method: 'POST',
         headers: {
           Accept: 'application/json',

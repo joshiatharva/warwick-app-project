@@ -1,4 +1,7 @@
 const mongoose = require("mongoose");
+const User = require("../models/User")
+const Topics = require("../models/Topics");
+const Type = require("../models/Type")
 
 /*  3 boxes of questions in Users:
 *   box 1
@@ -16,3 +19,7 @@ const mongoose = require("mongoose");
 *   Session 2: 1-3(Box 1)-6(Box 2)-0(Box 3)
 *   Session 3: 2 
 */
+
+const data = await User_scores.find({_id: id});
+const score_array = data.data
+

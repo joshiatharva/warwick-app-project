@@ -5,6 +5,10 @@ const jwt = require('jsonwebtoken');
 const User_scores = require("../models/User_scores");
 const User = require('../models/User');
 
+router.get('/', async (req, res) => {
+
+})
+
 router.get('/all', async (req, res) => {
     var token = req.headers.authorization.split(" ")[1]; 
     if (isValidated(token)) {
@@ -84,75 +88,41 @@ router.get('/marks/:qid', async (req,res) => {
 
 router.post('/marks', async (req, res) => {
     var string = req.headers.authorization.split(" ")[1];
+    var update = {};
     if (isValidated(string)) {
         var token = jwt.verify(string, "This is secret");
-        var question = await Question.findById({_id: req.body.question_id});
+        console.log(token);
         if (req.body.correct === true) {
             var correct = 1;
         } else {
             correct = 0; 
         }
-        await Question.updateOne({_id: token._id}, { $inc: { accesses: 1, correct: correct} });
-        if (question.type === "true_false") {
-            switch (question.difficulty) {
-                case 1:
-                    await User_scores.update({_id: token._id}, { $inc: { "tf.d1_total": 1, "tf.d1_correct": correct }});
-                    return res.send({"message": "Upload successful", "success": true});
-                case 2: 
-                    await User_scores.update({_id: token._id}, { $inc: { "tf.d2_total": 1, "tf.d2_correct": correct }});
-                    return res.send({"message": "Upload successful", "success": true});
-                case 3: 
-                    await User_scores.update({_id: token._id}, { $inc: { "tf.d3_total": 1, "tf.d3_correct": correct }});
-                    return res.send({"message": "Upload successful", "success": true});
-                case 4:
-                    await User_scores.update({_id: token._id}, { $inc: { "tf.d4_total": 1, "tf.d4_correct": correct }});
-                    return res.send({"message": "Upload successful", "success": true});
-                default:
-                    await User_scores.update({_id: token._id}, { $inc: { "tf.d2_total": 1, "tf.d2_correct": correct }});
-                    return res.send({"message": "Upload successful", "success": true});
-            }      
+        switch (question.difficulty) {
+            case 1:
+                update = {"d1.total": 1, "d1.correct": correct};
+                break;
+            case 2: 
+                update = {"d2.total": 1, "d2.correct": correct};
+                break;
+            case 3:
+                update = {"d3.total": 1, "d3.correct": correct};
+                break;
+            case 4:
+                update = {"d4.total": 1, "d4.correct": correct};
+                break;
+            case 5:
+                update = {"d5.total": 1, "d5.correct": correct};
+                break;
+            default:
+                update = {"d1.total": 1, "d1.correct": correct};
+                break;
         }
-        if (question.type === "multi_choice") {
-            switch (question.difficulty) {
-                case 1:
-                    await User_scores.update({_id: token._id}, { $inc: { "multi_choice.d1_total": 1, "multi_choice.d1_correct": correct }});
-                    return res.send({"message": "Upload successful", "success": true});
-                case 2 : 
-                    await User_scores.update({_id: token._id}, { $inc: { "multi_choice.d2_total": 1, "multi_choice.d2_correct": correct }});
-                    return res.send({"message": "Upload successful", "success": true});
-                case 3: 
-                    await User_scores.update({_id: token._id}, { $inc: { "multi_choice.d3_total": 1, "multi_choice.d3_correct": correct }});
-                    return res.send({"message": "Upload successful", "success": true});
-                case 4:
-                    await User_scores.update({_id: token._id}, { $inc: { "multi_choice.d4_total": 1, "multi_choice.d4_correct": correct }});
-                    return res.send({"message": "Upload successful", "success": true});
-                default:
-                    await User_scores.update({_id: token._id}, { $inc: { "multi_choice.d2_total": 1, "multi_choice.d2_correct": correct }});
-                    return res.send({"message": "Upload successful", "success": true});
-            }
-        }
-        if (question.type === "normal_answer") {
-            switch (question.difficulty) {
-                case 1:
-                    await User_scores.update({_id: token._id}, { $inc: { "normal.d1_total": 1, "normal.d1_correct": correct }});
-                    return res.send({"message": "Upload successful", "success": true});
-                case 2 : 
-                    await User_scores.update({_id: token._id}, { $inc: { "normal.d2_total": 1, "normal.d2_correct": correct }});
-                    return res.send({"message": "Upload successful", "success": true});
-                case 3: 
-                    await User_scores.update({_id: token._id}, { $inc: { "normal.d3_total": 1, "normal.d3_correct": correct }});
-                    return res.send({"message": "Upload successful", "success": true});
-                case 4:
-                    await User_scores.update({_id: token._id}, { $inc: { "normal.d4_total": 1, "normal.d4_correct": correct }});
-                    return res.send({"message": "Upload successful", "success": true});
-                default:
-                    await User_scores.update({_id: token._id}, { $inc: { "normal.d2_total": 1, "normal.d2_correct": correct }});
-                    return res.send({"message": "Upload successful", "success": true});
-            }
-        }  
+        var question = await Question.findOneAndUpdate({_id: req.body.question_id}, { $inc: {correct: correct, accesses: 1} });
+        await User_scores.update({_id: token, "data.type": question.type, "data.topic": question.topic}, { $inc: update });
+        return res.send({"success": true});
+
     }
     return res.send({"message": "Token invalid; please revalidate", "error": "Invalid token", "success": false});
-
 });
 
 router.post('/save', async(req,res) => {

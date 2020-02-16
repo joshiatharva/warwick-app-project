@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema({
     max: 55
   },
   question_history: [{
-    type: mongoose.Schema.Types.ObjectId,
+    type: [mongoose.Schema.Types.ObjectId],
     ref: 'Question',
   }],
   saved_questions: [{
@@ -52,6 +52,10 @@ const userSchema = new mongoose.Schema({
     default: 0
   },
   last_10_sessions_length: [Date],
+  blacklisted_until: {
+    type: Date,
+    default: null,
+  }
 });
 
 module.exports = mongoose.model('User', userSchema);

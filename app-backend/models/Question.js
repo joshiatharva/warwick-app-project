@@ -47,7 +47,7 @@ const questionSchema = new mongoose.Schema({
     topic: {
         type: String,
         required: true,
-        ref: "Topic",
+        ref: "Topics",
     },
     accesses: {
         type: Number,
@@ -64,6 +64,10 @@ const questionSchema = new mongoose.Schema({
     updated_at: {
         type: Date,
         default: Date.now()
+    },
+    created_by: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
     }
 });
 

@@ -52,7 +52,7 @@ const userScoreSchema = new mongoose.Schema({
       },
       topic: {
         type: String,
-        ref: 'Topic'
+        ref: 'Topics'
       },
       scores: difficultySchema,
     },

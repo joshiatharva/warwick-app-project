@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const User = require('../models/User');
 const Topics = require('../models/Topics');
-const Type = require('../models/Types');
+const Type = require('../models/Type');
 const { body, validationResult, sanitizeBody } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -79,10 +79,21 @@ async (req, res) => {
 });
 
 router.get('/yeet', async (req, res) => {
-  const topics = await Topics.find({});
-  const type = await Type.find({});
-  console.log(type);
-  return res.send(topics[0].name);
+  const styles = {};
+  const a = "given answer";
+  const c = "true answer"; //not selected but is right answer
+  const b = "true answer";
+  if (c === a) {
+    styles.borderColor = 'blue';
+    if (c != b) {
+      styles.backgroundColor = 'red';
+    }
+  }
+  if (c === b) {
+    styles.backgroundColor = 'green';
+  }
+  console.log(styles);
+  return res.send(styles);
 });
 
 router.get('/login', async (req, res) => {
