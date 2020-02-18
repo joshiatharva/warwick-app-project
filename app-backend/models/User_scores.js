@@ -32,8 +32,28 @@ const difficultySchema = new mongoose.Schema({
   d4_total: {
     type: Number,
     default: 0
+  },
+  d5_correct: {
+    type: Number,
+    default: 0,
+  },
+  d5_total: {
+    type: Number,
+    default: 0,
   }
 }, {_id: false });
+
+const dataSchema = new mongoose.Schema({
+  topic: {
+    type: String,
+    ref: 'Topics'
+  },
+  type: {
+    type: String,
+    ref: 'Type',
+  },
+  scores: difficultySchema,
+});
 
 
 const userScoreSchema = new mongoose.Schema({
@@ -45,19 +65,12 @@ const userScoreSchema = new mongoose.Schema({
       type: String,
       ref: 'User'
     },
-    data: {
-      type: {
-        type: String,
-        ref: 'Type',
-      },
-      topic: {
-        type: String,
-        ref: 'Topics'
-      },
-      scores: difficultySchema,
-    },
+    data: [dataSchema]
   });
 
+
+
   module.exports.difficulty = mongoose.model('difficulty', difficultySchema);
+  module.exports.data = mongoose.model('data', dataSchema);
   module.exports.User_scores = mongoose.model('User_scores', userScoreSchema);
   

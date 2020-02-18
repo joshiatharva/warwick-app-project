@@ -7,8 +7,13 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const User_forgot_password = require('../models/User_forgot_password');
-const { difficulty, User_scores } = require('../models/User_scores');
+const { difficulty, data, User_scores } = require('../models/User_scores');
 
+
+router.get('/', async (req,res) => {
+  var user_scores = await User_scores.find({username: "atthujoshi"});
+  return res.send({"user_scores": user_scores});
+});
 
 router.post('/register', [
   //firstname cannot have numbers
@@ -55,19 +60,23 @@ async (req, res) => {
         user_id: user._id,
         username: user.username
       });
-
+      const array = [];
+      for (i=0; i < topics.length; i++) {
+        for (j=0; j < types.length; j++) {
+          var element = new data({
+            topic: topics[i].name,
+            type: types[j].name,
+            scores: new difficulty({})
+          });
+          array.push(element);
+        }
+      }
       const user_scores = new User_scores({
         user_id: user._id,
         username: user.username,
+        data: array
       });
-
-      for (i=0; i< topics.length; i++) {
-        for (j=0; j<types.length; j++) {
-          user_scores.update({user_id: user._id}, {$set: { "data.topic": topics[i].name, "data.type": types[j].name, "data.scores": new difficulty({})} });
-        }
-      }
-
-      await user_forgot_password.save();
+      await user_forgot_password.save();  
       await user_scores.save();
       const token = jwt.sign({_id: user._id}, "This is secret");
       return res.send({"success": true, "msg": "Successful", "token": token});
@@ -76,24 +85,6 @@ async (req, res) => {
     }
   }
   
-});
-
-router.get('/yeet', async (req, res) => {
-  const styles = {};
-  const a = "given answer";
-  const c = "true answer"; //not selected but is right answer
-  const b = "true answer";
-  if (c === a) {
-    styles.borderColor = 'blue';
-    if (c != b) {
-      styles.backgroundColor = 'red';
-    }
-  }
-  if (c === b) {
-    styles.backgroundColor = 'green';
-  }
-  console.log(styles);
-  return res.send(styles);
 });
 
 router.get('/login', async (req, res) => {
@@ -137,10 +128,10 @@ async (req, res) => {
     return res.status(400).send({'success': "false",'msg': 'Incorrect password for given username'});
   }
   var time = 60;
-  if (req.body.remember === true) {
-    time = time * 15;
+  if (req.body.remember === "true") {
+    time = 60 * 60 * 60 * 60 * 24;
   }
-  const token = jwt.sign({_id: user._id}, "This is secret", { expiresIn: time });
+  const token = jwt.sign({_id: user._id}, "This is secret");
   console.log("Login successful");
   return res.status(200).send({'success': "true", 'msg': 'Login successful', 'token': token});
 });

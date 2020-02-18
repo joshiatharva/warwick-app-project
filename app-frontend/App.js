@@ -6,7 +6,7 @@ import { createBottomTabNavigator } from 'react-navigation-tabs';
 import { createDrawerNavigator } from 'react-navigation-drawer';
 // import { NavigationContainer } from '@react-navigation/native';
 // import { createStackNavigator } from '@react-navigation/stack';
-import { SearchBar, CheckBox, Input, Button, ListItem, Icon } from 'react-native-elements';
+import { SearchBar, CheckBox, Input, Button, ListItem, Icon, Slider } from 'react-native-elements';
 import { WebView } from 'react-native-webview';
 import { Linking } from 'expo';
 import Canvas from 'react-native-canvas';
@@ -23,6 +23,11 @@ const test = require('./test.js');
 // import Quiz from './components/Quiz';
 
 //TODO: 
+
+{
+	"question_id": "5e1a332d2cef8707f4b01190",
+	"correct": false
+}
 
 
 const WIDTH = Dimensions.get('window').width; 
@@ -61,7 +66,7 @@ class Welcome extends Component {
     var token = await AsyncStorage.getItem("id");
     if (token != null) {
       try {
-        let response = await fetch('http://192.168.0.12:3000/auth/login', {
+        let response = await fetch('http://192.168.0.16:3000/auth/login', {
         method: 'GET',
         headers: {
           Accept: 'application/json',
@@ -71,20 +76,20 @@ class Welcome extends Component {
         });
         let res = await response.json();
         if (res.success === "true") {
-          this.setState({isVerified: true});
-          console.log("Token present and valid");
+          this.setState({isVerified: true}, () => console.log(this.state.isVerified));
+          // console.log("Token present and valid");
         } else {
           this.setState({isVerified: false});
-          console.log("Token present, expired");
+          // console.log("Token present, expired");
           await AsyncStorage.removeItem("id"); 
         }
       } catch (err) {
         alert(err);
-        console.log(err);
+        // console.log(err);
       }
     } else {
       this.setState({isVerified: false});
-      console.log("Token not present");
+      // console.log("Token not present");
     }
   }
 
@@ -133,7 +138,7 @@ class Login extends Component {
   async sendData() {
     console.log(`Username: ${this.state.username}\nPassword: ${this.state.password}\nRemember: ${this.state.remember}`);
     try {
-      let response = await fetch('http://192.168.0.12:3000/auth/login', {
+      let response = await fetch('http://192.168.0.16:3000/auth/login', {
         method: 'POST',
         headers: {
           Accept: 'application/json',
@@ -195,7 +200,7 @@ class Register extends Component {
 
   async sendData() {
       try {
-        let response = await fetch('http://192.168.0.12:3000/auth/register', {
+        let response = await fetch('http://192.168.0.16:3000/auth/register', {
           method: 'POST',
           headers: {
             Accept: 'application/json',
@@ -243,384 +248,446 @@ class Register extends Component {
 class Home extends Component {
   render() {
     return (
-        // <WebView
-        //   originWhitelist={['*']}
-        //   source={test}
-        //   javaScriptEnabled={true}
-        // />
         <View style={styles.container}>
           <Text>Math component here</Text>
-          {/* <MathFormulaeComponent /> */}
+          <MathFormulaeComponent />
           <DFADrawingComponent />
         </View>
     );
   }
 }
 
-class ForgotPassword extends Component {
-  constructor(props){
-    super(props);
-    this.state = {
-      email: null,
-      received: false,
-      error: null
-    }
-  }
+// class ForgotPassword extends Component {
+//   constructor(props){
+//     super(props);
+//     this.state = {
+//       email: null,
+//       received: false,
+//       error: null
+//     }
+//   }
 
-  async sendData() {
-    let response = await fetch('http://192.168.0.12:3000/auth/forgot', {
-      method: 'POST',
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        "Authorization": "Basic"
-      },
-      body: JSON.stringify({
-        "email": this.state.email,
-        "url" : initialUrl,
-        "path": "forgotpassword"
-      })
-    });
-    let res = await response.json();
-    if (!res.error) {
-      this.setState({received: true, error: false});
-    } else {
-      this.setState({received: true, error: true});
-    }
-  }
+//   async sendData() {
+//     let response = await fetch('http://192.168.0.16:3000/auth/forgot', {
+//       method: 'POST',
+//       headers: {
+//         Accept: "application/json",
+//         "Content-Type": "application/json",
+//         "Authorization": "Basic"
+//       },
+//       body: JSON.stringify({
+//         "email": this.state.email,
+//         "url" : initialUrl,
+//         "path": "forgotpassword"
+//       })
+//     });
+//     let res = await response.json();
+//     if (!res.error) {
+//       this.setState({received: true, error: false}, () => console.log("received: " + this.state.received + "\nerror: " + this.state.error));
+//     } else {
+//       this.setState({received: true, error: true}, () => console.log("received: " + this.state.received + "\nerror: " + this.state.error));
+//     }
+//   }
 
-  render() {
-    if (!this.state.received && !this.state.error) {
-      return (
-        <View>
-          <Text>Please enter your email to receive your reset password link:</Text>
-          <Input placeholder="Enter your email here" onChangeText={(item) => this.setState({email: item})} />
-          <Button raised title="Send link" onPress={() => this.sendData()} />
-        </View>
-      );
-    } else if (this.state.received && !this.state.error) {
-      <View>
-        <Text>Your email has been sent to your account at {this.state.email}!</Text>
-      </View>
-    }
-  }
-}
+//   render() {
+//     if (!this.state.received && !this.state.error) {
+//       return (
+//         <View>
+//           <Text>Please enter your email to receive your reset password link:</Text>
+//           <Input placeholder="Enter your email here" onChangeText={(item) => this.setState({email: item})} />
+//           <Button raised title="Send link" onPress={() => this.sendData()} />
+//         </View>
+//       );
+//     } else if (this.state.received && !this.state.error) {
+//       <View>
+//         <Text>Your email has been sent to your account at {this.state.email}!</Text>
+//       </View>
+//     }
+//   }
+// }
 
-class ForgotPasswordForm extends Component {
-  constructor() {
-    super();
-    this.state = {
-      password: "",
-      passwordconf: "",
-      isLoading: true,
-      error: null
-    }
-  }
+// class ForgotPasswordForm extends Component {
+//   constructor() {
+//     super();
+//     this.state = {
+//       password: "",
+//       passwordconf: "",
+//       isLoading: true,
+//       error: null
+//     }
+//   }
 
-  async componentDidMount() {
-    Linking.addEventListener('url', this.handleDeepLink);
-    let response = await fetch(`http://192.168.0.12:3000/auth/reset/${token}`, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer'
-      },
-    });
-    let res = await response.json();
-    this.setState({error: res.error});
-  }
+//   async componentDidMount() {
+//     Linking.addEventListener('url', this.handleDeepLink);
+//     let response = await fetch(`http://192.168.0.16:3000/auth/reset/${token}`, {
+//       method: 'GET',
+//       headers: {
+//         Accept: 'application/json',
+//         'Content-Type': 'application/json',
+//         'Authorization': 'Bearer'
+//       },
+//     });
+//     let res = await response.json();
+//     this.setState({error: res.error});
+//   }
 
-  async sendData() {
-    let token = 12345;
-    let response = await fetch(`http://192.168.0.12:3000:3000/auth/reset/${token}`, {
-      method: "POST",
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer'
+//   async sendData() {
+//     let token = 12345;
+//     let response = await fetch(`http://192.168.0.16:3000:3000/auth/reset/${token}`, {
+//       method: "POST",
+//       headers: {
+//         Accept: 'application/json',
+//         'Content-Type': 'application/json',
+//         'Authorization': 'Bearer'
 
-      },
-      body: JSON.stringify({
-        "password": this.state.password,
+//       },
+//       body: JSON.stringify({
+//         "password": this.state.password,
         
-      })
-    });
-    let res = await response.json();
-    this.props.navigation.navigate("Home");
-  }
+//       })
+//     });
+//     let res = await response.json();
+//     this.props.navigation.navigate("Home");
+//   }
 
-  render() {
-    return (
-      <View>
-        <Input placeholder="Enter your new password" onEndEditing={(item) => this.setState({password: item})} />
-        <Input placeholder="Confirm your new password" onEndEditing={(item) => this.setState({passwordconf: item})} />
-        <Button title="Submit" onPress={()=> this.sendData()} /> 
-      </View>
-    );
-  }
-}
+//   render() {
+//     return (
+//       <View>
+//         <Input placeholder="Enter your new password" onEndEditing={(item) => this.setState({password: item})} />
+//         <Input placeholder="Confirm your new password" onEndEditing={(item) => this.setState({passwordconf: item})} />
+//         <Button title="Submit" onPress={()=> this.sendData()} /> 
+//       </View>
+//     );
+//   }
+// }
 
-class Questions extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      questions: [],
-      isLoading: true,
-      error: null,
-      search: '',
-      type: 'all'
-    }
-  }
+// class Questions extends Component {
+//   constructor(props) {
+//     super(props);
+//     this.state = {
+//       questions: [],
+//       isLoading: true,
+//       error: null,
+//       search: '',
+//       type: 'all',
+//     }
+//   }
 
-  static navigationOptions = ({ navigation }) => {
-    return {
-      headerTitle: "Questions Menu",
-      headerRight: () => (
-        <Button
-          type="clear"
-          title="New Question"
-          onPress={() => navigation.navigate("MakeQuestion")}
-        />
-      ),
-    };
-  }
+//   static navigationOptions = ({navigation}) => {
+//     return {
+//       headerRight: () => (
+//         <Button
+//           type="clear"
+//           title="New Question"
+//           onPress={() => {navigation.navigate("MakeQuestion")}}
+//         />
+//       ),
+//     };
+//   }
 
-  async componentDidMount() {
-    try {
-      const token = await AsyncStorage.getItem("id");
-      let response = await fetch('http://192.168.0.12:3000/questions/all', {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-      });
-      let json = await response.json();
-      this.setState({questions: json, isLoading: false});
-    } catch (err) {
-      console.log("Error occured");
-      this.setState({error: err});
-    }
-  }
+//   async componentDidMount() {
+//     try {
+//       const token = await AsyncStorage.getItem("id");
+//       let response = await fetch('http://192.168.0.16:3000/questions/all', {
+//         method: 'GET',
+//         headers: {
+//           Accept: 'application/json',
+//           'Content-Type': 'application/json',
+//           'Authorization': 'Bearer ' + token
+//         },
+//       });
+//       let json = await response.json();
+//       this.setState({questions: json, isLoading: false}, () => console.log("Questions: " + this.state.questions + "\nisLoading: " + this.state.isLoading));
+//     } catch (err) {
+//       this.setState({error: err}, () => console.log("Error: " + this.state.error));
+//     }
+//   }
 
-  async sendData() {
-    const token = await AsyncStorage.getItem("id");
-    try {
-      let response = await fetch(`http://192.168.0.12:3000/questions/${this.state.type}/${this.state.search}`, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token,  
-        }
-      });
-      let res = await response.json();
-      if (res.success) {
-        this.setState({questions: res.json});
-      }
-    } catch (err) {
-      console.log("Error occurred: " + err);
-    }
+//   async getData() {
+//     const token = await AsyncStorage.getItem("id");
+//     try {
+//       let response = await fetch(`http://192.168.0.16:3000/questions/${this.state.type}/${this.state.search}`, {
+//         method: 'GET',
+//         headers: {
+//           Accept: 'application/json',
+//           'Content-Type': 'application/json',
+//           'Authorization': 'Bearer ' + token,  
+//         }
+//       });
+//       let res = await response.json();
+//       if (res.success) {
+//         this.setState({questions: res.json});
+//       }
+//     } catch (err) {
+//       console.log("Error occurred: " + err);
+//     }
 
-  }
+//   }
 
-  async saveQuestion(id) {
-    try {
-      const token = await AsyncStorage.getItem("id");
-      let response = await fetch('http://192.168.0.12:3000/questions/save',{
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token,
-        },
-        body: JSON.stringify({
-          "question_id": id
-        })
-      });
-      let res = await response.json();
-      if (res.success == true) {
-        console.log(res);
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  }
+//   async saveQuestion(id) {
+//     try {
+//       const token = await AsyncStorage.getItem("id");
+//       let response = await fetch('http://192.168.0.16:3000/questions/save',{
+//         method: 'POST',
+//         headers: {
+//           Accept: 'application/json',
+//           'Content-Type': 'application/json',
+//           'Authorization': 'Bearer ' + token,
+//         },
+//         body: JSON.stringify({
+//           "question_id": id
+//         })
+//       });
+//       let res = await response.json();
+//       if (res.success == true) {
+//         console.log(res);
+//       }
+//     } catch (err) {
+//       console.log(err);
+//     }
+//   }
 
-  render() {
-      return (
-        <ScrollView>
-          <SearchBar 
-          onChangeText={(item) => this.setState({search: item})}
-          onClearText={()=> this.setState({search: ''})}
-          lightTheme
-          placeholder='Enter here....'
-          /> 
-          <Button title="Apply" onPress={(item) => this.sendData(item)} />
-          <FlatList 
-            data={this.state.questions}
-            renderItem = {({item, index}) =>
-                <Card>
-                  <TouchableOpacity style={styles.container} onPress={() => {
-                  Alert.alert('Add Question?', 'Add this Question to your Favourites?', [ {text: 'No', onPress: () => console.log("refused")}, {text: 'Yes', onPress: () => this.saveQuestion(item._id)}])}
-                  }>
-                    <Text>{item.name}</Text>
-                    <Text>{item.topic}</Text>
-                    <Text>{item.difficulty}</Text> 
-                </TouchableOpacity>
-                </Card>
-            }
-            keyExtractor={this.state.questions.name}
-          />
-        </ScrollView>
-      );
-  }
-}
+//   render() {
+//       return (
+//         <ScrollView>
+//           <SearchBar 
+//           onChangeText={(item) => this.setState({search: item})}
+//           onClearText={()=> this.setState({search: ''})}
+//           lightTheme
+//           placeholder='Enter here....'
+//           /> 
+//           <Button title="Apply" onPress={(item) => this.getData(item)} />
+//           <FlatList 
+//             data={this.state.questions}
+//             renderItem = {({item, index}) =>
+//                 <Card>
+//                   <TouchableOpacity style={styles.container} onPress={() => {
+//                   Alert.alert('Add Question?', 'Add this Question to your Favourites?', [ {text: 'No', onPress: () => console.log("refused")}, {text: 'Yes', onPress: () => this.saveQuestion(item._id)}])}
+//                   }>
+//                     <Text>{item.name}</Text>
+//                     <Text>{item.topic}</Text>
+//                     <Text>{item.difficulty}</Text> 
+//                 </TouchableOpacity>
+//                 </Card>
+//             }
+//             keyExtractor={this.state.questions._id}
+//           />
+//         </ScrollView>
+//       );
+//   }
+// }
 
-class AdminQuestions extends Component { 
-  constructor(props) {
-    super(props);
-    this.state = {
-      questions: [],
-      isLoading: true,
-      error: null,
-      search: '',
-      type: 'all'
-    }
-  }
+// class AdminQuestions extends Component { 
+//   constructor(props) {
+//     super(props);
+//     this.state = {
+//       questions: [],
+//       isLoading: true,
+//       error: null,
+//       search: '',
+//       type: 'all'
+//     }
+//   }
 
-  async componentDidMount() {
-    try {
-      const token = await AsyncStorage.getItem("id");
-      let response = await fetch('http://192.168.0.12:3000/questions/all', {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-      });
-      let json = await response.json();
-      this.setState({questions: json, isLoading: false});
-    } catch (err) {
-      console.log("Error occured");
-      this.setState({error: err});
-    }
-  }
+//   async componentDidMount() {
+//     try {
+//       const token = await AsyncStorage.getItem("id");
+//       let response = await fetch('http://192.168.0.16:3000/questions/all', {
+//         method: 'GET',
+//         headers: {
+//           Accept: 'application/json',
+//           'Content-Type': 'application/json',
+//           'Authorization': 'Bearer ' + token
+//         },
+//       });
+//       let json = await response.json();
+//       this.setState({questions: json, isLoading: false});
+//     } catch (err) {
+//       console.log("Error occured");
+//       this.setState({error: err});
+//     }
+//   }
 
-  async sendData() {
-    const token = await AsyncStorage.getItem("id");
-    try {
-      let response = await fetch(`http://192.168.0.12:3000/questions/${this.state.type}/${this.state.search}`, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token,  
-        }
-      });
-      let res = await response.json();
-      if (res.success) {
-        this.setState({questions: res.json});
-      }
-    } catch (err) {
-      console.log("Error occurred: " + err);
-    }
+//   async sendData() {
+//     const token = await AsyncStorage.getItem("id");
+//     try {
+//       let response = await fetch(`http://192.168.0.16:3000/questions/${this.state.type}/${this.state.search}`, {
+//         method: 'GET',
+//         headers: {
+//           Accept: 'application/json',
+//           'Content-Type': 'application/json',
+//           'Authorization': 'Bearer ' + token,  
+//         }
+//       });
+//       let res = await response.json();
+//       if (res.success) {
+//         this.setState({questions: res.json});
+//       }
+//     } catch (err) {
+//       // console.log("Error occurred: " + err);
+//     }
 
-  }
+//   }
 
-  async saveQuestion(id) {
-    try {
-      const token = await AsyncStorage.getItem("id");
-      let response = await fetch('http://192.168.0.12:3000/questions/save',{
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token,
-        },
-        body: JSON.stringify({
-          "question_id": id
-        })
-      });
-      let res = await response.json();
-      console.log(res.message);
-    } catch (err) {
-      console.log(err);
-    }
-  }
+//   async saveQuestion(id) {
+//     try {
+//       const token = await AsyncStorage.getItem("id");
+//       let response = await fetch('http://192.168.0.16:3000/questions/save',{
+//         method: 'POST',
+//         headers: {
+//           Accept: 'application/json',
+//           'Content-Type': 'application/json',
+//           'Authorization': 'Bearer ' + token,
+//         },
+//         body: JSON.stringify({
+//           "question_id": id
+//         })
+//       });
+//       let res = await response.json();
+//       // console.log(res.message);
+//     } catch (err) {
+//       // console.log(err);
+//     }
+//   }
 
-  render() {
-      return (
-        <ScrollView>
-          <SearchBar 
-          onChangeText={(item) => this.setState({search: item})}
-          onClearText={()=> this.setState({search: ''})}
-          lightTheme
-          placeholder='Enter here....'
-          /> 
-          <Button title="Apply" onPress={(item) => this.sendData(item)} />
-          <FlatList 
-            data={this.state.questions}
-            renderItem = {({item, index}) =>
-              <View> 
-                <TouchableOpacity style={styles.container} onPress={() => Alert.alert('Add Question?', 'Add this Question to your Favourites?', [ {text: 'No', onPress: () => console.log("refused")}, {text: 'Yes', onPress: () => this.saveQuestion(item._id)}])}>
-                  <Card>
-                    <Text>{item.name}</Text>
-                    <Text>{item.topic}</Text>
-                    <Text>{item.difficulty}</Text> 
-                  </Card>
-                </TouchableOpacity>
-              </View>
-            }
-            keyExtractor={this.state.questions.name}
-          />
-        </ScrollView>
-      );
-  }
-}
+//   render() {
+//       return (
+//         <ScrollView>
+//           <SearchBar 
+//           onChangeText={(item) => this.setState({search: item})}
+//           onClearText={()=> this.setState({search: ''})}
+//           lightTheme
+//           placeholder='Enter here....'
+//           /> 
+//           <Button title="Apply" onPress={(item) => this.sendData(item)} />
+//           <FlatList 
+//             data={this.state.questions}
+//             renderItem = {({item, index}) =>
+//               <View> 
+//                 <TouchableOpacity style={styles.container} onPress={() => Alert.alert('Add Question?', 'Add this Question to your Favourites?', [ {text: 'No', onPress: () => console.log("refused")}, {text: 'Yes', onPress: () => this.saveQuestion(item._id)}])}>
+//                   <Card>
+//                     <Text>{item.name}</Text>
+//                     <Text>{item.topic}</Text>
+//                     <Text>{item.difficulty}</Text> 
+//                   </Card>
+//                 </TouchableOpacity>
+//               </View>
+//             }
+//             keyExtractor={this.state.questions.name}
+//           />
+//         </ScrollView>
+//       );
+//   }
+// }
 
-class EditQuestion extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      question_id: null,
-      question_name: "",
-      question_type: "",
-      question_options: [],
-      question_answer: "",
-      question_solution: "",
-      question_difficulty: 1,
-      question_topic: "",
-      isLoading: false,
-    }
-  }
+// class EditQuestion extends Component {
+//   constructor(props) {
+//     this.topics = [];
+//     super(props);
+//     this.state = {
+//       question_id: null,
+//       question_name: "",
+//       question_question: "",
+//       question_type: "",
+//       question_options: [],
+//       question_answer: "",
+//       question_solution: "",
+//       question_difficulty: 1,
+//       question_topic: "",
+//       isLoading: false,
+//     }
+//   }
 
-  componentDidMount() {
-    this.setState({
-      question_name: this.props.navigation.getParam("Question").name,
-      question_type: this.props.navigation.getParam("Question").type,
-      question_options: this.props.navigation.getParam("Question").options,
-      question_answer: this.props.navigation.getParam("Question").answer,
-      question_solution: this.props.navigation.getParam("Question").solution,
-      question_difficulty: this.props.navigation
-    });
-  }
+//   async componentDidMount() {
+//     this.setState({
+//       question_name: this.props.navigation.getParam("Question").name,
+//       question_question: this.props.navigation.getParam("Question").question,
+//       question_type: this.props.navigation.getParam("Question").type,
+//       question_options: this.props.navigation.getParam("Question").options,
+//       question_answer: this.props.navigation.getParam("Question").answer,
+//       question_solution: this.props.navigation.getParam("Question").solution,
+//       question_difficulty: this.props.navigation.getParam("Question").difficulty,
+//     });
+//     let response = await fetch("http://192.168.0.16:3000/topics/all", {
+//       method: 'GET',
+//       headers: {
+//         Accept: 'application/json',
+//         'Content-Type': 'application/json'
+//       },
+//     });
+//     let res = await response.json();
+//     this.topics = res;
+//   }
 
-  async editQuestion() {
+//   async editQuestion() {
 
-  }
+//   }
 
-  render() {
-    return (
-      <View>
-
-      </View>
-    );
-  }
-}
+//   render() {
+//     const types = [
+//       {text: "True-False"},
+//       {text: "Multiple Choice"},
+//       {text: "Normal Answer"},
+//     ];
+//     const topics = [
+//       {text: "Regular Languages"},
+//       {text: "Context Free Languages"},
+//       {text: "Turing Machines"},
+//     ];
+//     return (
+//           <View style={styles.makequestion}>
+//             <Text>Here we can make new questions!</Text>
+//             <Input placeholder={this.state.question_name} onChangeText={(name) => this.setState({question_name: name})} />
+//             <Input placeholder={this.state.question_question} multiline={true} onChangeText={(text) => this.setState({question_question: text})} />
+//             <View>
+//             <Text>Please set a question type:</Text>
+//               <Select
+//                 placeholder={this.state.question_type}
+//                 data={types}
+//                 selectedOption={this.state.question_type}
+//                 onSelect={(value) => this.setState({type: value.text}, () => console.log(this.state.type))}/>
+//             </View>
+//             {(this.state.type.text === "Multiple Choice") && (
+//             <View>
+//               <Input placeholder={this.state.question_options[0]} onChangeText={(text) => this.setState({options: options.concat(text)})} />
+//               <Input placeholder={this.state.question_options[1]} onChangeText={(text) => this.setState({options: options.concat(text)})} />
+//               <Input placeholder={this.state.question_options[2]} onChangeText={(text) => this.setState({options: options.concat(text)})} />
+//               <Input placeholder={this.state.question_options[3]} onChangeText={(text) => this.setState({options: options.concat(text)})} />
+//             </View>
+//             )}
+//             {(this.state.type === "Normal Answer") && (
+//               <View>
+//                 <Text>No options required - move onto next field!</Text> 
+//               </View>
+//             )}
+//             {(this.state.type === "True-False") && (
+//               <View>
+//                 <Button disabled title="True"/> 
+//                 <Button disabled title="False"/>
+//               </View> 
+//             )}
+//             <View>
+//               <Text>Please select the question topic:</Text>
+//               <Select 
+//                 data={topics}
+//                 selectedOption={this.state.question_topic}
+//                 onSelect={(item) => this.setState({question_topic: item.text})} 
+//               />  
+//             </View>
+//             <Input placeholder="Answer to Question" onChangeText={(text) =>
+//               this.setState({question_answer: text}, () => {
+//                 if (this.state.type == "multi_choice" && !this.state.options.includes(text)) {
+//                   alert("Answer must also be included within the options provided!");
+//                 }
+//               }); 
+//             } />
+//             <Input placeholder="Solution to problem" multiline={true} onChangeText={(text) => this.setState({question_solution: text})} />
+//             <Slider maximumValue={5} minimumValue={1} step={1} value={this.state.question_difficulty} onValueChange={value => this.setState({question_difficulty: value}, () => console.log("Difficulty: " + this.state.question_difficulty))} />
+//             <Button style={styles.button} title="Submit question!" onPress={this.sendData()} />
+//           </View>
+//     );
+//   }
+// }
 
 class MathFormulaeComponent extends Component {
   constructor(props) {
@@ -632,41 +699,57 @@ class MathFormulaeComponent extends Component {
   }
 
   render() {
-    
+    let string = "$\\sum_{i=0}^n i^2 = \\frac{(n^2+n)(2n+1)}{6}$";
+    return <MathJax 
+      html={string}
+      mathJaxOptions={{
+        messageStyle: 'none',
+        extensions: [ 'tex2jax.js' ],
+        jax: [ ' input/TeX', 'output/HTML-CSS'],
+        tex2jax: {
+          inlineMath: [ ['$', '$'], ['\\(','\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]'] ],
+          processEscapes: true,
+        },
+        TeX: {
+          extensions: ['AMSmath.js', 'AMSsymbols.js', 'noErrors.js', 'noUndefined.js']
+        }
+      }}
+    />;
   }
 }
 
 class DFADrawingComponent extends Component {
   constructor(){
     super();
+    this.ctx = {};
     this.state = {
-      ctx: null
+      ctx: null,
     }
   }
 
   handleCanvas = async (canvas) => {
     if (canvas != null) {
-      const ctx = canvas.getContext('2d');
+      this.setState({ctx: canvas.getContext('2d')});
       try {
-        ctx.lineWidth = 10;
+        this.state.ctx.lineWidth = 10;
 
       // Wall
-        await ctx.strokeRect(75, 140, 150, 110);
+        await this.state.ctx.strokeRect(75, 140, 150, 110);
 
       // Door
-        await ctx.fillRect(130, 190, 40, 60);
+        await this.state.ctx.fillRect(130, 190, 40, 60);
 
       // Roof
-        await ctx.moveTo(50, 140);
-        await ctx.lineTo(150, 60);
-        await ctx.lineTo(250, 140);
-        ctx.closePath();
-        ctx.stroke();
+        await this.state.ctx.moveTo(50, 140);
+        await this.state.ctx.lineTo(150, 60);
+        await this.state.ctx.lineTo(250, 140);
+        await this.state.ctx.closePath();
+        await this.state.ctx.stroke();
       } catch (err) {
-        console.log(err);
+        // console.log(err);
       }
     } else {
-      console.log("canvas is null");
       alert("canvas is null");
     }
   }
@@ -686,8 +769,9 @@ class DFADrawingComponent extends Component {
 }
 
 class Favourites extends Component { 
-  constructor(props) {
-    super(props);
+  constructor() {
+    // this.questions = [];
+    super();
     this.state = {
       questions: [],
       error: null,
@@ -698,7 +782,7 @@ class Favourites extends Component {
   async componentDidMount() {
     try {
       const token = await AsyncStorage.getItem("id");
-      const response = await fetch('http://192.168.0.12:3000/user/questions', {
+      const response = await fetch('http://192.168.0.16:3000/user/questions', {
         method: 'GET',
         headers: {
           Accept: 'application/json',
@@ -710,8 +794,7 @@ class Favourites extends Component {
       this.setState({questions: json, isLoading: false});
       //console.log("Success on getting questions");
     } catch (err) {
-      console.log("Error occured");
-      this.setState({error: err});
+      this.setState({error: err}, () => console.log("Error: " + this.state.error));
     }
   }
 
@@ -720,14 +803,14 @@ class Favourites extends Component {
       <ScrollView>
           <FlatList 
             data={this.state.questions}
-            renderItem = {({item, index}) => 
+            renderItem = {({item, index}) => (
                 <View style={styles.itemStyle}>
-                  <TouchableOpacity onPress={() => this.props.navigation.navigate("Quiz", {questions: item})}>
+                  <TouchableOpacity onPress={() => this.props.navigation.navigate("Quiz", {questions: item}, () => console.log(item))}>
                   <Text>{item.name}</Text>
                   </TouchableOpacity>
                 </View>
-            }
-            keyExtractor={this.state.questions.name}
+            )}
+            keyExtractor={this.state.questions._id}
           />
         </ScrollView>
     );
@@ -742,75 +825,108 @@ class MakeQuestion extends Component {
       type: '',
       question: '',
       topic: '',
-      difficulty: 0,
+      difficulty: 1,
       content: '',
       answer: '',
       solution: '',
-      options: [],
-      correct: false
+      options: []
     }
   }
 
-  sendData = () => {
-    var token = AsyncStorage.getItem("id");
-    fetch('http://192.168.0.12:3000/questions/makequestion', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        "Content-Type": 'application/json',
-        "Authorization": "Bearer " + token
-      },
-      body: JSON.stringify({
-        name: this.state.name,
-        type: this.state.type,
-        question: this.state.question,
-        options: this.state.options,
-        difficulty: this.state.difficulty,
-        answer: this.state.answer,
-        solution: this.state.solution,
-        topic: this.state.topic
-      })
-    }).then((res) => console.log(res.json()))
-      .then(this.props.navigation.navigate("MakeQuestion"))
-      .catch((err) => console.log(err)).done(); 
+  async sendData() {
+    if (this.state.answer != null && !this.state.options.includes(this.state.answer)) {
+      alert("Answer must be included in Options selection!");
+      return;
+    }
+    if (this.state.type == "true_false") {
+      this.setState({options: [true, false]});
+    }
+    try { 
+      var token = await AsyncStorage.getItem("id");
+      // console.log(this.state);
+      let response = await fetch('http://192.168.0.16:3000/questions/new', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          "Content-Type": 'application/json',
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+          name: this.state.name,
+          type: this.state.type,
+          question: this.state.question,
+          options: this.state.options,
+          difficulty: this.state.difficulty,
+          answer: this.state.answer,
+          solution: this.state.solution,
+          topic: this.state.topic
+        }),
+      });
+      let res = await response.json();
+      if (res.success == true) {
+        alert("Question made");
+      } else {
+        alert("Question not made");
+      }
+      this.props.navigation.navigate("Questions");
+    } catch (err) {
+      // console.log(err);
+      alert(err);
+    }
   }
   render() {
+    const types = [
+      {text: "True-False"},
+      {text: "Multiple Choice"},
+      {text: "Normal Answer"},
+    ];
+    const topics = [
+      {text: "Regular Languages"},
+      {text: "Context Free Languages"},
+      {text: "Turing Machines"},
+    ];
     return (
       <View style={styles.makequestion}>
         <Text>Here we can make new questions!</Text>
-        <Input placeholder="Question Title"  onChangeText={(name) => this.setState(name)}  />
+        <Input placeholder="Question Title"  onChangeText={(name) => this.setState({name: name})} />
         <View>
         <Text>Please set a question type:</Text>
           <Select
-            data={topics}
-            selectedOption={this.state.topic}
-            onSelect={(item) => this.setState({topic: item})}
-          />
+            data={types}
+            selectedOption={this.state.types}
+            onSelect={(value) => this.setState({type: value}, () => console.log(this.state.type))}/>
         </View>
-        {(this.state.type === "multi-choice") && 
+        {(this.state.type === "multi_choice") && (
+        <View>
+          <Input placeholder="Option 1" onChangeText={(text) => this.setState({options: options.concat(text)})} />
+          <Input placeholder="Option 2" onChangeText={(text) => this.setState({options: options.concat(text)})} />
+          <Input placeholder="Option 3" onChangeText={(text) => this.setState({options: options.concat(text)})} />
+          <Input placeholder="Option 4" onChangeText={(text) => this.setState({options: options.concat(text)})} />
+        </View>
+        )}
+        {(this.state.type === "normal_answer") && (
           <View>
-            <Input placeholder="Option 1" onChangeText={(text) => this.setState({options: this.state.options.concat(text)})} />
-            <Input placeholder="Option 2" onChangeText={(text) => this.setState({options: this.state.options.concat(text)})} />
-            <Input placeholder="Option 3" onChangeText={(text) => this.setState({options: this.state.options.concat(text)})} />
-            <Input placeholder="Option 4" onChangeText={(text) => this.setState({options: this.state.options.concat(text)})} />
+            <Text>No options required - move onto next field!</Text> 
           </View>
-        }
+        )}
+        {(this.state.type === "true_false") && (
+          <View>
+            <Button disabled title="True"/> 
+            <Button disabled title="False"/>
+          </View> 
+        )}
         <View>
           <Text>Please select the question topic:</Text>
-          <Picker selectedValue={this.state.topic} style={{flex: 1, justifyContent: 'center', alignItems: 'center', height: 50, width: 100}} onValueChange={(itemValue) => this.setState({topic: itemValue})}>
-            <Picker.Item label="Regular Languages" value="automata" />
-            <Picker.Item label="Context-Free Languages" value="cfls" />
-            <Picker.Item label="Turing Machines" value="turing" />
-            <Picker.Item label="Lexing-Parsing" value="lexing-parsing" />
-          </Picker>  
+          <Select 
+            data={topics}
+            selectedOption={this.state.topics}
+            onSelect={(item) => this.setState({topic: item})} 
+          />  
         </View>
-        <Input placeholder="Answer to Question" onChangeText={(text) => {
-          if (this.state.type === "multi-choice") {
-            this.setState({options: this.state.options.concat(text)});
-          }
-          this.setState({answer: text});
-        }} />
+        <Input placeholder="Answer to Question" onChangeText={(text) =>
+          this.setState({answer: text}, () => console.log(this.state.answer)) }/>  
         <Input placeholder="Solution to problem" multiline={true} onChangeText={(text) => this.setState({solution: text})} />
+        <Slider maximumValue={5} minimumValue={1} step={1} value={this.state.difficulty} />
         <Button style={styles.button} title="Submit question!" onPress={this.sendData()} />
       </View>
     );
@@ -827,16 +943,17 @@ class Quiz extends Component {
       value: "",
       questions: [],
       normalAnswer: "",
+      answer: ""
     }
   }
 
   componentDidMount() {
-    this.setState({questions: this.props.navigation.getParam('questions'), isLoading: false});
+    this.setState({questions: this.props.navigation.getParam('questions'), isLoading: false}, () => console.log("Questions: " + this.state.questions));
   }
 
   isCorrect(value) {
     this.setState({
-      answered: true
+      answered: true, answer: value, 
     });
     if (value === this.state.questions.answer) {
       this.setState({correct: true}, () => {
@@ -860,17 +977,17 @@ class Quiz extends Component {
 
   render() {
     if (!this.state.isLoading) {
-      if (this.state.questions.type === "true_false") {
+      if (this.state.questions.type == "true_false") {
         return (
-          <View style={styles.truefalse}>
+          <View style={styles.container}>
             <Text>{this.state.questions.question}</Text>
-            <Button title="True" onPress={() => this.isCorrect(true)} />
-            <Button title="False" onPress={() => this.isCorrect(false)} />
+            <Button title="True" onPress={() => this.isCorrect("true")} />
+            <Button title="False" onPress={() => this.isCorrect("false")} />
           </View>
         );
-      } else if (this.state.questions.type === "multi_choice") {
+      } else if (this.state.questions.type == "multi_choice") {
         return (
-          <View style={styles.multichoice}>
+          <View style={styles.container}>
             <Text> {this.state.questions.question}</Text>
             <Button title={this.state.questions.options[0]} value={this.state.questions.options[0]} onPress={() => this.isCorrect(this.state.questions.options[0])} />
             <Button title={this.state.questions.options[1]} value ={this.state.questions.options[1]} onPress={() => this.isCorrect(this.state.questions.options[1])} />
@@ -878,9 +995,9 @@ class Quiz extends Component {
             <Button title={this.state.questions.options[3]} value={this.state.questions.options[3]} onPress={() => this.isCorrect(this.state.questions.options[3])} />
           </View>
         );
-      } else if (this.state.questions.type === "normal_answer") {
+      } else if (this.state.questions.type == "normal_answer") {
         return (
-          <View>
+          <View style={styles.container}>
             <Text> {this.state.questions.question}</Text>
             <Input placeholder="Answer here" onChangeText={(item) => this.setState({normalAnswer: item})}/>
             <Button title="Check answer" onPress={() => this.isCorrect(this.state.normalAnswer)} />
@@ -888,7 +1005,7 @@ class Quiz extends Component {
         );
       } else {
         return (
-          <View>
+          <View style={styles.container}>
             <Text> {this.state.questions.question}</Text>
             <Input placeholder="Answer here" onChangeText={(answer) => this.setState({normalAnswer: answer})}/>
             <Button title="Check answer" onPress={() => this.isCorrect(this.state.normalAnswer)} />
@@ -906,189 +1023,217 @@ class Quiz extends Component {
   }
 }
 
+// class Profile extends Component {
+//   constructor(props) {
+//     super(props);
+//   }
 
-class Profile extends Component {
-  constructor(props) {
-    super(props);
-  }
-
-  async _handleLogout(){
-    let token = await AsyncStorage.getItem("id");
-    let response = await fetch("http://192.168.0.12:3000/auth/logout", {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-      }
-    });
-    let res = await response.json();
-    if (res.remember != true) {
-      await AsyncStorage.removeItem("id");
-    }
-    this.props.navigation.navigate("Welcome");
-  }
-
-
-  render() {
-    const list = [
-      {
-        title: 'View my scores',
-        icon: 'graph',
-        page: 'Statistics',
-      },
-      {
-        title: 'My Account',
-        icon: 'person',
-        page: 'Account',
-      },
-      {
-        title: 'General Settings',
-        icon: 'settings',
-        page: 'Settings',
-      },
-      {
-        title: 'Edit Profile',
-        icon: 'edit',
-        page: 'Personal',
-
-      }
-    ];
-
-    return (
-      <View>
-        {list.map((item, i) => (
-          <ListItem
-            key={i}
-            title={item.title}
-            bottomDivider
-            chevron
-            onPress={() => this.props.navigation.navigate(item.page)}
-          />
-        ))
-        }
-
-        <Button title="Logout" onPress={() => this._handleLogout()} />
-      </View>
-    );
-  }
-}
-
-class Settings extends Component {
-  constructor(props) {
-    super(props);
-  }
+//   async _handleLogout(){
+//     let token = await AsyncStorage.getItem("id");
+//     let response = await fetch("http://192.168.0.16:3000/auth/logout", {
+//       method: "GET",
+//       headers: {
+//         Accept: "application/json",
+//         "Content-Type": "application/json",
+//         "Authorization": "Bearer " + token
+//       }
+//     });
+//     let res = await response.json();
+//     if (res.remember != true) {
+//       await AsyncStorage.removeItem("id");
+//     }
+//     this.props.navigation.navigate("Welcome");
+//   }
 
 
-  render() {
-    return (
-      <View>
-        <Text>Settings Screen</Text>
-        <Text>Adjust brightness</Text>
-        <Text>Adjust colour schemes</Text> 
-      </View>
-    );
-  }
-}
+//   render() {
+//     const list = [
+//       {
+//         title: 'View my scores',
+//         icon: 'graph',
+//         page: 'Statistics',
+//       },
+//       {
+//         title: 'My Account',
+//         icon: 'person',
+//         page: 'Account',
+//       },
+//       {
+//         title: 'General Settings',
+//         icon: 'settings',
+//         page: 'Settings',
+//       },
+//       {
+//         title: 'Edit Profile',
+//         icon: 'edit',
+//         page: 'Personal',
 
-class Statistics extends Component {
-  constructor(props) {
-    super(props);
-  }
+//       }
+//     ];
 
-  async componentDidMount() {
-    let token = await AsyncStorage.getItem("id");
-    let response = await fetch("http://192.168.0.12:3000/user/statistics", {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-      }
-    });
-    let res = await response.json();
+//     return (
+//       <View>
+//         {list.map((item, i) => (
+//           <ListItem
+//             key={i}
+//             title={item.title}
+//             bottomDivider
+//             chevron
+//             onPress={() => this.props.navigation.navigate(item.page)}
+//           />
+//         ))
+//         }
 
-  }
-  render() {
-    return(
-      <View>
-        <Text>These are your statistics as follows:</Text>
-        <Text>Marks over all questions:</Text>
-        <Text>Usage Statistics: </Text>
-      </View>
-    );
-  }
-}
+//         <Button title="Logout" onPress={() => this._handleLogout()} />
+//       </View>
+//     );
+//   }
+// }
 
-class Personal extends Component {
-  constructor(props) {
-    super(props);
-  }
+// class Settings extends Component {
+//   constructor(props) {
+//     super(props);
+//   }
 
-  async componentDidMount() {
-    let token = await AsyncStorage.getItem("id");
-    let response = await fetch("http://192.168.0.12:3000/user/profile", {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-      }
-    });
-    let res = await response.json();
 
-  }
+//   render() {
+//     return (
+//       <View>
+//         <Text>Settings Screen</Text>
+//         <Text>Adjust brightness</Text>
+//         <Text>Adjust colour schemes</Text> 
+//       </View>
+//     );
+//   }
+// }
 
-  render() {
-    return (
-      <View>
-        <Text>Data Preferences</Text>
-      </View>
-    );
-  }
-}
+// class Statistics extends Component {
+//   constructor(props) {
+//     super(props);
+//   }
 
-class Account extends Component {
-  render() {
-    return (
-      <View>
-        <Button title="Edit" />
-        <Text>My details: </Text>
-        <Text>Personal Information:</Text>
-        <Text>Username: {this.state.username}</Text>
-        <Text>First Name: {this.state.firstname}</Text>
-        <Text>Last Name: {this.state.lastname}</Text>
-        <Text></Text>
-      </View>
-    );
-  }
-}
+//   async componentDidMount() {
+//     let token = await AsyncStorage.getItem("id");
+//     let response = await fetch("http://192.168.0.16:3000/user/statistics", {
+//       method: "GET",
+//       headers: {
+//         Accept: "application/json",
+//         "Content-Type": "application/json",
+//         "Authorization": "Bearer " + token
+//       }
+//     });
+//     let res = await response.json();
+
+//   }
+//   render() {
+//     return(
+//       <View>
+//         <Text>These are your statistics as follows:</Text>
+//         <Text>Marks over all questions:</Text>
+//         <Text>Usage Statistics: </Text>
+//       </View>
+//     );
+//   }
+// }
+
+// class Personal extends Component {
+//   constructor(props) {
+//     super(props);
+//   }
+
+//   async componentDidMount() {
+//     let token = await AsyncStorage.getItem("id");
+//     let response = await fetch("http://192.168.0.16:3000/user/profile", {
+//       method: "GET",
+//       headers: {
+//         Accept: "application/json",
+//         "Content-Type": "application/json",
+//         "Authorization": "Bearer " + token
+//       }
+//     });
+//     let res = await response.json();
+
+//   }
+
+//   render() {
+//     return (
+//       <View>
+//         <Text>Data Preferences</Text>
+//       </View>
+//     );
+//   }
+// }
+
+// class Account extends Component {
+//   render() {
+//     return (
+//       <View>
+//         <Button title="Edit" />
+//         <Text>My details: </Text>
+//         <Text>Personal Information:</Text>
+//         <Text>Username: {this.state.username}</Text>
+//         <Text>First Name: {this.state.firstname}</Text>
+//         <Text>Last Name: {this.state.lastname}</Text>
+//         <Text></Text>
+//       </View>
+//     );
+//   }
+// }
 
 class DataUpload extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      question: {},
+      question: [],
       correct: false,
       selectedAnswer: "",
       isSending: true
     }
   }
 
-  componentDidMount() {  
-    // console.log(this.props.navigation.getParam("chosenAnswer") + " This is the answer");
+  async componentDidMount() {  
+    console.log("chosenAnswer" + this.props.navigation.getParam("chosenAnswer"));
     // console.log(this.props.navigation.getParam("Question"));
     // console.log(this.props.navigation.getParam("Question").options[0] + "This is the answer");
     this.setState({
       question: this.props.navigation.getParam("Question"),
       correct: this.props.navigation.getParam("correct"),
-    });
-    const setParamsAction = NavigationActions.setParams({
-      params: {hideTabBar: true},
-      key: 'tab-name'
-    });
-    this.props.navigation.dispatch(setParamsAction);
-    this.sendData();
+      selectedAnswer: this.props.navigation.getParam("chosenValue"),
+    }, () => console.log(this.state.question + ", " + this.state.correct));
+    // const setParamsAction = NavigationActions.setParams({
+    //   params: {hideTabBar: true},
+    //   key: 'tab-name'
+    // });
+    // this.props.navigation.dispatch(setParamsAction);
+    // console.log("isSending: " + this.state.isSending);
+    // console.log("id: " + this.state.question._id);
+    let token = await AsyncStorage.getItem("id");
+    try {
+      let response = await fetch('http://192.168.0.16:3000/questions/marks', {
+        method: "POST",
+        headers: {
+          Accept: 'application/json',
+          "Content-Type": 'application/json',
+          "Authorization": "Bearer " + token,
+        },
+        body: JSON.stringify({
+          question_id: this.state.question._id,
+          correct: this.state.correct,
+        }),
+      });
+      let res = await response.json();
+      if (res.success === true) {
+        alert("Done");
+        this.setState({isSending: false}); 
+      // } else {
+      //   this.props.navigation.navigate("Questions");
+      //   alert("Not done");
+      }
+      // }
+    } catch (err) {
+      // console.log(err);
+      // console.log("Error occurred");
+    }
   }
 
   selectedStyle(value) {
@@ -1103,36 +1248,6 @@ class DataUpload extends Component {
       styles.backgroundColor = 'green';
     }
   }
-  
-  async sendData() {
-    let token = await AsyncStorage.getItem("id");
-    try {
-      let response = await fetch('http://192.168.0.12:3000/questions/marks', {
-        method: "POST",
-        headers: {
-          Accept: 'application/json',
-          "Content-Type": 'application/json',
-          "Authorization": "Bearer " + token,
-        },
-        body: JSON.stringify({
-          question_id: this.state.question._id,
-          correct: this.state.correct,
-        })
-      });
-      let res = await response.json();
-      if (res.success === true) {
-        alert("Done");
-        this.setState({isSending: false});
-      } else {
-        this.props.navigation.navigate("Questions");
-        alert("Not done");
-
-      }
-    } catch (err) {
-      console.log(err);
-      console.log("Error occurred");
-    }
-  }
 
   render() {
     if (this.state.question.type === "true_false") {
@@ -1142,11 +1257,16 @@ class DataUpload extends Component {
           <Button title="True" style={this.selectedStyle("True")} />
           <Button title="False" style={this.selectedStyle("False")} />
           <AnswerScheme isAnswered={true} answer={this.state.question.answer} answerScheme={this.state.question.solution} correct={this.state.correct} givenAnswer={this.state.chosenAnswer} />
-          {!this.state.isSending && (
           <View>
-            <Button title="Click here to go home!" onPress={() => this.props.navigation.navigate("Home")} />
+          {this.state.isSending ? 
+            <View>
+              <ActivityIndicator />
+                <Text>Just wait, your result is being sent!</Text>
+            </View>
+            :
+            <Button title="Click here to go home!" onPress={() => this.props.navigation.navigate("Home")}/> 
+          }
           </View>
-          )}
         </View>
       );
     } else if (this.state.question.type === "multi_choice") {
@@ -1158,11 +1278,16 @@ class DataUpload extends Component {
           <Button title={this.state.question.options[2]} value="C" disabled disabledStyle={this.selectedStyle(this.state.question.options[2])} />
           <Button title={this.state.question.options[3]} value="D" disabled disabledStyle={this.selectedStyle(this.state.question.options[3])} />
           <AnswerScheme isAnswered={true} givenAnswer={this.props.navigation.getParam("chosenAnswer")} answerScheme={this.state.question.solution} answer={this.state.question.answer} correct={this.state.correct} />
-          {!this.state.isSending && (
-            <View>
-              <Button title="Click here to go home!" onPress={() => this.props.navigation.navigate("Home")} />
-            </View>
-          )}
+          <View>
+          {this.state.isSending ?
+          <View> 
+            <ActivityIndicator />
+              <Text>Just wait, your result is being sent!</Text>
+          </View>
+          :
+          <Button title="Click here to go home!" onPress={() => this.props.navigation.navigate("Home")}/> 
+          }
+          </View>
         </View>
       );
     } else if (this.state.question.type === "normal_answer") {
@@ -1172,11 +1297,16 @@ class DataUpload extends Component {
           <Input placeholder={this.state.normalAnswer} disabled disabledInputStyle={this.selectedStyle} />
           <Button title="Check answer" disabled />
           <AnswerScheme isAnswered={true} givenAnswer={this.state.chosenAnswer} answerScheme={this.state.question.solution} answer={this.state.question.answer} correct={this.state.correct} />
-          {!this.state.isSending && (
+          <View>
+          {this.state.isSending ? 
             <View>
-              <Button title="Click here to go home!" onPress={() => this.props.navigation.navigate("Home")} />
+              <ActivityIndicator />
+              <Text>Just wait, your result is being sent!</Text>
             </View>
-          )}
+          :
+            <Button title="Click here to go home!" onPress={() => this.props.navigation.navigate("Home")}/> 
+          }
+          </View>
         </ScrollView>
       );
     } else {
@@ -1186,11 +1316,16 @@ class DataUpload extends Component {
           <Input placeholder={this.state.normalAnswer} disabled disabledInputStyle={this.selectedStyle}/>
           <Button title="Check answer" disabled/>
           <AnswerScheme isAnswered={true} givenAnswer={this.state.chosenAnswer} answerScheme={this.state.question.solution} answer={this.state.question.answer} correct={this.state.correct} />
-          {!this.state.isSending && (
+          <View>
+          {this.state.isSending ? 
             <View>
-              <Button title="Click here to go home!" onPress={() => this.props.navigation.navigate("Home")} />
+              <ActivityIndicator />
+              <Text>Just wait, your result is being sent!</Text>
             </View>
-          )}
+            :
+            <Button title="Click here to go home!" onPress={() => this.props.navigation.navigate("Home")}/> 
+          }
+          </View>
         </ScrollView>
       );
     }
@@ -1199,6 +1334,7 @@ class DataUpload extends Component {
 
 class AnswerScheme extends Component {
   render() {
+    console.log(this.props.answer)
     if (this.props.isAnswered) {
       return (
         <View>
@@ -1260,10 +1396,10 @@ const AuthStack = createStackNavigator({
     screen: Login,
     path: 'login'
   },
-  Forgot: {
-    screen: ForgotPassword,
-    path: 'forgot'
-  },  
+  // Forgot: {
+  //   screen: ForgotPassword,
+  //   path: 'forgot'
+  // },  
   Register: {
     screen: Register,
     path: 'register'
@@ -1302,12 +1438,15 @@ const AuthStack = createStackNavigator({
 
 
 const questionStackNavigator = createStackNavigator({
-  Questions: {
-    screen: Questions,
+  // Questions: {
+  //   screen: Questions,
+  // },
+  // MakeQuestion: {
+  //   screen: MakeQuestion
+  // }, 
+  Favourites: {
+    screen: Favourites,
   },
-  MakeQuestion: {
-    screen: MakeQuestion
-  }, 
   Quiz: Quiz
 });
 
@@ -1315,55 +1454,52 @@ const questionSwitchNavigator = createSwitchNavigator({
   questionStackNavigator: questionStackNavigator,
   DataUpload: {
     screen: DataUpload,
-  },
-  Home: {
-    screen: Home,
   }
 });
 
 questionSwitchNavigator.navigationOptions = ({navigation, screenProps}) => ({ 
-  tabBarLabel: 'Questions',
-  initialRouteName: 'Questions',
+  tabBarLabel: 'Favourites',
+  initialRouteName: 'Favourites',
   // tabBarVisible: navigation.state.getParam("hideTabBar") != null ? !(navigation.state.getParam("hideTabBar")) : true,
 });
 
-const profileNavigator = createStackNavigator({
-  Profile: {
-    screen: Profile,
-  },
-  Settings: {
-    screen: Settings,
-  },
-  Statistics: {
-    screen: Statistics,
-  },
-  Personal: {
-    screen: Personal,
-  },
-  Account: {
-    screen: Account,
-  }
-});
+// const profileNavigator = createStackNavigator({
+//   Profile: {
+//     screen: Profile,
+//   },
+//   Settings: {
+//     screen: Settings,
+//   },
+//   Statistics: {
+//     screen: Statistics,
+//   },
+//   Personal: {
+//     screen: Personal,
+//   },
+//   Account: {
+//     screen: Account,
+//   }
+// });
 
-profileNavigator.navigationOptions = {
-  tabBarLabel: 'Profile',
-  initialRouteName: 'Profile'
-};
+// profileNavigator.navigationOptions = {
+//   tabBarLabel: 'Profile',
+//   initialRouteName: 'Profile'
+// };
 
 const HomepageTabNavigator = createBottomTabNavigator({
   Home,
-  questionSwitchNavigator,
-  Favourites,
-  profileNavigator
+  questionSwitchNavigator
+  // Favourites,
+  // profileNavigator
 });
 
 const AppSwitchNavigator = createSwitchNavigator({
   Auth: AuthStack, 
-  ForgotPassword: {
-    screen: ForgotPasswordForm,
-    path: 'forgotpassword/:token'
+  // ForgotPassword: {
+  //   screen: ForgotPasswordForm,
+  //   path: 'forgotpassword/:token'
 
-  },
+  // },
   Homepage: HomepageTabNavigator,
   // AdminHomepage: AdminTabNavigator,
   Welcome: Welcome

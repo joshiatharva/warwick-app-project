@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const typeSchema = new mongoose.Schema({
-    type: String,
+    name: String,
 });
 
 module.exports = mongoose.model('Type', typeSchema);

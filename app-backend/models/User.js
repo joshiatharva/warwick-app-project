@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 const Question = require('./Question');
 
+const historySchema = new mongoose.Schema({
+
+})
+
 const userSchema = new mongoose.Schema({
   firstname: {
     type: String,
@@ -33,8 +37,13 @@ const userSchema = new mongoose.Schema({
     max: 55
   },
   question_history: [{
-    type: [mongoose.Schema.Types.ObjectId],
-    ref: 'Question',
+    qid: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Question',
+    },
+    correct: {
+      type: Number,
+    }
   }],
   saved_questions: [{
     type: mongoose.Schema.Types.ObjectId,

@@ -2,12 +2,8 @@ const router = require('express').Router();
 const Question = require('../models/Question');
 const isValidated = require("./protectedRoute");
 const jwt = require('jsonwebtoken');
-const User_scores = require("../models/User_scores");
+const {difficulty, data, User_scores} = require("../models/User_scores");
 const User = require('../models/User');
-
-router.get('/', async (req, res) => {
-
-})
 
 router.get('/all', async (req, res) => {
     var token = req.headers.authorization.split(" ")[1]; 
@@ -78,49 +74,81 @@ router.get('/marks/:qid', async (req,res) => {
         var correct = marks.correct;
         var total = marks.accesses;
         console.log("Success");
-        res.send({"message": "Success"});
-        return res.send({"correct": correct, "attempts": total});
+        return res.send({"success": true, "correct": correct, "attempts": total});
     } else {
         console.log("Failure");
-        return res.status(401).send({"message": "Unauthorized"});
+        return res.status(401).send({"success": false, "message": "Unauthorized"});
     }
 });
 
 router.post('/marks', async (req, res) => {
     var string = req.headers.authorization.split(" ")[1];
-    var update = {};
     if (isValidated(string)) {
-        var token = jwt.verify(string, "This is secret");
-        console.log(token);
-        if (req.body.correct === true) {
-            var correct = 1;
-        } else {
-            correct = 0; 
-        }
-        switch (question.difficulty) {
-            case 1:
-                update = {"d1.total": 1, "d1.correct": correct};
-                break;
-            case 2: 
-                update = {"d2.total": 1, "d2.correct": correct};
-                break;
-            case 3:
-                update = {"d3.total": 1, "d3.correct": correct};
-                break;
-            case 4:
-                update = {"d4.total": 1, "d4.correct": correct};
-                break;
-            case 5:
-                update = {"d5.total": 1, "d5.correct": correct};
-                break;
-            default:
-                update = {"d1.total": 1, "d1.correct": correct};
-                break;
-        }
-        var question = await Question.findOneAndUpdate({_id: req.body.question_id}, { $inc: {correct: correct, accesses: 1} });
-        await User_scores.update({_id: token, "data.type": question.type, "data.topic": question.topic}, { $inc: update });
-        return res.send({"success": true});
+        try {
+            var token = jwt.verify(string, "This is secret");
+            var user_scores = await User_scores.find({user_id: token});
+            var cor = 0;
+    
+            if (req.body.correct === true) {
+                var cor = 1;
+            } else {
+                cor = 0; 
+            }
+            await Question.updateOne({_id: req.body.question_id}, { $inc: {correct: cor, accesses: 1} });
+            var question = await Question.findOne({_id: req.body.question_id});
+            var element = {
+                qid: req.body.question_id,
+                correct: req.body.correct
+            };
+            await User.updateOne({_id: token}, { $push: { question_history: element }});
+            var update = {};
+            var index = 0; 
+            if (!question) {
+                return res.send({"message": "Operation failed - no question found", "success": false});
+            }
+            switch (question.difficulty) {
+                case 1:
+                    update = {"scores.d1.total": 1, "scores.data.d1.correct": cor};
+                    break;
+                case 2: 
+                    update = {"scores.d2.total": 1, "scores.d2.correct": cor};
+                    break;
+                case 3:
+                    update = {"scores.d3.total": 1, "scores.d3.correct": cor};
+                    break;
+                case 4:
+                    update = {"scores.d4.total": 1, "scores.d4.correct": cor};
+                    break;
+                case 5:
+                    update = {"scores.d5.total": 1, "scores.d5.correct": cor};
+                    break;
+                default:
+                    update = {"scores.d1.total": 1, "scores.d1.correct": cor};
+                    break;
+            }
 
+            //TODO: FINISH THIS TOMORROW AND ADD ADMIN SHIT SO THURSDAY IS ONLY MATH COMPONENT
+
+            
+            var dataArray = user_scores[0].data;
+            // index = find(user_scores.data, question.type, question.topic);
+            for (i=0; i < dataArray.length; i++) {
+                if ((user_scores[0].data[i].topic == question.topic) && (user_scores[0].data[i].type == question.type)) {
+                    index = i;
+                }
+            }
+            console.log(update);
+            // await User_scores.updateOne({user_id: token, 'data.topic': question.topic, 'data.type': question.type}, { $inc: update });
+            // var us = await User_scores.findOne({user_id: token});
+            // console.log(us);
+            // return res.send({"success": true, "new_record": us, "question": question});
+            await User_scores.updateOne({user_id: token, 'data.topic': question.topic, 'data.type': question.type}, {$inc: update});
+            var v1 = await User_scores.findOne({user_id: token});
+            console.log(v1);
+            return res.send(v1);
+        } catch (err) {
+            console.log(err);
+        }
     }
     return res.send({"message": "Token invalid; please revalidate", "error": "Invalid token", "success": false});
 });

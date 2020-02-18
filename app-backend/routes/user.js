@@ -2,7 +2,7 @@ const router = require('express').Router();
 const isValidated = require('./protectedRoute');
 const User = require('../models/User');
 const mongoose = require("mongoose");
-const User_scores = require('../models/User_scores');
+const {difficulty, data, User_scores} = require('../models/User_scores');
 const Question = require('../models/Question');
 const jwt = require('jsonwebtoken');
 
@@ -47,6 +47,16 @@ router.get('/questions', async (req, res) => {
             return res.send(questions);
         } catch (err) {
             console.log(err);
+        }
+    }
+});
+router.get('/history', async (req, res) => {
+    var token = req.headers.authorization.split(" ")[1];
+    if (isValidated(token)) {
+        try {
+
+        } catch (err) {
+
         }
     }
 });
