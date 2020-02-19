@@ -72,5 +72,5 @@ const userScoreSchema = new mongoose.Schema({
 
   module.exports.difficulty = mongoose.model('difficulty', difficultySchema);
   module.exports.data = mongoose.model('data', dataSchema);
-  module.exports.User_scores = mongoose.model('User_scores', userScoreSchema);
+  module.exports.User_scores = mongoose.model('User_score', userScoreSchema);
   

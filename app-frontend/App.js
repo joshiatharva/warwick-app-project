@@ -24,10 +24,10 @@ const test = require('./test.js');
 
 //TODO: 
 
-{
-	"question_id": "5e1a332d2cef8707f4b01190",
-	"correct": false
-}
+// {
+// 	"question_id": "5e1a332d2cef8707f4b01190",
+// 	"correct": false
+// }
 
 
 const WIDTH = Dimensions.get('window').width; 
@@ -66,7 +66,7 @@ class Welcome extends Component {
     var token = await AsyncStorage.getItem("id");
     if (token != null) {
       try {
-        let response = await fetch('http://192.168.0.16:3000/auth/login', {
+        let response = await fetch('http://172.31.199.57:3000/auth/login', {
         method: 'GET',
         headers: {
           Accept: 'application/json',
@@ -138,7 +138,7 @@ class Login extends Component {
   async sendData() {
     console.log(`Username: ${this.state.username}\nPassword: ${this.state.password}\nRemember: ${this.state.remember}`);
     try {
-      let response = await fetch('http://192.168.0.16:3000/auth/login', {
+      let response = await fetch('http://172.31.199.57:3000/auth/login', {
         method: 'POST',
         headers: {
           Accept: 'application/json',
@@ -200,7 +200,7 @@ class Register extends Component {
 
   async sendData() {
       try {
-        let response = await fetch('http://192.168.0.16:3000/auth/register', {
+        let response = await fetch('http://172.31.199.57:3000/auth/register', {
           method: 'POST',
           headers: {
             Accept: 'application/json',
@@ -257,54 +257,57 @@ class Home extends Component {
   }
 }
 
-// class ForgotPassword extends Component {
-//   constructor(props){
-//     super(props);
-//     this.state = {
-//       email: null,
-//       received: false,
-//       error: null
-//     }
-//   }
+class ForgotPassword extends Component {
+  constructor(props){
+    super(props);
+    this.state = {
+      email: null,
+      received: false,
+      error: null
+    }
+  }
 
-//   async sendData() {
-//     let response = await fetch('http://192.168.0.16:3000/auth/forgot', {
-//       method: 'POST',
-//       headers: {
-//         Accept: "application/json",
-//         "Content-Type": "application/json",
-//         "Authorization": "Basic"
-//       },
-//       body: JSON.stringify({
-//         "email": this.state.email,
-//         "url" : initialUrl,
-//         "path": "forgotpassword"
-//       })
-//     });
-//     let res = await response.json();
-//     if (!res.error) {
-//       this.setState({received: true, error: false}, () => console.log("received: " + this.state.received + "\nerror: " + this.state.error));
-//     } else {
-//       this.setState({received: true, error: true}, () => console.log("received: " + this.state.received + "\nerror: " + this.state.error));
-//     }
-//   }
+  async sendData() {
+    let response = await fetch('http://172.31.199.57:3000/auth/forgot', {
+      method: 'POST',
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "Authorization": "Basic"
+      },
+      body: JSON.stringify({
+        "email": this.state.email,
+        "url" : initialUrl,
+        "path": "forgotpassword"
+      })
+    });
+    let res = await response.json();
+    if (res.message == "/") {
+      alert("You have already logged in and have a token present on your device. Please log into your account and reset your password from there!");
+    }
+    if (!res.error) {
+      this.setState({received: true, error: false}, () => console.log("received: " + this.state.received + "\nerror: " + this.state.error));
+    } else {
+      this.setState({received: true, error: true}, () => console.log("received: " + this.state.received + "\nerror: " + this.state.error));
+    }
+  }
 
-//   render() {
-//     if (!this.state.received && !this.state.error) {
-//       return (
-//         <View>
-//           <Text>Please enter your email to receive your reset password link:</Text>
-//           <Input placeholder="Enter your email here" onChangeText={(item) => this.setState({email: item})} />
-//           <Button raised title="Send link" onPress={() => this.sendData()} />
-//         </View>
-//       );
-//     } else if (this.state.received && !this.state.error) {
-//       <View>
-//         <Text>Your email has been sent to your account at {this.state.email}!</Text>
-//       </View>
-//     }
-//   }
-// }
+  render() {
+    if (!this.state.received && !this.state.error) {
+      return (
+        <View>
+          <Text>Please enter your email to receive your reset password link:</Text>
+          <Input placeholder="Enter your email here" onChangeText={(item) => this.setState({email: item})} />
+          <Button raised title="Send link" onPress={() => this.sendData()} />
+        </View>
+      );
+    } else if (this.state.received && !this.state.error) {
+      <View>
+        <Text>Your email has been sent to your account at {this.state.email}!</Text>
+      </View>
+    }
+  }
+}
 
 // class ForgotPasswordForm extends Component {
 //   constructor() {
@@ -319,7 +322,7 @@ class Home extends Component {
 
 //   async componentDidMount() {
 //     Linking.addEventListener('url', this.handleDeepLink);
-//     let response = await fetch(`http://192.168.0.16:3000/auth/reset/${token}`, {
+//     let response = await fetch(`http://172.31.199.57:3000/auth/reset/${token}`, {
 //       method: 'GET',
 //       headers: {
 //         Accept: 'application/json',
@@ -333,7 +336,7 @@ class Home extends Component {
 
 //   async sendData() {
 //     let token = 12345;
-//     let response = await fetch(`http://192.168.0.16:3000:3000/auth/reset/${token}`, {
+//     let response = await fetch(`http://172.31.199.57:3000:3000/auth/reset/${token}`, {
 //       method: "POST",
 //       headers: {
 //         Accept: 'application/json',
@@ -388,7 +391,7 @@ class Home extends Component {
 //   async componentDidMount() {
 //     try {
 //       const token = await AsyncStorage.getItem("id");
-//       let response = await fetch('http://192.168.0.16:3000/questions/all', {
+//       let response = await fetch('http://172.31.199.57:3000/questions/all', {
 //         method: 'GET',
 //         headers: {
 //           Accept: 'application/json',
@@ -406,7 +409,7 @@ class Home extends Component {
 //   async getData() {
 //     const token = await AsyncStorage.getItem("id");
 //     try {
-//       let response = await fetch(`http://192.168.0.16:3000/questions/${this.state.type}/${this.state.search}`, {
+//       let response = await fetch(`http://172.31.199.57:3000/questions/${this.state.type}/${this.state.search}`, {
 //         method: 'GET',
 //         headers: {
 //           Accept: 'application/json',
@@ -427,7 +430,7 @@ class Home extends Component {
 //   async saveQuestion(id) {
 //     try {
 //       const token = await AsyncStorage.getItem("id");
-//       let response = await fetch('http://192.168.0.16:3000/questions/save',{
+//       let response = await fetch('http://172.31.199.57:3000/questions/save',{
 //         method: 'POST',
 //         headers: {
 //           Accept: 'application/json',
@@ -492,7 +495,7 @@ class Home extends Component {
 //   async componentDidMount() {
 //     try {
 //       const token = await AsyncStorage.getItem("id");
-//       let response = await fetch('http://192.168.0.16:3000/questions/all', {
+//       let response = await fetch('http://172.31.199.57:3000/questions/all', {
 //         method: 'GET',
 //         headers: {
 //           Accept: 'application/json',
@@ -511,7 +514,7 @@ class Home extends Component {
 //   async sendData() {
 //     const token = await AsyncStorage.getItem("id");
 //     try {
-//       let response = await fetch(`http://192.168.0.16:3000/questions/${this.state.type}/${this.state.search}`, {
+//       let response = await fetch(`http://172.31.199.57:3000/questions/${this.state.type}/${this.state.search}`, {
 //         method: 'GET',
 //         headers: {
 //           Accept: 'application/json',
@@ -532,7 +535,7 @@ class Home extends Component {
 //   async saveQuestion(id) {
 //     try {
 //       const token = await AsyncStorage.getItem("id");
-//       let response = await fetch('http://192.168.0.16:3000/questions/save',{
+//       let response = await fetch('http://172.31.199.57:3000/questions/save',{
 //         method: 'POST',
 //         headers: {
 //           Accept: 'application/json',
@@ -608,7 +611,7 @@ class Home extends Component {
 //       question_solution: this.props.navigation.getParam("Question").solution,
 //       question_difficulty: this.props.navigation.getParam("Question").difficulty,
 //     });
-//     let response = await fetch("http://192.168.0.16:3000/topics/all", {
+//     let response = await fetch("http://172.31.199.57:3000/topics/all", {
 //       method: 'GET',
 //       headers: {
 //         Accept: 'application/json',
@@ -782,7 +785,7 @@ class Favourites extends Component {
   async componentDidMount() {
     try {
       const token = await AsyncStorage.getItem("id");
-      const response = await fetch('http://192.168.0.16:3000/user/questions', {
+      const response = await fetch('http://172.31.199.57:3000/user/questions', {
         method: 'GET',
         headers: {
           Accept: 'application/json',
@@ -844,7 +847,7 @@ class MakeQuestion extends Component {
     try { 
       var token = await AsyncStorage.getItem("id");
       // console.log(this.state);
-      let response = await fetch('http://192.168.0.16:3000/questions/new', {
+      let response = await fetch('http://172.31.199.57:3000/questions/new', {
         method: 'POST',
         headers: {
           Accept: 'application/json',
@@ -952,6 +955,7 @@ class Quiz extends Component {
   }
 
   isCorrect(value) {
+    // console.log("Value: " + value);
     this.setState({
       answered: true, answer: value, 
     });
@@ -1030,7 +1034,7 @@ class Quiz extends Component {
 
 //   async _handleLogout(){
 //     let token = await AsyncStorage.getItem("id");
-//     let response = await fetch("http://192.168.0.16:3000/auth/logout", {
+//     let response = await fetch("http://172.31.199.57:3000/auth/logout", {
 //       method: "GET",
 //       headers: {
 //         Accept: "application/json",
@@ -1114,7 +1118,7 @@ class Quiz extends Component {
 
 //   async componentDidMount() {
 //     let token = await AsyncStorage.getItem("id");
-//     let response = await fetch("http://192.168.0.16:3000/user/statistics", {
+//     let response = await fetch("http://172.31.199.57:3000/user/statistics", {
 //       method: "GET",
 //       headers: {
 //         Accept: "application/json",
@@ -1143,7 +1147,7 @@ class Quiz extends Component {
 
 //   async componentDidMount() {
 //     let token = await AsyncStorage.getItem("id");
-//     let response = await fetch("http://192.168.0.16:3000/user/profile", {
+//     let response = await fetch("http://172.31.199.57:3000/user/profile", {
 //       method: "GET",
 //       headers: {
 //         Accept: "application/json",
@@ -1192,14 +1196,14 @@ class DataUpload extends Component {
   }
 
   async componentDidMount() {  
-    console.log("chosenAnswer" + this.props.navigation.getParam("chosenAnswer"));
+    // console.log("chosenAnswer" + this.props.navigation.getParam("chosenAnswer"));
     // console.log(this.props.navigation.getParam("Question"));
     // console.log(this.props.navigation.getParam("Question").options[0] + "This is the answer");
     this.setState({
       question: this.props.navigation.getParam("Question"),
       correct: this.props.navigation.getParam("correct"),
-      selectedAnswer: this.props.navigation.getParam("chosenValue"),
-    }, () => console.log(this.state.question + ", " + this.state.correct));
+      answer: this.props.navigation.getParam("chosenAnswer")
+    }, () => console.log(this.props.navigation.getParam("chosenAnswer") + "=" + this.state.answer));
     // const setParamsAction = NavigationActions.setParams({
     //   params: {hideTabBar: true},
     //   key: 'tab-name'
@@ -1209,7 +1213,7 @@ class DataUpload extends Component {
     // console.log("id: " + this.state.question._id);
     let token = await AsyncStorage.getItem("id");
     try {
-      let response = await fetch('http://192.168.0.16:3000/questions/marks', {
+      let response = await fetch('http://172.31.199.57:3000/questions/marks', {
         method: "POST",
         headers: {
           Accept: 'application/json',
@@ -1219,6 +1223,7 @@ class DataUpload extends Component {
         body: JSON.stringify({
           question_id: this.state.question._id,
           correct: this.state.correct,
+          answer: this.state.answer
         }),
       });
       let res = await response.json();
@@ -1256,7 +1261,7 @@ class DataUpload extends Component {
           <Text>{this.state.question.question}</Text>
           <Button title="True" style={this.selectedStyle("True")} />
           <Button title="False" style={this.selectedStyle("False")} />
-          <AnswerScheme isAnswered={true} answer={this.state.question.answer} answerScheme={this.state.question.solution} correct={this.state.correct} givenAnswer={this.state.chosenAnswer} />
+          <AnswerScheme isAnswered={true} answer={this.state.question.answer} answerScheme={this.state.question.solution} correct={this.state.correct} givenAnswer={this.state.answer} />
           <View>
           {this.state.isSending ? 
             <View>
@@ -1277,7 +1282,7 @@ class DataUpload extends Component {
           <Button title={this.state.question.options[1]} value="B" disabled disabledStyle={this.selectedStyle(this.state.question.options[1])} />
           <Button title={this.state.question.options[2]} value="C" disabled disabledStyle={this.selectedStyle(this.state.question.options[2])} />
           <Button title={this.state.question.options[3]} value="D" disabled disabledStyle={this.selectedStyle(this.state.question.options[3])} />
-          <AnswerScheme isAnswered={true} givenAnswer={this.props.navigation.getParam("chosenAnswer")} answerScheme={this.state.question.solution} answer={this.state.question.answer} correct={this.state.correct} />
+          <AnswerScheme isAnswered={true} givenAnswer={this.state.answer} answerScheme={this.state.question.solution} answer={this.state.question.answer} correct={this.state.correct} />
           <View>
           {this.state.isSending ?
           <View> 
@@ -1285,7 +1290,7 @@ class DataUpload extends Component {
               <Text>Just wait, your result is being sent!</Text>
           </View>
           :
-          <Button title="Click here to go home!" onPress={() => this.props.navigation.navigate("Home")}/> 
+          <Button title="Click here to go home!" onPress={() => this.props.navigation.navigate("Favourites")}/> 
           }
           </View>
         </View>
@@ -1296,7 +1301,7 @@ class DataUpload extends Component {
           <Text> {this.state.question.question}</Text>
           <Input placeholder={this.state.normalAnswer} disabled disabledInputStyle={this.selectedStyle} />
           <Button title="Check answer" disabled />
-          <AnswerScheme isAnswered={true} givenAnswer={this.state.chosenAnswer} answerScheme={this.state.question.solution} answer={this.state.question.answer} correct={this.state.correct} />
+          <AnswerScheme isAnswered={true} givenAnswer={this.state.answer} answerScheme={this.state.question.solution} answer={this.state.question.answer} correct={this.state.correct} />
           <View>
           {this.state.isSending ? 
             <View>
@@ -1304,7 +1309,7 @@ class DataUpload extends Component {
               <Text>Just wait, your result is being sent!</Text>
             </View>
           :
-            <Button title="Click here to go home!" onPress={() => this.props.navigation.navigate("Home")}/> 
+            <Button title="Click here to go home!" onPress={() => this.props.navigation.navigate("Favourites")}/> 
           }
           </View>
         </ScrollView>
@@ -1323,7 +1328,7 @@ class DataUpload extends Component {
               <Text>Just wait, your result is being sent!</Text>
             </View>
             :
-            <Button title="Click here to go home!" onPress={() => this.props.navigation.navigate("Home")}/> 
+            <Button title="Click here to go home!" onPress={() => this.props.navigation.navigate("Favourites")}/> 
           }
           </View>
         </ScrollView>
@@ -1396,10 +1401,10 @@ const AuthStack = createStackNavigator({
     screen: Login,
     path: 'login'
   },
-  // Forgot: {
-  //   screen: ForgotPassword,
-  //   path: 'forgot'
-  // },  
+  Forgot: {
+    screen: ForgotPassword,
+    path: 'forgot'
+  },  
   Register: {
     screen: Register,
     path: 'register'
@@ -1498,7 +1503,6 @@ const AppSwitchNavigator = createSwitchNavigator({
   // ForgotPassword: {
   //   screen: ForgotPasswordForm,
   //   path: 'forgotpassword/:token'
-
   // },
   Homepage: HomepageTabNavigator,
   // AdminHomepage: AdminTabNavigator,

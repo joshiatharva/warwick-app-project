@@ -15,7 +15,7 @@ const userForgotPasswordSchema = new mongoose.Schema({
     },
     forgotPasswordToken: {
       type: String, 
-      default: null,
+      default: "abcd",
     },
     forgotTokenExpiry: {
       type: Date,

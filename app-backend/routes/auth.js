@@ -8,11 +8,16 @@ const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const User_forgot_password = require('../models/User_forgot_password');
 const { difficulty, data, User_scores } = require('../models/User_scores');
+const Demo_scores = require('../models/Demo_scores');
+const Admin = require('../models/Admin');
+const isValidated = require('../routes/protectedRoute');
 
 
-router.get('/', async (req,res) => {
-  var user_scores = await User_scores.find({username: "atthujoshi"});
-  return res.send({"user_scores": user_scores});
+router.post('/', async (req,res) => {
+  console.log(req.body.question_id);
+  console.log(req.body.correct);
+  console.log(req.body.answer);
+  return res.send({"success": true});
 });
 
 router.post('/register', [
@@ -93,6 +98,7 @@ router.get('/login', async (req, res) => {
     try {
       var id = jwt.verify(token, "This is secret");
       var user = await User.findOne({_id: id._id});
+      // var admin = await Admin.findOne({_id: id}).
       if (!user) { 
         console.log(id);
         return res.send({"success": "false", "msg": "Fake token, user doesn't exist!", "error": "X"});
@@ -140,38 +146,53 @@ router.post('/forgot', [
   body('email').isEmail()
   ],
   async (req, res) => {
+    console.log("Endpoint hit");
   if (isValidated(req.headers.authorization.split(" ")[1])) {
     return res.send({"message": "/"});
   }
   const user = await User.findOne({email: req.body.email});
   console.log(`"URL: ${req.body.url}, path: ${req.body.path}`);
   if (user) {
-    const forgot = await User.findOne({user_id: user._id});
-    const forgotToken = jwt.sign({_id: user._id, type: forgot, forgot_id: forgot._id}, "This is secret");
-    await User_forgot_password.updateOne({user_id: user._id}, {})
-    let testAccount = await nodemailer.createTestAccount();
+    console.log("User exists");
+    const forgotToken = jwt.sign({forgot_id: user._id}, "This is secret");
+    await User_forgot_password.updateOne({user_id: user._id}, { $set: {forgotPasswordToken: forgotToken}});
+    // let testAccount = await nodemailer.createTestAccount();
     let transporter = nodemailer.createTransport({
-      host: "smtp.ethereal.email",
-      port: 587,
-      secure: false,
+      // host: "smtp.ethereal.email",
+      // port: 587,
+      // secure: false,
+      // auth: {
+      //   user: testAccount.user,
+      //   pass: testAccount.pass
+      // }
+      service: 'gmail',
       auth: {
-        user: testAccount.user,
-        pass: testAccount.pass
+        user: 'joshiatharvaRM@gmail.com',
+        pass: 'aj241162'
       }
     });
 
-    let info = await transporter.sendMail({
-      from: '"no-reply@formality.io"',
+    var message = {
+      from: 'joshiatharvaRM@gmail.com',
       to: user.email,
       subject: "Password Reset",
       html: "<div><p>Here is the link to your password reset page!<br /></div>"
-    });
+    };
 
-    } else {
-      return res.send(false);
-    }
-    console.log(`Account: ${testAccount}, url: ${nodemailer.getTestMessageUrl(info)}`);
-    return res.send({"msg": forgotToken, "messageID": info.messageId});
+    console.log("Account: " + user.email
+    // url: ${nodemailer.getTestMessageUrl(info)}
+    );
+
+    transporter.sendMail(message, function(err, data) {
+      if (err) {
+        console.log("error done")
+        return res.send({"error": "email not sent"});
+      } else {
+        console.log("message sent");
+        return res.send({"msg": forgotToken, "messageID": info.messageId});
+      }
+    });
+  }
 
     //send email
 
@@ -187,7 +208,7 @@ router.post('/reset/:token', async (req, res) => {
       salt = bcrypt.genSalt(10);
       newPassword = bcrypt.hash(newPassword, salt);
       await User.update({password: newPassword});
-      return res.send({"msg": "Password updated"});
+      return res.send({"msg": "Password updated", "success": true});
     }
   } catch (err) {
     console.log(err);
