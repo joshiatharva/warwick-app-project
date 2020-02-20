@@ -42,23 +42,17 @@ router.get('/:topic/:name', async (req, res) => {
 router.post('/new', async (req, res) => {
     var token = req.headers.authorization.split(" ")[1]; 
     if (isValidated(token)) {
-       const question = new Question({
-            name: req.body.name,
-            type: req.body.type,
-            question: req.body.question,
-            options: req.body.options,
-            answer: req.body.answer,
-            solution: req.body.solution,
-            difficulty: req.body.difficulty,
-            topic: req.body.topic,
-
-       });
-       try {
-        await question.save();
-        res.send({'success': true, "message": "Question added!"});
-       } catch(err) {
-        console.log(err);
-       } 
+        try {
+            var id = jwt.verify(token, "This is secret");
+            body = req.body;
+            body.created_by = id;
+            const question = new Question(body);
+            // await question.save();
+            console.log(question);
+            res.send({'success': true, "message": "Question added!"});
+        } catch(err) {
+            console.log(err);
+        } 
     }
 //    const qname = await Question.findOne({name: req.body.name});
 //    if (!qname.isEmpty()) {
@@ -95,7 +89,7 @@ router.post('/marks', async (req, res) => {
             } else {
                 cor = 0; 
             }
-            await Question.updateOne({_id: req.body.question_id}, { $inc: {correct: cor, accesses: 1} });
+            await Question.updateOne({_id: req.body.question_id}, { $inc: {correct: cor, accesses: 1 } });
             var question = await Question.findOne({_id: req.body.question_id});
             var element = {
                 qid: req.body.question_id,
@@ -163,7 +157,6 @@ router.post('/marks', async (req, res) => {
 
 router.post('/save', async(req,res) => {
     var q_id = req.body.question_id;
-    console.log(q_id);
     var token = req.headers.authorization.split(" ")[1];
     if (isValidated(token)) {
         try {

@@ -8,7 +8,6 @@
 */
 const mongoose = require('mongoose');
 
-
 const questionSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -72,6 +71,7 @@ const questionSchema = new mongoose.Schema({
     updated_by: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Admin',
+        default: null,
     }
 });
 

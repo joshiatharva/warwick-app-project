@@ -43,6 +43,12 @@ const userSchema = new mongoose.Schema({
     },
     correct: {
       type: Number,
+    },
+    start_time: {
+      type: Date
+    }, 
+    end_time: {
+      type: Date
     }
   }],
   saved_questions: [{

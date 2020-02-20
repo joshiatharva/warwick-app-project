@@ -14,9 +14,18 @@ const isValidated = require('../routes/protectedRoute');
 
 
 router.post('/', async (req,res) => {
-  console.log(req.body.question_id);
-  console.log(req.body.correct);
-  console.log(req.body.answer);
+  var token = req.headers.authorization.split(" ")[1];
+  try {
+    var id = jwt.verify(token, "This is secret");
+    body = req.body;
+    body.created_by = id;
+    body.createdAt = Date.now();
+    body.accesses = 0;
+    body.correct = 0;
+    console.log(body);
+  } catch (err) {
+
+  }
   return res.send({"success": true});
 });
 
@@ -54,7 +63,9 @@ async (req, res) => {
       lastname: req.body.lastname,
       username: req.body.username,
       password: hashedPassword,
-      email: req.body.email
+      email: req.body.email,
+      last_sign_in: Date.now(),
+      last_sign_out: null,
     });
     const topics = await Topics.find({});
     const types = await Type.find({});
@@ -176,7 +187,7 @@ router.post('/forgot', [
       from: 'joshiatharvaRM@gmail.com',
       to: user.email,
       subject: "Password Reset",
-      html: "<div><p>Here is the link to your password reset page!<br /></div>"
+      html: '<div><p>Here is the link to your password reset page!<br /><a>{{}}</div>'
     };
 
     console.log("Account: " + user.email
@@ -222,8 +233,9 @@ router.get('/logout', async(req,res) => {
       var data = jwt.verify(token, "This is secret");
       var user = await User.findById(token);
       signin = user.last_sign_in;
-      signout = user.last_sign_out;
+      signout = Date.now()
       let timeinbetween = signin.toDate() - signout.toDate();
+      console.log(timeinbetween);
       await User.update({_id: token}, { $set: {last_sign_out: Date.now()}}  );
       console.log(Date.now());
       console.log(`Signin time: ${signin}\nSignout time: ${signout}\nTime in between: ${timeinbetween}`);
