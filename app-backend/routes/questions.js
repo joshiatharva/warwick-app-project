@@ -16,11 +16,10 @@ router.get('/all', async (req, res) => {
     }
 });
 
-router.get('/:topic/:name', async (req, res) => {
+router.get('/:id', async (req, res) => {
     var token = req.headers.authorization.split(" ")[1]; 
     if (isValidated(token)) {
-        var topic = req.params.topic;
-        var name = req.params.name;
+        var id = req.params.id;
         // if (selection.topic === 'true-false') {
         //     let tf = await Question.find({true_false: true});
         //     return res.status(200).send(tf);
@@ -31,8 +30,8 @@ router.get('/:topic/:name', async (req, res) => {
         //     let normal = await Question.find({normal_answer: true});
         //     return res.status(200).send(normal);
         // }
-        let value = await Question.find({type: type, name: name});
-        return res.status(200).send(value);
+        let value = await Question.findOne({_id: id});
+        return res.status(200).send({"success": true, "question": value});
     } else {
         return res.status(401).send({"message": "Unauthorized"});
     }
@@ -44,10 +43,19 @@ router.post('/new', async (req, res) => {
     if (isValidated(token)) {
         try {
             var id = jwt.verify(token, "This is secret");
-            body = req.body;
-            body.created_by = id;
-            const question = new Question(body);
-            // await question.save();
+            const question = new Question({
+                name: req.body.name,
+                type: req.body.type,
+                question: req.body.question,
+                answer: req.body.answer,
+                solution: req.body.solution,
+                difficulty: req.body.difficulty,
+                options: req.body.options,
+                topic: req.body.topic,
+                created_by: id,
+                updated_by: null
+            });
+            await question.save();
             console.log(question);
             res.send({'success': true, "message": "Question added!"});
         } catch(err) {

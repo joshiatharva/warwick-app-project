@@ -8,7 +8,11 @@ const adminSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true
-    } 
+    },
+    rememberQuestions: [{
+        question: String,
+        answer: String,
+    }],
 });
 
-module.exports = mongoose.model('Admin', adminSchema);
+module.exports = mongoose.model('admin', adminSchema);

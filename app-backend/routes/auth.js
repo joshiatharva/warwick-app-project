@@ -163,6 +163,7 @@ router.post('/forgot', [
   }
   const user = await User.findOne({email: req.body.email});
   console.log(`"URL: ${req.body.url}, path: ${req.body.path}`);
+  const url = req.body.url + req.body.path;
   if (user) {
     console.log("User exists");
     const forgotToken = jwt.sign({forgot_id: user._id}, "This is secret");
@@ -187,7 +188,15 @@ router.post('/forgot', [
       from: 'joshiatharvaRM@gmail.com',
       to: user.email,
       subject: "Password Reset",
-      html: '<div><p>Here is the link to your password reset page!<br /><a>{{}}</div>'
+      html: `<div>
+              <p>Here is the link to your password reset page!</p>
+              <a href=${url}>${url}</a>
+              <p>Once you've clicked on the link, please enter your new password in the fields given. You will then be rerouted to the login page.</p>
+              <br />
+              <p>Many thanks,</p>
+              <br />
+              <p>The Formality team</p>
+             </div>`
     };
 
     console.log("Account: " + user.email
@@ -204,7 +213,6 @@ router.post('/forgot', [
       }
     });
   }
-
     //send email
 
 });
@@ -231,12 +239,15 @@ router.get('/logout', async(req,res) => {
     var token = req.headers.authorization.split(" ")[1]
     try {
       var data = jwt.verify(token, "This is secret");
-      var user = await User.findById(token);
+      var user = await User.findOne({_id: token});
       signin = user.last_sign_in;
-      signout = Date.now()
-      let timeinbetween = signin.toDate() - signout.toDate();
+      signout = new Date();
+      let timeinbetween = new Date();
+      timeinbetween.setDate(signout - signin);
       console.log(timeinbetween);
-      await User.update({_id: token}, { $set: {last_sign_out: Date.now()}}  );
+      await User.updateOne({_id: token}, { $set: {last_sign_out: signout} });
+      await User.updateOne({_id: token}, { $inc : {no_of_sessions: 1} });
+      await User.updateOne({_id: token}, { $push: {last_10_sessions_length: timeinbetween}});
       console.log(Date.now());
       console.log(`Signin time: ${signin}\nSignout time: ${signout}\nTime in between: ${timeinbetween}`);
       if (data.expiresIn == 900) {

@@ -5,5 +5,5 @@ const Topics = require('../models/Topics');
 
 router.get('/all', async(req, res) => {
     data = await Topics.find({}).name;
-    return res.send(data);
+    return res.send({"success": true, "topics": data});
 });
