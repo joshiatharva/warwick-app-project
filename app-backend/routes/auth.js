@@ -11,6 +11,7 @@ const { difficulty, data, User_scores } = require('../models/User_scores');
 const Demo_scores = require('../models/Demo_scores');
 const Admin = require('../models/Admin');
 const isValidated = require('../routes/protectedRoute');
+const crypto = require("crypto");
 
 
 router.post('/', async (req,res) => {
@@ -49,7 +50,7 @@ async (req, res) => {
   if (!errors.isEmpty()) {
     return res.status(422).json(errors.array());
   } else {
-    if (req.body.passwordconf !== req.body.password) {
+    if (req.body.passwordconf != req.body.password) {
       return res.status(422).send({"msg": "Passwords don't match"})
     }
     const emailExists = await User.findOne({ email: req.body.email });
@@ -64,9 +65,20 @@ async (req, res) => {
       username: req.body.username,
       password: hashedPassword,
       email: req.body.email,
-      last_sign_in: Date.now(),
+      last_sign_in: new Date(),
       last_sign_out: null,
+      question_history: [],
+      no_of_sessions: 0,
+      last_10_sessions_length: [],
+      blacklisted_until: null,
+      saved_questions: [],
     });
+    var sessions = {
+      signin: new Date(),
+      length: 0,
+      questions: 0
+    };
+    user.last_10_sessions_length.push(sessions);
     const topics = await Topics.find({});
     const types = await Type.find({});
     
@@ -132,7 +144,7 @@ router.post('/login', [
 async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(422).json({ 'msg': errors.array() });
+    return res.status(422).json({'msg': errors.array()});
     // res.send({'success': false, 'error': errors.array()})
   }
   const user = await User.findOne({ username: req.body.username });
@@ -141,9 +153,18 @@ async (req, res) => {
     return res.status(400).send({'success': "false",'msg': 'Username does not exist'});
   }
   const isValidPassword = await bcrypt.compare(req.body.password, user.password);
+  console.log(isValidPassword);
   if (!isValidPassword) {
     return res.status(400).send({'success': "false",'msg': 'Incorrect password for given username'});
   }
+  var object = {
+    signin: new Date(),
+    questions: 0,
+    length: 0
+  };
+
+  await User.update({_id: user._id}, { $push: {last_10_sessions_length: object}});
+  await User.update({_id: user._id}, { $set: { last_sign_in: new Date() } });
   var time = 60;
   if (req.body.remember === "true") {
     time = 60 * 60 * 60 * 60 * 24;
@@ -166,9 +187,12 @@ router.post('/forgot', [
   const url = req.body.url + req.body.path;
   if (user) {
     console.log("User exists");
-    const forgotToken = jwt.sign({forgot_id: user._id}, "This is secret");
+    const forgotToken = crypto.randomBytes(16).toString('hex');
+    // const expiry = new Date()
     await User_forgot_password.updateOne({user_id: user._id}, { $set: {forgotPasswordToken: forgotToken}});
     // let testAccount = await nodemailer.createTestAccount();
+    const url = req.body.url+req.body.path+"/"+forgotToken;
+    console.log(url);
     let transporter = nodemailer.createTransport({
       // host: "smtp.ethereal.email",
       // port: 587,
@@ -209,7 +233,7 @@ router.post('/forgot', [
         return res.send({"error": "email not sent"});
       } else {
         console.log("message sent");
-        return res.send({"msg": forgotToken, "messageID": info.messageId});
+        return res.send({"msg": forgotToken, "messageID": info.messageId, "success": "true"});
       }
     });
   }
@@ -220,14 +244,22 @@ router.post('/forgot', [
 router.post('/reset/:token', async (req, res) => {
   var resetToken = req.params.token;
   var newPassword = req.body.password;
+  var passwordConf = req.body.passwordconf;
+  if (newPassword != passwordConf) {
+    return res.send({"success": false, "msg": "Passwords don't match"});
+  }
   try {
     var data = jwt.verify(resetToken, "This is secret");
     var user = await User.findOne({_id: data._id });
     if(user.forgotPassword) {
-      salt = bcrypt.genSalt(10);
-      newPassword = bcrypt.hash(newPassword, salt);
-      await User.update({password: newPassword});
-      return res.send({"msg": "Password updated", "success": true});
+      var forgot = await User_forgot_password({user_id: data});
+      if (forgot.forgotPasswordToken == resetToken) {
+        console.log("Yes it works!");
+        salt = bcrypt.genSalt(10);
+        newPassword = bcrypt.hash(newPassword, salt);
+        await User.update({_id: data._id}, { $set: {password: newPassword} });
+        return res.send({"msg": "Password updated", "success": true});
+      }
     }
   } catch (err) {
     console.log(err);
@@ -239,20 +271,18 @@ router.get('/logout', async(req,res) => {
     var token = req.headers.authorization.split(" ")[1]
     try {
       var data = jwt.verify(token, "This is secret");
-      var user = await User.findOne({_id: token});
-      signin = user.last_sign_in;
-      signout = new Date();
-      let timeinbetween = new Date();
-      timeinbetween.setDate(signout - signin);
+      var user = await User.findOne({_id: data});
+      var signin = user.last_sign_in;
+      var signout = new Date();
+      var timeinbetween = signout.getTime() - signin.getTime();
       console.log(timeinbetween);
-      await User.updateOne({_id: token}, { $set: {last_sign_out: signout} });
-      await User.updateOne({_id: token}, { $inc : {no_of_sessions: 1} });
-      await User.updateOne({_id: token}, { $push: {last_10_sessions_length: timeinbetween}});
-      console.log(Date.now());
+      var object = user.last_10_sessions_length.pop();
+      object.length = timeinbetween;
+      await User.updateOne({_id: data}, { $set: {last_sign_out: signout} });
+      await User.updateOne({_id: data}, { $inc : {no_of_sessions: 1} });
+      await User.updateOne({_id: data}, { $push: {last_10_sessions_length: object}});
       console.log(`Signin time: ${signin}\nSignout time: ${signout}\nTime in between: ${timeinbetween}`);
-      if (data.expiresIn == 900) {
-        return res.send({"success": true, "remember": true});
-      }
+      console.log("Signout complete");
       return res.send({"success": true, "remember": false});
     } catch (err) {
       console.log(err);

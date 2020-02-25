@@ -6292,10 +6292,10 @@ react-native-canvas@^0.1.36:
   dependencies:
     ctx-polyfill "^1.1.4"
 
-react-native-chart-kit@^5.0.0:
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/react-native-chart-kit/-/react-native-chart-kit-5.0.0.tgz#c14cc29e3bfea452559f2a57660bbe7614867aa0"
-  integrity sha512-HKOGgWP3XzFxwEFkSRfhF8acATOZTrAvPTGt1aNLrCFLvLUKj5+JC345+XCiU8XAU1450tyW5DdwiaEL5SU8SA==
+react-native-chart-kit@^5.1.0:
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/react-native-chart-kit/-/react-native-chart-kit-5.1.0.tgz#d1bda2140010c9ecd397265ea34fa48832756fd2"
+  integrity sha512-Sg8Y0ameNSmcqbVSilLvlNXTevWu75km0cTXl+2VhRG7xYnoHnW89m8ljsl62mrD+YA8KsYIKOCTpid0WxqFMQ==
   dependencies:
     lodash "^4.17.13"
     paths-js "^0.4.10"

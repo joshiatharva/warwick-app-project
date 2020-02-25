@@ -1,9 +1,6 @@
 const mongoose = require('mongoose');
 const Question = require('./Question');
 
-const historySchema = new mongoose.Schema({
-
-})
 
 const userSchema = new mongoose.Schema({
   firstname: {
@@ -66,7 +63,11 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  last_10_sessions_length: [Date],
+  last_10_sessions_length: [{
+    signin: Date,
+    length: Number,
+    questions: Number,
+  }],
   blacklisted_until: {
     type: Date,
     default: null,

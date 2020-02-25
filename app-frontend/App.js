@@ -1,19 +1,20 @@
 import React, { Component } from 'react';
-import { StyleSheet, View,  FlatList, AsyncStorage, Picker, ActivityIndicator, TouchableOpacity, ScrollView, Dimensions, Platform, Alert, InputAccessoryView, ListView } from 'react-native';
+import { StyleSheet, View,  FlatList, AsyncStorage, KeyboardAvoidingView, ActivityIndicator, TouchableOpacity, ScrollView, Dimensions, Platform, Alert, InputAccessoryView, ListView } from 'react-native';
 import { createAppContainer, createSwitchNavigator, NavigationActions } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import { createBottomTabNavigator } from 'react-navigation-tabs';
 import { createDrawerNavigator } from 'react-navigation-drawer';
 // import { NavigationContainer } from '@react-navigation/native';
 // import { createStackNavigator } from '@react-navigation/stack';
-import { SearchBar, CheckBox, Input, Button, ListItem, Icon, Slider, Avatar } from 'react-native-elements';
+import { SearchBar, CheckBox, Button, ListItem, Icon, Slider, Avatar, Header } from 'react-native-elements';
 import { WebView } from 'react-native-webview';
 import { Linking } from 'expo';
 import Canvas from 'react-native-canvas';
 import SlidingUpPanel from 'rn-sliding-up-panel';
 import MathJax from 'react-native-mathjax';
-import { ApplicationProvider, Select, Text, Card, Datepicker } from '@ui-kitten/components';
+import { ApplicationProvider, Select, Text, Card, Datepicker, Input } from '@ui-kitten/components';
 import { mapping, light } from '@eva-design/eva';
+import { ContributionGraph, StackedBarChart } from "react-native-chart-kit"
 
 const test = require('./test.js');
 // import Welcome from './components/Welcome';
@@ -54,11 +55,15 @@ class App extends Component {
 
 export default App;
 
-class Welcome extends Component {
+class Login extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      isVerified: false
+      username: '',
+      password: '',
+      remember: false,
+      admin: false,
+      isSending: false
     }
   }
 
@@ -76,7 +81,7 @@ class Welcome extends Component {
         });
         let res = await response.json();
         if (res.success === "true") {
-          this.setState({isVerified: true}, () => console.log(this.state.isVerified));
+          this.props.navigation.navigate("Home");
           // console.log("Token present and valid");
         } else {
           this.setState({isVerified: false});
@@ -90,50 +95,6 @@ class Welcome extends Component {
     } else {
       this.setState({isVerified: false});
       // console.log("Token not present");
-    }
-  }
-
-  // componentWillUnmount() {
-  //   Linking.removeEventListener('url', this.handleOpenURL);
-  // }
-
-  // handleOpenURL = (url) => {
-  //   let {path, token} = Linking.parse(url);
-  //   let navPath = path.charAt(0).toUpperCase();
-  //   this.props.navigation.navigate(navPath, {token: token});
-  // }
-  
-
-  render() {
-    if (this.state.isVerified) {
-      return (
-        <View style={styles.welcome}>
-          <Button title="Login" onPress={() => this.props.navigation.navigate("Home")} />
-          <Button title="Haven't got an account? Register here!" onPress={() => this.props.navigation.navigate("Register")} />
-          <Button title="Forgot Password? Click here" onPress={() => this.props.navigation.navigate("Forgot")} /> 
-        </View>
-      );
-    } else {
-      return (
-        <View style={styles.welcome}>
-          <Button title="Login" onPress={() => this.props.navigation.navigate("Login")} />
-          <Button title="Haven't got an account? Register here!" onPress={() => this.props.navigation.navigate("Register")} />
-          <Button title="Forgot Password? Click here" onPress={() => this.props.navigation.navigate("Forgot")} /> 
-        </View>
-      );
-    }
-  }
-}
-
-class Login extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      username: '',
-      password: '',
-      remember: false,
-      admin: false,
-      isSending: false
     }
   }
 
@@ -164,7 +125,7 @@ class Login extends Component {
           this.setState({isSending: false});
           this.props.navigation.navigate('Home');
         } else {
-          console.log (res.message);
+          console.log(res.message);
         }
       } catch (err) {
         console.log(err);
@@ -186,8 +147,8 @@ class Login extends Component {
         });
         let res = await response.json()
         if (res.success === "true") {
-          const admin_token = res.token;
-          await AsyncStorage.setItem('admin', id_token);
+          console.log("success");
+          await AsyncStorage.setItem('admin', res.token);
           // if (res.remember === true) {
           //   await AsyncStorage.setItem('remember', true);
           // }
@@ -208,23 +169,31 @@ class Login extends Component {
       return null;
     } else {
       return (
-        <View style={styles.container}>
-          <Avatar rounded title="U" onPress={() => this.setState({isAdmin: false})}/>
-          <Avatar rounded title="Ad" onPress={() => this.setState({isAdmin: true})}/>
-          <Input 
-            placeholder='Username' 
-            // style={styles.input} 
-            onChangeText={(item) => this.setState({username: item})} 
-          />
-          <Input 
-            // style={styles.input}
-            placeholder='Password' 
-            secureTextEntry={true} 
-            onChangeText={(item) => this.setState({password: item})} 
-          />
-          <CheckBox center title='Remember Me' checked={this.state.remember} checkedColor='blue' onPress={() => this.setState({remember: !this.state.remember})}/>
-          <Button title="Signin" onPress={() => this.sendData()} loading={this.state.isSending} />
-        </View>
+        <ScrollView>
+          <View style={styles.headerContainer}>
+            <Text>Hello</Text>
+            <Text>Sign in to your account:</Text>
+            <Button buttonStyle={styles.signUpButton} type="clear" title="Sign Up" onPress={() => this.props.navigation.navigate("Register")} />
+          </View>
+          <View style={styles.formContainer}>
+            <Input 
+              placeholder='Username'  
+              onChangeText={(item) => this.setState({username: item})} 
+            />
+            <Input 
+              style={styles.passwordInput}
+              placeholder='Password' 
+              secureTextEntry={true} 
+              onChangeText={(item) => this.setState({password: item})} 
+            />
+          </View>
+          <CheckBox center title='Remember Me' checked={this.state.remember} checkedColor='blue' onPress={() => this.setState({remember: !this.state.remember})} />
+          <CheckBox center title='I am an Admin' checked={this.state.admin} checkedColor='red' onPress={() => this.setState({admin: !this.state.admin})} />
+          <Button style={styles.signinButton} title="Signin" onPress={() => this.sendData()} loading={this.state.isSending} buttonStyle={styles.signinButton} />
+          <View style={styles.forgotContainer}>
+            <Button buttonStyle={styles.forgotButton} type="clear" title="Forgot Password?" onPress={() => this.props.navigation.navigate("Forgot")} style={styles.forgotButton}/>
+          </View>
+        </ScrollView>
         /* <Avatar rounded title="User" onPress={() => this.setState({admin: false})}/>
         <Avatar rounded title="Admin" onPress={() => this.setState({admin: true})}/> */ 
       );
@@ -246,7 +215,7 @@ class AdminLogin extends Component {
 
   async componentDidMount() {
     this.setState({isLoading: true})
-    let token = await AsyncStorage("admin");
+    let token = await AsyncStorage.getItem("admin");
     let response = await fetch("http://192.168.0.16:3000/admin/2fa", {
       method: "GET",
       headers: {
@@ -271,26 +240,26 @@ class AdminLogin extends Component {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
-        "Authorization": "Bearer" + adminToken
+        "Authorization": "Bearer " + adminToken
       },
       body: JSON.stringify({
-        question: this.state.question.question,
+        question: this.state.question,
         answer: this.state.answer,
       })
     });
     let res = await response.json();
     if (res.success === true) {
       this.setState({isSending: false});
-      this.props.navigation.navigate("Home");
+      this.props.navigation.navigate("AdminHomepage");
     }
   }
 
   render() {
     if (!this.state.err) {
         return (
-          <View>
+          <View styles={formContainer}>
             <Text>Password confirmed! For security reasons, please enter the relevant answer to the provided security question!</Text>
-            <Text>{this.state.question.question}</Text>
+            <Text>{this.state.question}</Text>
             <Input placeholder="Enter your answer here!" onChangeText={(text) => this.setState({answer: text})} />
             <Button title="Submit your answer!" loading={this.state.isSending} onPress={() => this.sendData()} />
           </View>
@@ -348,12 +317,15 @@ class Register extends Component {
   render() {
       return (
         <ScrollView>
-          <Input placeholder="First Name" onChangeText={(item) => this.setState({firstname: item})} />
-          <Input placeholder="Last Name" onChangeText={(item) => this.setState({lastname: item})} />
-          <Input placeholder="Email" onChangeText={(item) => this.setState({email: item})} />
-          <Input placeholder="Username" onChangeText={(item) => this.setState({username: item})} />
-          <Input placeholder="Password" secureTextEntry={true} onChangeText={(item) => this.setState({password: item})} />
-          <Input placeholder="Confirm Password" secureTextEntry={true} onChangeText={(item) => this.setState({passwordconf: item})} />
+          <View style={styles.headerContainer}></View>
+          <View style={styles.formContainer}>
+            <Input placeholder="First Name" onChangeText={(item) => this.setState({firstname: item})} />
+            <Input placeholder="Last Name" onChangeText={(item) => this.setState({lastname: item})} />
+            <Input placeholder="Email" onChangeText={(item) => this.setState({email: item})} />
+            <Input placeholder="Username" onChangeText={(item) => this.setState({username: item})} />
+            <Input placeholder="Password" secureTextEntry={true} onChangeText={(item) => this.setState({password: item})} />
+            <Input placeholder="Confirm Password" secureTextEntry={true} onChangeText={(item) => this.setState({passwordconf: item})} />
+          </View>
           <Button onPress={() => this.sendData()} title ="Register now!" />
         </ScrollView> 
       );
@@ -452,7 +424,7 @@ class ForgotPassword extends Component {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
-        "Authorization": "Basic"
+        "Authorization": "Bearer"
       },
       body: JSON.stringify({
         "email": this.state.email,
@@ -464,23 +436,25 @@ class ForgotPassword extends Component {
     if (res.message == "/") {
       alert("You have already logged in and have a token present on your device. Please log into your account and reset your password from there!");
     }
-    if (!res.error) {
-      this.setState({received: true, error: false}, () => console.log("received: " + this.state.received + "\nerror: " + this.state.error));
-    } else {
-      this.setState({received: true, error: true}, () => console.log("received: " + this.state.received + "\nerror: " + this.state.error));
+    if (res.success == "true") {
+      this.setState({received: true});
+      await AsyncStorage.setItem("forgot_Token", res.msg);
     }
+    
   }
 
   render() {
     if (!this.state.received && !this.state.error) {
       return (
         <View>
-          <Text>Please enter your email to receive your reset password link:</Text>
+          <View>
+            <Text>Please enter your email to receive your reset password link:</Text>
+          </View>
           <Input placeholder="Enter your email here" onChangeText={(item) => this.setState({email: item})} />
           <Button raised title="Send link" onPress={() => this.sendData()} />
         </View>
       );
-    } else if (this.state.received && !this.state.error) {
+    } else if (this.state.received) {
       <View>
         <Text>Your email has been sent to your account at {this.state.email}!</Text>
       </View>
@@ -499,23 +473,28 @@ class ForgotPasswordForm extends Component {
     }
   }
 
+  handleDeepLink = (url) => {
+    const { path, token } = Linking.parse(url);
+    console.log("token = " + token);
+  }
+
   async componentDidMount() {
-    Linking.addEventListener('url', this.handleDeepLink);
-    let response = await fetch(`http://192.168.0.16:3000/auth/reset/${token}`, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer'
-      },
-    });
-    let res = await response.json();
-    this.setState({error: res.error});
+    // var forgot = await AsyncStorage.getItem("forgot_Token");
+    // Linking.addEventListener('url', this.handleDeepLink);
+    // let response = await fetch(`http://192.168.0.16:3000/auth/reset/${forgot}`, {
+    //   method: 'GET',
+    //   headers: {
+    //     Accept: 'application/json',
+    //     'Content-Type': 'application/json',
+    //     'Authorization': 'Bearer'
+    //   },
+    // });
+    // let res = await response.json();
+    // this.setState({error: res.error});
   }
 
   async sendData() {
-    let token = 12345;
-    let response = await fetch(`http://192.168.0.16:3000:3000/auth/reset/${token}`, {
+    let response = await fetch(`http://192.168.0.16:3000:3000/auth/reset/${forgot}`, {
       method: "POST",
       headers: {
         Accept: 'application/json',
@@ -525,10 +504,11 @@ class ForgotPasswordForm extends Component {
       },
       body: JSON.stringify({
         "password": this.state.password,
-        
+        "passwordconf": this.state.passwordconf,
       })
     });
     let res = await response.json();
+    if (res.success == "true")
     this.props.navigation.navigate("Home");
   }
 
@@ -681,7 +661,7 @@ class AdminQuestions extends Component {
 
   async componentDidMount() {
     try {
-      const token = await AsyncStorage.getItem("id");
+      const token = await AsyncStorage.getItem("admin");
       let response = await fetch('http://192.168.0.16:3000/questions/all', {
         method: 'GET',
         headers: {
@@ -1037,6 +1017,31 @@ class Favourites extends Component {
       this.setState({error: err}, () => console.log("Error: " + this.state.error));
     }
   }
+  
+  async sendData(item) {
+    try {
+      let token = await AsyncStorage.getItem("id");
+      let response = await fetch('http://192.168.0.16:3000/questions/log', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({
+          id: item._id,
+        })
+      });
+      let res = await response.json();
+      if (res.success == "true") {
+        this.props.navigation.navigate("Quiz", {Question: item});
+      } else {
+        alert("Connection lost");
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
 
   render() {
     return (
@@ -1045,7 +1050,7 @@ class Favourites extends Component {
             data={this.state.questions}
             renderItem = {({item, index}) => (
                 <View style={styles.itemStyle}>
-                  <TouchableOpacity onPress={() => this.props.navigation.navigate("Quiz", {questions: item}, () => console.log(item))}>
+                  <TouchableOpacity onPress={() => this.sendData(item)}>
                   <Text>{item.name}</Text>
                   </TouchableOpacity>
                 </View>
@@ -1351,10 +1356,11 @@ class Profile extends Component {
       }
     });
     let res = await response.json();
-    if (res.remember != true) {
+    let remember = await AsyncStorage.getItem("remember");
+    if (remember == null) {
       await AsyncStorage.removeItem("id");
     }
-    this.props.navigation.navigate("Welcome");
+    this.props.navigation.navigate("Login");
   }
 
 
@@ -1456,6 +1462,9 @@ class Statistics extends Component {
       q_history: [],
       sessions: [],
       questions_made: [],
+      rldata: [],
+      ctldata: [],
+      tmdata: [],
     }
   }
 
@@ -1470,24 +1479,58 @@ class Statistics extends Component {
       }
     });
     let res = await response.json();
+    var array = [];
     if (res.success == true) {
-      this.setState({user_scores: res.user_scores, q_history: res.user.question_history, sessions: res.user.sessions});
+      this.setState({user_scores: res.user_scores, q_history: res.user.question_history, sessions: res.user.last_10_sessions_length});
+      for (var i = 0; i < this.state.user_scores.length; i++) {
+        console.log(this.state.user_scores[i].topic);
+        if (this.state.user_scores[i].topic == "Regular Languages") {
+          array = [this.state.user_scores[i].d1_correct, this.state.user_scores[i].d2_correct, this.state.user_scores[i].d3_correct, this.state.user_scores[i].d4_correct, this.state.user_scores[i].d5_correct];
+          this.setState({rldata: array});
+        } else if (res.user_scores[i].topic == "Context Free Languages") {
+          array = [this.state.user_scores[i].d1_correct, this.state.user_scores[i].d2_correct, this.state.user_scores[i].d3_correct, this.state.user_scores[i].d4_correct, this.state.user_scores[i].d5_correct];
+          this.setState({ctldata: array});
+        } else if (res.user_scores[i].topic == "Turing Machines") {
+          array = [this.state.user_scores[i].d1_correct, this.state.user_scores[i].d2_correct, this.state.user_scores[i].d3_correct, this.state.user_scores[i].d4_correct, this.state.user_scores[i].d5_correct];
+          this.setState({tmdata: array});
+        }
+      }
     } else {
       console.log("Error occured");
     }
   }
   render() {
-    return(
-      <View>
+    const chartConfig = {
+      backgroundColor: '#ffffff',
+      backgroundGradientFrom: '#ffffff',
+      backgroundGradientTo: '#ffffff',
+      color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`
+    };
+    const data = {
+      labels: ["RL", "CFL", "TM"],
+      legend: ["D1", "D2"],
+      data: [this.state.rldata, this.state.ctldata, this.state.tmdata],
+      barColors: ["#dfe4ea", "#ced6e0", "#a4b0be"]
+    };
+    return (
+      <ScrollView>
         <Text>These are your statistics as follows:</Text>
         <Text>Marks over all questions:</Text>
-        <Text>{this.state.user_scores}</Text>
+        <StackedBarChart 
+          data={data}
+          width={WIDTH}
+          height={400}
+          chartConfig={chartConfig}
+        />
         <Text>Usage Statistics: </Text>
-        <Text>{this.state.q_history}</Text>
         <Text>Record of sessions:</Text>
-        <Text>{this.state.sessions}</Text>
+        <ContributionGraph
+          values={this.state.sessions}
+          endDate={new Date()}
+          numDays={50}
+          chartConfig={chartConfig}
+        />
         <Text>Last sessions:</Text>
-        <Text>{this.state.sessions[0]}</Text>
         <Text>Questions you've made:</Text>
         <FlatList
           data={this.state.questions_made}
@@ -1501,8 +1544,7 @@ class Statistics extends Component {
         <ScrollView></ScrollView>
         <Text>Question History:</Text>
         <Text>Average time spent on questions:</Text>
-
-      </View>
+      </ScrollView>
     );
   }
 }
@@ -1815,43 +1857,25 @@ class AnswerScheme extends Component {
   }
 }
 
-// const AdminTabNavigator = createBottomTabNavigator({
-//   Home, 
-//   adminQuestionSwitchNavigator, 
-//   Favourites, 
-//   profileNavigator
-// });
-
-// const adminQuestionSwitchNavigator = createSwitchNavigator({
-//   adminQuestionStackNavigator: adminQuestionStackNavigator,
-//   DataUpload: DataUpload,
-//   Home: {
-//     screen: Home,
-//   }
-// });
-
-// adminQuestionSwitchNavigator.navigationOptions = {
-//   tabBarLabel: 'Questions',
-//   initialRouteName: 'Questions'
-// };
-
-
 const AuthStack = createStackNavigator({
-  Welcome: {
-    screen: Welcome,
-    path: ''
-  },
   Login: {
     screen: Login,
-    path: 'login'
+    path: '',
+    navigationOptions: {
+      headerShown: false,
+    },
   },
   Forgot: {
     screen: ForgotPassword,
-    path: 'forgot'
+    navigationOptions: {
+      headerShown: false,
+    },
   },  
   Register: {
     screen: Register,
-    path: 'register'
+    navigationOptions: {
+      headerShown: false,
+    },
   },
 });
 
@@ -1919,7 +1943,17 @@ const questionStackNavigator = createStackNavigator({
 
 questionStackNavigator.navigationOptions = {
   tabBarLabel: 'Questions',
-  initialRouteName: 'Questions'
+  initialRouteName: 'Questions',
+  defaultNavigationOptions: {
+    headerStyle: {
+      backgroundColor: 'purple',
+      color: 'white',
+    },
+    headerTintColor: '#fff',
+    headerTitleStyle: {
+      fontWeight: 'bold',
+    }
+  }
 };
 
 const questionSwitchNavigator = createSwitchNavigator({
@@ -1935,6 +1969,9 @@ const questionSwitchNavigator = createSwitchNavigator({
 questionSwitchNavigator.navigationOptions = { 
   tabBarLabel: 'Favourites',
   initialRouteName: 'Favourites',
+  headerStyle: {
+
+  }
   // tabBarVisible: navigation.state.getParam("hideTabBar") != null ? !(navigation.state.getParam("hideTabBar")) : true,
 };
 
@@ -1961,11 +1998,26 @@ profileNavigator.navigationOptions = {
   initialRouteName: 'Profile'
 };
 
+const adminQuestionSwitchNavigator = createSwitchNavigator({
+  Favourites: {
+    screen: Favourites,
+  },
+  Quiz: Quiz,
+  DataUpload: {
+    screen: DataUpload,
+  },
+  BlacklistUsers: BlacklistUsers,
+});
+
+adminQuestionSwitchNavigator.navigationOptions = {
+  tabBarLabel: 'Favourites',
+  initialRouteName: 'Favourites',
+};
 
 const AdminHomepageTabNavigator = createBottomTabNavigator({
   Home,
   adminQuestionStackNavigator,
-  Favourites,
+  adminQuestionSwitchNavigator,
   profileNavigator,
 });
 
@@ -1983,9 +2035,8 @@ const AppSwitchNavigator = createSwitchNavigator({
     path: 'forgotpassword/:token'
   },
   AdminLogin: AdminLogin,
-  Homepage: HomepageTabNavigator,
-  AdminHomepage: AdminHomepageTabNavigator,
-  Welcome: Welcome
+  Home: HomepageTabNavigator,
+  AdminHomepage: AdminHomepageTabNavigator
 });
 
 const AppContainer = createAppContainer(AppSwitchNavigator);
@@ -2004,16 +2055,6 @@ const AppContainer = createAppContainer(AppSwitchNavigator);
 //   }
 //}
 
-const login = StyleSheet.create({
-  headerContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: 216,
-    backgroundColor: 'orange',
-  }
-});
-
-
 
 const styles = StyleSheet.create({
   welcome: {
@@ -2021,22 +2062,55 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center'
   },
+  rootcontainer: {
+    backgroundColor: 'white',
+  },
   container: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
   },
-  input: {
-    width: WIDTH - 55,
-    height: 40,
-    borderRadius: 10,
-    fontSize: 16,
-    paddingLeft: 45,
-    backgroundColor: 'black',
+  headerContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 200,
+    backgroundColor: 'purple',
+    width: WIDTH,
     color: 'white',
-    marginHorizontal: 25
-
   },
+  formContainer: {
+    flex: 1,
+    paddingTop: 32,
+    paddingHorizontal: 16,
+  },
+  signInLabel: {
+    marginTop: 16,
+  },
+  signUpButton: {
+    marginVertical: 12,
+    marginHorizontal: 16,
+  },
+  passwordInput: {
+    marginTop: 16,
+  },    
+  forgotContainer: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+  },
+  forgotButton: {
+    paddingHorizontal: 0,
+  },
+  signinButton: {
+    marginHorizontal: 16,
+  },
+  // input: {
+  //   width: WIDTH - 55,
+  //   height: 40,
+  //   borderRadius: 10,
+  //   fontSize: 16,
+  //   paddingLeft: 45,
+  //   marginHorizontal: 25
+  // },
   makequestion: {
     flex: 1,
     justifyContent: 'center'

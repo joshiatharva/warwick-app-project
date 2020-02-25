@@ -6,6 +6,8 @@ const {difficulty, data, User_scores} = require('../models/User_scores');
 const Question = require('../models/Question');
 const jwt = require('jsonwebtoken');
 const Demo_scores = require('../models/Demo_scores');
+const Topics = require('../models/Topics');
+const Type = require('../models/Type');
 
 // router.get('/', async (req,res) => {
 //     var token = req.headers.authorization.split(" ")[1];
@@ -55,10 +57,36 @@ router.get('/statistics', async (req, res) => {
         try {
             var id = jwt.verify(token, "This is secret");
             var user_scores = await Demo_scores.find({user_id: id});
-            var user = await User.find({_id: id});
+            var topics = await Topics.find({});
+            var types = await Type.find({});
+            var array = [];
+            for (var i = 0; i < topics.length; i++) {
+                var object = {
+                    topic: '',
+                    d1_correct: 0,
+                    d2_correct: 0,
+                    d3_correct: 0,
+                    d4_correct: 0,
+                    d5_correct: 0,
+                };
+                object.topic = topics[i].name;
+                // console.log(object.topic);
+                for (var j = 0; j < types.length; j++) {
+                    var ux = await Demo_scores.find({user_id: id, topic: topics[i].name, type: types[j].name});
+                    object.d1_correct = object.d1_correct + ux[0].scores.d1_correct;
+                    object.d2_correct = object.d2_correct + ux[0].scores.d2_correct;
+                    object.d3_correct = object.d3_correct + ux[0].scores.d3_correct;
+                    object.d4_correct = object.d4_correct + ux[0].scores.d4_correct;
+                    object.d5_correct = object.d5_correct + ux[0].scores.d5_correct;
+                }
+                // console.log(object);
+                array.push(object);
+            }
+            var user = await User.findOne({_id: id});;
             var questions = await Question.find({created_by: id});
-            console.log(user_scores);
-            return res.send({"user_scores": user_scores, "user": user, "success": true, "questions": questions});
+            // console.log(user_scores);
+            console.log(array);
+            return res.send({"user_scores": array, "user": user, "success": true, "questions": questions});
         } catch (err) {
             console.log(err);
         }

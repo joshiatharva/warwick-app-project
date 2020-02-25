@@ -37,6 +37,26 @@ router.get('/:id', async (req, res) => {
     }
 });
 
+router.post('/log', async (req, res) => {
+    var token = req.headers.authorization.split(" ")[1];
+    if (isValidated(token)) {
+        try {
+            var id = jwt.verify(token, "This is secret");
+            var object = {
+                qid: req.body.id,
+                correct: 0,
+                start_time: new Date()
+            };
+            await User.updateOne({_id: id}, { $push: { question_history: object }});
+            return res.send({"success": true});
+        } catch (err) {
+            console.log(err);
+        }
+    } else {
+        return res.send({"success": false});
+    }
+});
+
 
 router.post('/new', async (req, res) => {
     var token = req.headers.authorization.split(" ")[1]; 
@@ -99,12 +119,19 @@ router.post('/marks', async (req, res) => {
             }
             await Question.updateOne({_id: req.body.question_id}, { $inc: {correct: cor, accesses: 1 } });
             var question = await Question.findOne({_id: req.body.question_id});
-            var element = {
-                qid: req.body.question_id,
-                correct: req.body.correct,
-                answer: req.body.answer
-            };
-            await User.updateOne({_id: token}, { $push: { question_history: element }});
+            // var element = {
+            //     qid: req.body.question_id,
+            //     correct: req.body.correct,
+            //     answer: req.body.answer
+            // };
+            var user = await User.findOne({_id: token});
+            var element = user.question_history.pop();
+            var current = user.last_10_sessions_length.pop();
+            current.questions = current.questions + 1;
+            element.correct = cor;
+            element.end_date = new Date();
+            await User.updateOne({_id: token}, { $push: {question_history: element, last_10_sessions_length: current }});
+            // await User.updateOne({_id: token}, { $push: { question_history: element }});
             var update = {};
             // var index = 0; 
             if (!question) {
@@ -169,7 +196,7 @@ router.post('/save', async(req,res) => {
     if (isValidated(token)) {
         try {
             var id = jwt.verify(token, "This is secret");
-            await User.updateOne({_id: id}, { $addToSet: { saved_questions: q_id} });
+            await User.updateOne({_id: id}, { $addToSet: { saved_questions: q_id } });
             var user = await User.findOne({_id: id});
             console.log("Pushed: " + user.saved_questions);
             return res.send({"message": "Successful", "success": true});

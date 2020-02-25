@@ -12,6 +12,7 @@ const port = 3000;
 const authRoute = require('./routes/auth');
 const questionRoute = require('./routes/questions');
 const userRoute = require('./routes/user');
+const adminRoute = require('./routes/admin');
 // const topicsRoute = require('./routes/topics');
 
 // const privateKey = fs.readFileSync('../app-frontend/server/server.key', 'utf8');
@@ -46,6 +47,8 @@ app.use('/auth', authRoute);
 app.use('/questions', questionRoute);
 
 app.use('/user', userRoute);
+
+app.use('/admin', adminRoute);
 
 // app.use('/topics', topicsRoute);
 

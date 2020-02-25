@@ -13,6 +13,10 @@ const adminSchema = new mongoose.Schema({
         question: String,
         answer: String,
     }],
+    username: {
+        type: String,
+        ref: 'User',
+    }
 });
 
 module.exports = mongoose.model('admin', adminSchema);
