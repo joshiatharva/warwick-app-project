@@ -1,7 +1,19 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, Button, FlatList, AsyncStorage, Picker, ActivityIndicator } from 'react-native';
-import { createAppContainer, createSwitchNavigator } from 'react-navigation';
+import { StyleSheet, View,  FlatList, AsyncStorage, KeyboardAvoidingView, ActivityIndicator, TouchableOpacity, ScrollView, Dimensions, Platform, Alert, InputAccessoryView, ListView } from 'react-native';
+import { createAppContainer, createSwitchNavigator, NavigationActions } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
+import { createBottomTabNavigator } from 'react-navigation-tabs';
+import { SearchBar, CheckBox, Button, ListItem, Slider, Avatar, Header } from 'react-native-elements';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import { WebView } from 'react-native-webview';
+import { Linking } from 'expo';
+// import Canvas from 'react-native-canvas';
+// import SlidingUpPanel from 'rn-sliding-up-panel';
+// import MathJax from 'react-native-mathjax';
+import { ApplicationProvider, Select, Text, Card, Datepicker, Input, Layout, TopNavigation, TabView} from '@ui-kitten/components';
+//import * as UI from '@ui-kitten/components';
+import { mapping, light } from '@eva-design/eva';
+import { ContributionGraph, StackedBarChart, ProgressChart } from "react-native-chart-kit"
 
 export default class Questions extends Component {
   constructor(props) {
@@ -11,14 +23,30 @@ export default class Questions extends Component {
       isLoading: true,
       error: null,
       search: '',
-      type: 'all'
     }
   }
 
+  static navigationOptions = ({navigation}) => {
+    return {
+      headerRight: () => (
+        <Icon
+          name='plus'
+          size={10}
+          onPress={() => {navigation.navigate("MakeQuestion")}}
+        />
+      ),
+    };
+  }
+
   async componentDidMount() {
+    this.getQuestions();
+    //setInterval(() => this.getQuestions(), 2000);
+  }
+
+  async getQuestions() {
     try {
       const token = await AsyncStorage.getItem("id");
-      let response = await fetch('http://192.168.0.12:3000/questions/all', {
+      let response = await fetch('http://172.31.199.57:3000/questions/all', {
         method: 'GET',
         headers: {
           Accept: 'application/json',
@@ -28,16 +56,19 @@ export default class Questions extends Component {
       });
       let json = await response.json();
       this.setState({questions: json, isLoading: false});
+      if (res.msg == "Token expired") {
+        this.props.navigation.navigate("Login");
+        alert("Unfortunately, your token has expired! Please sign in again!");
+      }
     } catch (err) {
-      console.log("Error occured");
-      this.setState({error: err});
+      this.setState({error: err}, () => console.log("Error: " + this.state.error));
     }
   }
 
-  async sendData() {
+  async getData() {
     const token = await AsyncStorage.getItem("id");
     try {
-      let response = await fetch(`http://192.168.0.12:3000/questions/${this.state.type}/${this.state.search}`, {
+      let response = await fetch(`http://172.31.199.57:3000/questions/${this.state.topic}/${this.state.search}`, {
         method: 'GET',
         headers: {
           Accept: 'application/json',
@@ -46,8 +77,16 @@ export default class Questions extends Component {
         }
       });
       let res = await response.json();
+      if (res.msg == "Token expired") {
+        this.props.navigation.navigate("Login");
+        alert("Unfortunately, your token has expired! Please sign in again!");
+      }
       if (res.success) {
         this.setState({questions: res.json});
+      }
+      if (res.msg == "Token expired") {
+        this.props.navigation.navigate("Login");
+        alert("Unfortunately, your token has expired! Please sign in again!");
       }
     } catch (err) {
       console.log("Error occurred: " + err);
@@ -58,7 +97,7 @@ export default class Questions extends Component {
   async saveQuestion(id) {
     try {
       const token = await AsyncStorage.getItem("id");
-      let response = await fetch('http://192.168.0.12:3000/questions/save',{
+      let response = await fetch('http://172.31.199.57:3000/questions/save',{
         method: 'POST',
         headers: {
           Accept: 'application/json',
@@ -70,10 +109,23 @@ export default class Questions extends Component {
         })
       });
       let res = await response.json();
-      console.log(res.message);
+      if (res.success == true) {
+        console.log(res);
+      }
+      if (res.msg == "Token expired") {
+        this.props.navigation.navigate("Login");
+        alert("Unfortunately, your token has expired! Please sign in again!");
+      }
     } catch (err) {
       console.log(err);
     }
+  }
+
+  async getQuestion(item) {
+    console.log(item);
+    this.props.navigation.navigate("ViewQuestion", {
+      id: item
+    });
   }
 
   render() {
@@ -84,33 +136,21 @@ export default class Questions extends Component {
           onClearText={()=> this.setState({search: ''})}
           lightTheme
           placeholder='Enter here....'
-          /> 
-          <Button title="Apply" onPress={(item) => this.sendData(item)} />
+          />
           <FlatList 
             data={this.state.questions}
-            renderItem = {({item, index}) => 
-                <TouchableOpacity style={styles.container} onPress={() => Alert.alert('Add Question?', 'Add this Question to your Favourites?', [ {text: 'No', onPress: () => console.log("refused")}, {text: 'Yes', onPress: () => this.saveQuestion(item._id)}])}>
-                  <Card>
-                    <Text>{item.name}</Text>
-                    <Text>{item.topic}</Text>
-                    <Text>{item.difficulty}</Text> 
-                  </Card>
-                </TouchableOpacity>
+            renderItem = {({item, index}) =>
+              <ListItem
+                title={item.name}
+                subtitle={item.topic}
+                bottomDivider
+                chevron
+                onPress={() => this.getQuestion(item)}
+              />
             }
-            keyExtractor={this.state.questions.name}
+            keyExtractor={(item, index) => index.toString()}
           />
         </ScrollView>
       );
   }
 }
-
-export const questionStackNavigator = createStackNavigator({
-    Questions: Questions
-    Quiz: Quiz
-});
-
-export const questionSwitchNavigator = createSwitchNavigator({
-    questionStackNavigator: questionStackNavigator,
-    DataUpload: DataUpload,
-    Home: Home
-});

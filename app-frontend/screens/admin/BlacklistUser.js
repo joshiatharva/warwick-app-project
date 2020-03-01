@@ -15,45 +15,34 @@ import { ApplicationProvider, Select, Text, Card, Datepicker, Input, Layout, Top
 import { mapping, light } from '@eva-design/eva';
 import { ContributionGraph, StackedBarChart, ProgressChart } from "react-native-chart-kit"
 
-export default class Personal extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      sessions: [],
+
+export default class BlacklistUsers extends Component {
+    constructor(props) {
+      super(props);
+      this.state = {
+        user_id: '',
+        reason: '',
+        date: null,
+      }
+    }
+  
+    async componentDidMount() {
+      this.setState({date: new Date()});
+    }
+  
+    render() {
+      return (
+        <View>
+          <Text>Here is the facility for blacklisting users.</Text>
+          <Text>
+            NOTE: all blacklist actions require CLEAR and SIGNIFICANT actions against the University of Warwick's Policy.
+            This justification will also be sent to the blacklisted user to understand the actions committed and for their chance to appeal the decision.
+          </Text>
+  
+          <Input />
+          <Input placeholder="Enter the justification for blacklisting this user here" multiline={true} numberOfLines={5} onChangeText={(text) => this.setState({reason: text})} />
+          <Datepicker placeholder='Date to be banned until' date={this.state.date} onSelect={(newdate) => this.setState({date: newdate})} boundingMonth={false} />
+        </View>
+      );
     }
   }
-
-  async componentDidMount() {
-    let token = await AsyncStorage.getItem("id");
-    let response = await fetch("http://172.31.199.57:3000/user/profile", {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-      }
-    });
-    let res = await response.json();
-    this.setState({user: res.user}, function(err, success) {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log("User: " + this.state.user);
-      }
-    });
-  }
-
-  render() {
-    return (
-      <View>
-        <Text>Last sessions:</Text>
-        <Text>Questions you've made:</Text>
-        <ScrollView></ScrollView>
-        <Text>Question History:</Text>
-        {/* <ListView /> */}
-        <Text>Average time spent on questions:</Text>
-       { /* add chart here  */}
-      </View>
-    );
-  }
-}

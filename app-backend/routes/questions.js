@@ -48,6 +48,7 @@ router.post('/log', async (req, res) => {
                 start_time: new Date()
             };
             await User.updateOne({_id: id}, { $push: { question_history: object }});
+            console.log("pushed");
             return res.send({"success": true});
         } catch (err) {
             console.log(err);

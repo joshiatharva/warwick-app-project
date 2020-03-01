@@ -10,12 +10,25 @@ const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
 const Admin = require('../models/Admin');
 
-router.post('/login', 
-//[
+router.get('/login', async(req,res) => {
+  var token = req.headers.authorization.split(" ")[1];
+  try {
+    var id = jwt.verify(token, "This is secret");
+    var admin = await Admin.findOne({user_id: id});
+    if (admin) {
+      return res.send({"success": true, "msg": admin});
+    }
+  } catch(err) {
+    console.log(err);
+    return res.send({"success": false, "msg": "Token expired"});
+  }
+});
 
-//   body('username').isAlphanumeric(),
-//   body('password').isLength({ min: 6 })
-// ],
+router.post('/login', 
+[
+  body('username').isAlphanumeric(),
+  body('password').isLength({ min: 6 })
+],
 async (req, res) => {
   // const errors = validationResult(req);
   // if (!errors.isEmpty()) {
@@ -26,7 +39,7 @@ async (req, res) => {
   if (!admin) {
     return res.status(400).send({'success': "false",'msg': 'Username does not exist'});
   }
-  const isValidPassword = (admin.password === req.body.password);
+  const isValidPassword = (admin.password == req.body.password);
   console.log(isValidPassword);
   if (!isValidPassword) {
     return res.status(400).send({'success': "false",'msg': 'Incorrect password for given username'});
@@ -38,6 +51,19 @@ async (req, res) => {
   const token = jwt.sign({_id: admin.user_id}, "This is secret");
   console.log("Login successful");
   return res.status(200).send({'success': "true", 'msg': 'Login successful', 'token': token});
+});
+
+router.get('/profile', async(req, res) => {
+  var token = req.headers.authorization.split(" ")[1];
+  try {
+    var id = jwt.verify(token, "This is secret");
+    var admin = await Admin.findOne({user_id: id}).populate('username');
+    console.log(admin);
+    return res.send({"success": true, "msg": admin});
+  } catch (err) {
+    console.log(err);
+    return res.send({"success": false, "msg": "Token expired"});
+  }
 });
 
 router.get('/2fa', async(req, res) => {
@@ -53,7 +79,7 @@ router.get('/2fa', async(req, res) => {
       console.log(index);
       var question = admin.rememberQuestions[index].question;
       // console.log(question);
-      return res.send({"success": true, "question": question});
+      return res.send({"success": true, "question": question, "admin": true});
     }
   } catch (err) {
     return res.send({"success": false, "message": err});
@@ -76,7 +102,7 @@ router.post('/2fa', async(req, res) => {
     console.log(index);
     console.log(req.body.answer + " + " + admin.rememberQuestions[index].answer);
     if (req.body.answer === admin.rememberQuestions[index].answer) {
-      return res.send({"success": true});
+      return res.send({"success": true, "user": admin.username});
     } else {
       return res.send({"success": false, "message": "Answer incorrect!"});
     }
@@ -85,65 +111,123 @@ router.post('/2fa', async(req, res) => {
   }
 });
 
+router.get('/users', async (req,res) => {
+  var token = req.headers.authorization.split(" ")[1];
+  try {
+    let id = jwt.verify(token, "This is secret");
+    let admin = await Admin.findOne({user_id: id});
+    if (admin) {
+      var user = await User.find({});
+      return res.send({"success": true, "msg": user});
+    } else {
+      return res.send({"success": false, "msg": "Not admin"});
+    }
+  } catch (err) {
+    console.log(err);
+    return res.send({"success": false, "msg": "Token invalid"});
+  }
+});
+
 router.post('/blacklist', async (req, res) => {
     var token = req.headers.authorization.split(" ")[1];
     var username = req.body.username;
     var reason = req.body.reason;
-    var duration = req.body.duration;
+    var date = req.body.date;
     var blacklistLength = new Date();
-    blacklistLength.setDate(blacklistLength.getDate() + duration);
-    try { 
-      var admin = jwt.verify(token, "This is secret");
-    } catch (err) {
-      console.log("Token expired");
-    }
-    var admin = await Admin.findOne({user_id: token});
+    console.log(req.body);
+    return res.send({"success": true});
+    // blacklistLength.setDate(blacklistLength.getDate() + duration);
+    // try { 
+    //   var admin = jwt.verify(token, "This is secret");
+    // } catch (err) {
+    //   console.log("Token expired");
+    // }
+    // var admin = await Admin.findOne({user_id: token});
 
-    await User.updateOne({username: username}, { $set: {blacklistedUntil: blacklistLength } });
-    var user = await User.findOne({username: username});
+    // await User.updateOne({username: username}, { $set: {blacklistedUntil: blacklistLength } });
+    // var user = await User.findOne({username: username});
 
-    let transporter = nodemailer.createTransport({
-        // host: "smtp.ethereal.email",
-        // port: 587,
-        // secure: false,
-        // auth: {
-        //   user: testAccount.user,
-        //   pass: testAccount.pass
-        // }
-        service: 'gmail',
-        auth: {
-          user: 'joshiatharvaRM@gmail.com',
-          pass: 'aj241162'
-        }
-      });
+    // let transporter = nodemailer.createTransport({
+    //     // host: "smtp.ethereal.email",
+    //     // port: 587,
+    //     // secure: false,
+    //     // auth: {
+    //     //   user: testAccount.user,
+    //     //   pass: testAccount.pass
+    //     // }
+    //     service: 'gmail',
+    //     auth: {
+    //       user: 'joshiatharvaRM@gmail.com',
+    //       pass: 'aj241162'
+    //     }
+    //   });
 
-      let message = {
-        from: 'joshiatharvaRM@gmail.com',
-        to: user.email,
-        subject: "Password Reset",
-        html: `<div>
-        <p>Hi ${username},<br />
-        Unfortunately, we have some bad news. You have been blacklisted by the moderator ${admin.username} for the following reason: </p>
-        <p>${reason}</p>
-        <p>However, you will be allowed access again once your blacklist period is over. We're very sorry about this!</p>
-        <br />
-        <p>The Formality team</p>
-        </div>`
-      };
+    //   let message = {
+    //     from: 'joshiatharvaRM@gmail.com',
+    //     to: user.email,
+    //     subject: "Password Reset",
+    //     html: `<div>
+    //     <p>Hi ${username},<br />
+    //     Unfortunately, we have some bad news. You have been blacklisted by the moderator ${admin.username} for the following reason: </p>
+    //     <p>${reason}</p>
+    //     <p>However, you will be allowed access again once your blacklist period is over. We're very sorry about this!</p>
+    //     <br />
+    //     <p>The Formality team</p>
+    //     </div>`
+    //   };
   
-      console.log("Account: " + user.email
-      // url: ${nodemailer.getTestMessageUrl(info)}
-      );
+    //   console.log("Account: " + user.email
+    //   // url: ${nodemailer.getTestMessageUrl(info)}
+    //   );
   
-      transporter.sendMail(message, function(err, data) {
-        if (err) {
-          console.log("error done")
-          return res.send({"error": "email not sent"});
-        } else {
-          console.log("message sent");
-          return res.send({"msg": forgotToken, "messageID": info.messageId});
-        }
-      });
+    //   transporter.sendMail(message, function(err, data) {
+    //     if (err) {
+    //       console.log("error done")
+    //       return res.send({"error": "email not sent"});
+    //     } else {
+    //       console.log("message sent");
+    //       return res.send({"msg": forgotToken, "messageID": info.messageId});
+    //     }
+    //   });
 });
+
+router.post('/edit', async (req, res) => {
+  var token = req.headers.authorization.split(" ")[1];
+  try { 
+    var id = jwt.verify(token, "This is secret");
+    var admin = await Admin.findOne({user_id: id});
+    if (admin) {
+      await Question.update({_id: req.body.id}, { $set: {
+        name: req.body.name,
+        question: req.body.question,
+        topic: req.body.topic,
+        type: req.body.type,
+        options: req.body.options,
+        answer: req.body.answer,
+        solution: req.body.solution,
+        difficulty: req.body.difficulty,
+      }});
+    }
+  } catch (err) {
+    console.log(err);
+    return res.send({"success": false, "msg": "Token expired"});
+  }
+});
+
+router.get('/logout', async (req, res) => {
+  var token = req.headers.authorization.split(" ")[1];
+  try {
+    var id = jwt.verify(token, "This is secret");
+    var admin = await Admin.findOne({user_id: id});
+    if (admin) {
+      return res.send({"success": true, "msg": "Logged out"});
+    } else {
+      return res.send({"success": false, "msg": "Admin doesn't exist"});
+    }
+  } catch (err) {
+    console.log(err);
+    return res.send({"success": false, "msg": "Token invalid"});
+  }
+})
 
 module.exports = router;

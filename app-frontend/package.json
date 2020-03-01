@@ -44,7 +44,8 @@
     "rn-sliding-up-panel": "^2.4.0"
   },
   "devDependencies": {
-    "babel-preset-expo": "^7.0.0"
+    "babel-preset-expo": "^7.0.0",
+    "jest": "^25.1.0"
   },
   "private": true
 }

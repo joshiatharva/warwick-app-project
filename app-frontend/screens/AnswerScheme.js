@@ -15,45 +15,25 @@ import { ApplicationProvider, Select, Text, Card, Datepicker, Input, Layout, Top
 import { mapping, light } from '@eva-design/eva';
 import { ContributionGraph, StackedBarChart, ProgressChart } from "react-native-chart-kit"
 
-export default class Personal extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      sessions: [],
-    }
-  }
 
-  async componentDidMount() {
-    let token = await AsyncStorage.getItem("id");
-    let response = await fetch("http://172.31.199.57:3000/user/profile", {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-      }
-    });
-    let res = await response.json();
-    this.setState({user: res.user}, function(err, success) {
-      if (err) {
-        console.log(err);
+export default class AnswerScheme extends Component {
+    render() {
+        console.log(this.props.answer)
+        if (this.props.isAnswered) {
+            return (
+                <View>
+                {this.props.correct && (
+                    <Text>Congratulations! You answered {this.props.givenAnswer} and the answer was {this.props.answer}!</Text>
+                )}
+                {!this.props.correct && (
+                    <Text>Sorry! Whereas you picked {this.props.givenAnswer}, the answer was {this.props.answer}!</Text>
+                )}
+                    <Text>Here's the solution:</Text>
+                    <Text>{this.props.answerScheme}</Text>
+                </View>
+            );
       } else {
-        console.log("User: " + this.state.user);
+        return null;
       }
-    });
-  }
-
-  render() {
-    return (
-      <View>
-        <Text>Last sessions:</Text>
-        <Text>Questions you've made:</Text>
-        <ScrollView></ScrollView>
-        <Text>Question History:</Text>
-        {/* <ListView /> */}
-        <Text>Average time spent on questions:</Text>
-       { /* add chart here  */}
-      </View>
-    );
-  }
+    }
 }

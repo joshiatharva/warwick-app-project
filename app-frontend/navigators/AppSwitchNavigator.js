@@ -15,45 +15,16 @@ import { ApplicationProvider, Select, Text, Card, Datepicker, Input, Layout, Top
 import { mapping, light } from '@eva-design/eva';
 import { ContributionGraph, StackedBarChart, ProgressChart } from "react-native-chart-kit"
 
-export default class Personal extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      sessions: [],
-    }
-  }
 
-  async componentDidMount() {
-    let token = await AsyncStorage.getItem("id");
-    let response = await fetch("http://172.31.199.57:3000/user/profile", {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-      }
-    });
-    let res = await response.json();
-    this.setState({user: res.user}, function(err, success) {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log("User: " + this.state.user);
-      }
-    });
-  }
+const AppSwitchNavigator = createSwitchNavigator({
+    Auth: AuthStack, 
+    ForgotPassword: {
+      screen: ForgotPasswordForm,
+      path: 'forgotpassword/:token'
+    },
+    AdminLogin: AdminLogin,
+    Home: HomepageTabNavigator,
+    AdminHomepage: AdminHomepageTabNavigator
+  });
 
-  render() {
-    return (
-      <View>
-        <Text>Last sessions:</Text>
-        <Text>Questions you've made:</Text>
-        <ScrollView></ScrollView>
-        <Text>Question History:</Text>
-        {/* <ListView /> */}
-        <Text>Average time spent on questions:</Text>
-       { /* add chart here  */}
-      </View>
-    );
-  }
-}
+export default AppSwitchNavigator;

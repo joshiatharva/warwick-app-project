@@ -165,11 +165,13 @@ async (req, res) => {
 
   await User.update({_id: user._id}, { $push: {last_10_sessions_length: object}});
   await User.update({_id: user._id}, { $set: { last_sign_in: new Date() } });
-  var time = 60;
-  if (req.body.remember === "true") {
-    time = 60 * 60 * 60 * 60 * 24;
+  var time = 20;
+  if (req.body.remember == true) {
+    time = 20 * 3 * 3;
   }
-  const token = jwt.sign({_id: user._id}, "This is secret");
+  var expiryTime = new Date();
+  expiryTime.setMinutes(expiryTime.getMinutes() + time);  
+  const token = jwt.sign({_id: user._id, exp: expiryTime}, "This is secret",  );
   console.log("Login successful");
   return res.status(200).send({'success': "true", 'msg': 'Login successful', 'token': token});
 });
@@ -233,7 +235,7 @@ router.post('/forgot', [
         return res.send({"error": "email not sent"});
       } else {
         console.log("message sent");
-        return res.send({"msg": forgotToken, "messageID": info.messageId, "success": "true"});
+        return res.send({"msg": forgotToken, "messageID": info.messageId, "success": "true", "id": user._id});
       }
     });
   }
@@ -242,28 +244,27 @@ router.post('/forgot', [
 });
 
 router.post('/reset/:token', async (req, res) => {
-  var resetToken = req.params.token;
+  var resetToken = req.body.token;
   var newPassword = req.body.password;
   var passwordConf = req.body.passwordconf;
   if (newPassword != passwordConf) {
-    return res.send({"success": false, "msg": "Passwords don't match"});
+    return res.send({"success": false, "typ": "password", "msg": "Passwords don't match"});
   }
-  try {
-    var data = jwt.verify(resetToken, "This is secret");
-    var user = await User.findOne({_id: data._id });
-    if(user.forgotPassword) {
-      var forgot = await User_forgot_password({user_id: data});
-      if (forgot.forgotPasswordToken == resetToken) {
+  var passwordToken = await User_forgot_password.findOne({})
+  var user = await User_forgot_password.findOne({user_id: req.body.id });
+  if(user.forgotPassword) {
+    var forgot = user.forgotPasswordToken;
+    if (forgot == resetToken) {
         console.log("Yes it works!");
         salt = bcrypt.genSalt(10);
         newPassword = bcrypt.hash(newPassword, salt);
         await User.update({_id: data._id}, { $set: {password: newPassword} });
         return res.send({"msg": "Password updated", "success": true});
-      }
+    } else {
+      return res.send({"success": false, "typ": "token", "msg": "Tokens do not match!" });
     }
-  } catch (err) {
-    console.log(err);
-    return res.send({"msg": err});
+  } else {
+    return res.send({"success": false, "typ": "user", "msg": "User hasn't clicked forgot password!"});
   }
 });
 

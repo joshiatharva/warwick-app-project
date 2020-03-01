@@ -25,7 +25,7 @@ export default class Local extends Component {
     fetch('localhost:3000/question/makeQuestion', {
       method: 'POST',
       headers: {
-        Accept: 'application/json'
+        Accept: 'application/json',
         "Content-Type": 'application/json',
         "Authorization": "Bearer" + " " + AsyncStorage.getItem("id");
       },
