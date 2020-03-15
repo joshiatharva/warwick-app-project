@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
-import { StyleSheet, View,  FlatList, AsyncStorage, KeyboardAvoidingView, ActivityIndicator, TouchableOpacity, ScrollView, Dimensions, Platform, Alert, InputAccessoryView, ListView } from 'react-native';
+import { StyleSheet, View,  FlatList, AsyncStorage, KeyboardAvoidingView, ActivityIndicator, TouchableOpacity, ScrollView, Dimensions, Platform, Alert, InputAccessoryView, ListView, RefreshControl, Modal } from 'react-native';
 import { createAppContainer, createSwitchNavigator, NavigationActions } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import { createBottomTabNavigator } from 'react-navigation-tabs';
+import { createMaterialTopTabNavigator } from 'react-navigation-tabs';
 import { SearchBar, CheckBox, Button, ListItem, Slider, Avatar, Header } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { WebView } from 'react-native-webview';
@@ -24,6 +25,8 @@ const test = require('./test.js');
 // import Quiz from './components/Quiz';
 
 //TODO: 
+
+
 
 // {
 // 	"question_id": "5e1a332d2cef8707f4b01190",
@@ -63,7 +66,8 @@ class Login extends Component {
       password: '',
       remember: false,
       admin: false,
-      isSending: false
+      isSending: false,
+      errorMsg: '',
     }
   }
 
@@ -122,9 +126,6 @@ class Login extends Component {
         alert(err);
         // console.log(err);
       }
-    } else {
-      this.setState({isVerified: false});
-      // console.log("Token not present");
     }
   }
 
@@ -145,17 +146,17 @@ class Login extends Component {
             "remember": this.state.remember
           })
         });
-        let res = await response.json()
+        let res = await response.json();
         if (res.success === "true") {
           const id_token = res.token;
           await AsyncStorage.setItem('id', id_token);
           // if (res.remember === true) {
           //   await AsyncStorage.setItem('remember', true);
           // }
-          this.setState({isSending: false});
+          this.setState({isSending: false, errorMsg: ''});
           this.props.navigation.navigate('Home');
         } else {
-          console.log(res.message);
+          this.setState({isSending: false, errorMsg: res.msg});
         }
       } catch (err) {
         console.log(err);
@@ -198,7 +199,14 @@ class Login extends Component {
         <ScrollView>
           <View style={styles.signInContainer}>
             <Text style={styles.signInLabel} status='control' category='h5'>Sign In</Text>
-            <Button icon={<Icon name="arrow-right" size={12} color="white"/>} title="Sign Up    " containerStyle = {styles.signUpButton} type="clear" iconRight={true} titleStyle={{color: 'white'}} onPress={() => this.props.navigation.navigate("Register")} />
+            <Button 
+              // icon={<Icon name="arrow-right" size={12} color="white"/>} 
+              title="Sign Up" 
+              containerStyle={styles.signUpButton} 
+              type="clear" 
+              iconRight={true} 
+              titleStyle={{color: 'white'}} 
+              onPress={() => this.props.navigation.navigate("Register")} />
           </View>
           <View style={styles.formContainer}>
             <Input 
@@ -212,6 +220,7 @@ class Login extends Component {
               onChangeText={(item) => this.setState({password: item})} 
             />
           </View>
+          {this.state.errorMsg != ''}
           <CheckBox center title='Remember Me' checked={this.state.remember} checkedColor='blue' onPress={() => this.setState({remember: !this.state.remember})} />
           <CheckBox center title='I am an Admin' checked={this.state.admin} checkedColor='red' onPress={() => this.setState({admin: !this.state.admin})} />
           <Button style={styles.signinButton} title="Sign In" onPress={() => this.sendData()} loading={this.state.isSending} buttonStyle={styles.signinButton} />
@@ -285,7 +294,7 @@ class AdminLogin extends Component {
   render() {
     if (!this.state.err) {
         return (
-          <View styles={styles.formContainer}>
+          <View styles={styles.container}>
             <Text>Password confirmed! For security reasons, please enter the relevant answer to the provided security question!</Text>
             <Text>{this.state.question}</Text>
             <Input placeholder="Enter your answer here!" onChangeText={(text) => this.setState({answer: text})} />
@@ -313,7 +322,9 @@ class Register extends Component {
       email: "",
       username: "",
       password: "",
-      passwordconf: ""
+      passwordconf: "",
+      errorMsg: "",
+      errorArray: null,
     }
   }
 
@@ -342,7 +353,11 @@ class Register extends Component {
           await AsyncStorage.setItem('id', id_token);
           this.props.navigation.navigate('Home');
         } else {
-          alert(res.errors);
+          if (res.typ == "password" || res.typ == "email") {
+            this.setState({errorMsg: res.msg});
+          } else {
+            this.setState({errorArray: res});
+          }
         }
       } catch (err) {
         console.log(err);
@@ -357,6 +372,18 @@ class Register extends Component {
             <Button icon={<Icon name="arrow-left" size={12} color="white" />} type="clear" titleStyle={{color: "white"}} title="Sign In" onPress={() => this.props.navigation.goBack()} />
           </View>
           <View style={styles.formContainer}>
+            {this.state.errorMsg != "" && (
+                <View>
+                  <Text style={styles.error}>{this.state.errorMsg}</Text>
+                </View>
+            )}
+            {this.state.errorArray != null && (
+              <View>
+                {this.state.errorArray.map((item) => {
+                  <Text style={styles.error}>{item.msg}</Text>
+                })}
+              </View>
+            )}
             <Input placeholder="First Name" onChangeText={(item) => this.setState({firstname: item})} />
             <Input placeholder="Last Name" onChangeText={(item) => this.setState({lastname: item})} />
             <Input placeholder="Email" onChangeText={(item) => this.setState({email: item})} />
@@ -384,7 +411,6 @@ class Home extends Component {
 
   async componentDidMount() {
     let token = await AsyncStorage.getItem("id");
-    let admin = await AsyncStorage.getItem("admin");
     if (token != null) {
       let response = await fetch('http://192.168.0.16:3000/user/profile', {
         method: "GET",
@@ -409,29 +435,20 @@ class Home extends Component {
           alert("Unfortunately, your token has expired! Please sign in again.");
         }
       }
-    if (admin != null) {
-      let response = await fetch('http://192.168.0.16:3000/admin/profile', {
-        method: "GET",
-        headers : {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + token
-        }
-      });
-      let res = await response.json();
-      if (res.success === true) {
-        this.setState({user: res.admin, admin: true});
-          // this.getAdminData();
-      } else {
-        this.setState({err: res.message});
-        if (res.msg == "Token expired") {
-          this.props.navigation.navigate("Login");
-          alert("Unfortunately, your token has expired! Please sign in again.");
-        }
-      }
     }
   }
-}
+
+  // async getData() {
+  //   let token = await AsyncStorage.getItem("id");
+  //   let response = await fetch('http://192.168.0.16:3000/user/today', {
+  //     method: 'GET',
+  //     headers: {
+  //       Accept: 'application/json',
+  //       'Content-Type': 'application/json',
+  //       'Authorization': 'Bearer ' + token,
+  //     }
+  //   })
+  // }
 
   render() {
     const chartConfig = {
@@ -439,13 +456,13 @@ class Home extends Component {
       backgroundGradientFromOpacity: 0,
       backgroundGradientTo: "#FFFFFF",
       backgroundGradientToOpacity: 0.5,
-      color: (opacity = 1) => `rgba(106,13,173, ${opacity})`,
+      color: (opacity = 1) => `rgba(0,181,204, ${opacity})`,
       strokeWidth: 2, // optional, default 3
       barPercentage: 0.5
     };
     const data={
       labels: ["RL's", "CFL's", "TM's"],
-      data: [(4/7), (2/6), (1/3)],
+      data: [(5/7), (2/5), (1/3)],
     };
     return (
     // <DFADrawingComponent />
@@ -454,26 +471,90 @@ class Home extends Component {
         <Text>Welcome back,</Text>
         <Text category="h2">{this.state.user.firstname}!</Text> 
       </View>
-      {!this.state.admin && (
-      <View>
-        <Text style={{textAlign: 'center', fontSize: 18, padding: 16, marginTop: 16}}>Your current success average is:</Text>
-        <ProgressChart
+      <Text style={{textAlign: 'center', fontSize: 18, padding: 16, marginTop: 16}}>Your current success average is:</Text>
+      <ProgressChart
           data={data}
           width={WIDTH}
           height={220}
           chartConfig={chartConfig}
           hideLegend={false}
-        />
-      </View>
-      )}
-      {this.state.admin && (
-        <View>
-
-        </View>
-      )}
+      />
+      <Text status="control" category="p2">Questions:</Text>
+      <Text>{this.state.questions_made_today} questions have been made today.</Text>
       <Text>Let's get started with quizzing:</Text>
       <Button title="Get Started!" onPress={() => this.props.navigation.navigate("Questions")} />
       
+    </ScrollView>
+    );
+  }
+}
+
+class AdminHome extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      user: [],
+      scores: [],
+      err: '',
+      admin: false,
+      questions: 5,
+      // adminStats: [],
+    }
+  }
+
+  async componentDidMount() {
+    let admin = await AsyncStorage.getItem("admin");
+    if (admin != null) {
+      let response = await fetch('http://192.168.0.16:3000/admin/profile', {
+        method: "GET",
+        headers : {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + admin
+        }
+      });
+      let res = await response.json();
+      if (res.success === true) {
+        this.setState({user: res.msg, admin: true});
+        let newResponse = await fetch('http://192.168.0.16:3000/admin/stats', {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + admin
+          }
+        });
+        let newRes = await newResponse.json();
+        if (newRes.success == true) {
+          this.setState({questions: newRes.questions});
+        }
+          // this.getAdminData();
+      } else {
+        this.setState({err: res.msg});
+        if (res.msg == "Token expired") {
+          this.props.navigation.navigate("Login");
+          alert("Unfortunately, your token has expired! Please sign in again.");
+        }
+      }
+    }
+  }
+
+  render() {
+    return (
+    // <DFADrawingComponent />
+    <ScrollView>
+      <TopNavigation 
+        title='Home'
+        alignment='center'
+      />
+      <View style={styles.headerContainer}>
+        <Text>Welcome back,</Text>
+        <Text category="h2">{this.state.user.username}!</Text> 
+      </View>
+      <View>
+        <Text>Hello there</Text>
+        <Text>There are currently 1 new users signed up today!</Text>
+      </View>
     </ScrollView>
     );
   }
@@ -532,12 +613,13 @@ class BlacklistUsers extends Component {
       }),
     });
     let res = await response.json();
-    if (res.success == true) {
+    if (res.success == "true") {
+      alert("Your request has been submitted. "+ this.state.username +" will receive an email concerning their blacklist");
       this.setState({username: '', reason: '', date: null, users: []});
-      alert(`Your request has been submitted. ${this.state.username} will receive an email concerning their blacklist`);
     } else {
       alert("Error occurred, please try again");
     }
+    alert("Your request has been submitted. "+ this.state.username +" will receive an email concerning their blacklist");
   }
 
   render() {
@@ -707,6 +789,7 @@ class Questions extends Component {
       isLoading: true,
       error: null,
       search: '',
+      filteredQuestions: [],
     }
   }
 
@@ -715,8 +798,9 @@ class Questions extends Component {
       headerRight: () => (
         <Icon
           name='plus'
-          size={10}
+          size={20}
           onPress={() => {navigation.navigate("MakeQuestion")}}
+          style={{marginRight: 10}}
         />
       ),
     };
@@ -739,7 +823,7 @@ class Questions extends Component {
         },
       });
       let json = await response.json();
-      this.setState({questions: json, isLoading: false});
+      this.setState({questions: json, filteredQuestions: json, isLoading: false});
       if (res.msg == "Token expired") {
         this.props.navigation.navigate("Login");
         alert("Unfortunately, your token has expired! Please sign in again!");
@@ -749,34 +833,34 @@ class Questions extends Component {
     }
   }
 
-  async getData() {
-    const token = await AsyncStorage.getItem("id");
-    try {
-      let response = await fetch(`http://192.168.0.16:3000/questions/${this.state.topic}/${this.state.search}`, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token,  
-        }
-      });
-      let res = await response.json();
-      if (res.msg == "Token expired") {
-        this.props.navigation.navigate("Login");
-        alert("Unfortunately, your token has expired! Please sign in again!");
-      }
-      if (res.success) {
-        this.setState({questions: res.json});
-      }
-      if (res.msg == "Token expired") {
-        this.props.navigation.navigate("Login");
-        alert("Unfortunately, your token has expired! Please sign in again!");
-      }
-    } catch (err) {
-      console.log("Error occurred: " + err);
-    }
+  // async getData() {
+  //   const token = await AsyncStorage.getItem("id");
+  //   try {
+  //     let response = await fetch(`http://192.168.0.16:3000/questions/${this.state.topic}/${this.state.search}`, {
+  //       method: 'GET',
+  //       headers: {
+  //         Accept: 'application/json',
+  //         'Content-Type': 'application/json',
+  //         'Authorization': 'Bearer ' + token,  
+  //       }
+  //     });
+  //     let res = await response.json();
+  //     if (res.msg == "Token expired") {
+  //       this.props.navigation.navigate("Login");
+  //       alert("Unfortunately, your token has expired! Please sign in again!");
+  //     }
+  //     if (res.success) {
+  //       this.setState({questions: res.json});
+  //     }
+  //     if (res.msg == "Token expired") {
+  //       this.props.navigation.navigate("Login");
+  //       alert("Unfortunately, your token has expired! Please sign in again!");
+  //     }
+  //   } catch (err) {
+  //     console.log("Error occurred: " + err);
+  //   }
 
-  }
+  // }
 
   async saveQuestion(id) {
     try {
@@ -805,31 +889,79 @@ class Questions extends Component {
     }
   }
 
-  async getQuestion(item) {
+  async viewQuestion(item) {
     console.log(item);
     this.props.navigation.navigate("ViewQuestion", {
       id: item
     });
   }
 
+  getData = search => {
+    if (search == '') {
+      this.setState({filteredQuestions: this.state.questions, search: ''});
+    }
+    this.setState({search: search});
+    let filtered = this.state.filteredQuestions.filter(function(item) {
+      console.log(search + "+" +  (item.name.includes(search)).name);
+      return item.name.includes(search); 
+    });
+    console.log(filtered);
+    this.setState({filteredQuestions: filtered});
+  }
+
+  async resetData() { 
+    this.setState({filteredQuestions: this.state.questions, search: ''});
+  }
+
+  async _handleRefresh() {
+    this.setState({isLoading: true});
+    this.getQuestions();
+    this.setState({isLoading: false});
+  }
+
+
   render() {
+    const data = [
+      {
+        index: 0,
+        screen: "Questions",
+      },
+      {
+        index: 1,
+        screen: "MakeQuestion",
+      }
+    ];
       return (
-        <ScrollView>
+        <ScrollView refreshControl={<RefreshControl 
+          refreshing={this.state.isLoading}
+          onRefresh={() => this._handleRefresh()}/>
+        }>
+          {/* <TopNavigation 
+            title='Questions'
+            alignment='center'
+          /> */}
+          {/* <TabView 
+            selectedIndex={data.index}
+            onSelect={(item) => this.props.navigation.navigate(item.screen)}
+          >
+            <Tab></Tab>
+          </TabView> */}
           <SearchBar 
-          onChangeText={(item) => this.setState({search: item})}
-          onClearText={()=> this.setState({search: ''})}
+          value={this.state.search}
+          onChangeText={this.getData}
+          // onClearText={this.getData}
           lightTheme
           placeholder='Enter here....'
           />
           <FlatList 
-            data={this.state.questions}
+            data={this.state.filteredQuestions}
             renderItem = {({item, index}) =>
               <ListItem
                 title={item.name}
                 subtitle={item.topic}
                 bottomDivider
                 chevron
-                onPress={() => this.getQuestion(item)}
+                onPress={() => this.viewQuestion(item)}
               />
             }
             keyExtractor={(item, index) => index.toString()}
@@ -852,22 +984,7 @@ class AdminQuestions extends Component {
   }
 
   async componentDidMount() {
-    try {
-      const token = await AsyncStorage.getItem("admin");
-      let response = await fetch('http://192.168.0.16:3000/questions/all', {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-      });
-      let json = await response.json();
-      this.setState({questions: json, isLoading: false});
-    } catch (err) {
-      console.log("Error occured");
-      this.setState({error: err});
-    }
+    this.getQuestions();
   }
 
   async sendData() {
@@ -912,9 +1029,37 @@ class AdminQuestions extends Component {
     }
   }
 
+  async getQuestions() {
+    try {
+      const token = await AsyncStorage.getItem("admin");
+      let response = await fetch('http://192.168.0.16:3000/questions/all', {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+      });
+      let json = await response.json();
+      this.setState({questions: json});
+    } catch (err) {
+      console.log("Error occured");
+      this.setState({error: err});
+    }
+  }
+  async _handleRefresh() {
+    this.setState({isLoading: true});
+    this.getQuestions();
+    this.setState({isLoading: false});
+  }
+
   render() {
       return (
-        <ScrollView>
+        <ScrollView refreshControl={<RefreshControl 
+          refreshing={this.state.isLoading}
+          onRefresh={() => this._handleRefresh()}
+          stickyIndices
+        />}>
           <SearchBar 
           onChangeText={(item) => this.setState({search: item})}
           onClearText={()=> this.setState({search: ''})}
@@ -970,6 +1115,9 @@ class ViewQuestion extends Component {
         })
       });
       let res = await response.json();
+      if (res.success == true) {
+        alert("Question has been saved to Favourites!");
+      }
       // console.log(res.message);
     } catch (err) {
       // console.log(err);
@@ -1037,10 +1185,236 @@ class AdminViewQuestion extends Component {
           <Text>Solution: {this.state.question.solution}</Text>
           <Text>{this.state.question.accesses} people have tried this question!</Text>
           <Text>Mean mark: {this.state.question.correct / this.state.question.accesses}</Text>
-          <Button title="Edit Question" onPress={() => this.props.navigation.navigate("EditQuestion", {Question: this.state.question})} />
+          <Button title="Edit Question" onPress={() => this.props.navigation.navigate("EditQuestion", { Question: this.state.question})} />
+          <Button title="Simulate" onPress={() => this.props.navigation.navigate("TestQuiz", {Question: this.state.question})} />
         </Card>
       </View>
     );
+  }
+}
+
+class TestQuiz extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      isLoading: true,
+      correct: false, 
+      answered: false,
+      value: "",
+      questions: [],
+      normalAnswer: "",
+      answer: ""
+    }
+  }
+
+  componentDidMount() {
+    this.setState({questions: this.props.navigation.getParam('Question'), isLoading: false}, () => console.log("Questions: " + this.state.questions));
+  }
+
+  isCorrect(value) {
+    // console.log("Value: " + value);
+    this.setState({
+      answered: true, answer: value, 
+    });
+    if (value === this.state.questions.answer) {
+      this.setState({correct: true}, () => {
+        this.props.navigation.navigate("CheckAnswer", {
+          Question: this.state.questions,
+          correct: this.state.correct,
+          chosenAnswer: value,
+        });
+      });
+    } else {
+      this.setState({correct: false}, () => {
+        this.props.navigation.navigate("CheckAnswer", {
+          Question: this.state.questions,
+          correct: this.state.correct,
+          chosenAnswer: value,
+        });
+      });
+
+    }
+  }
+
+  render() {
+    if (!this.state.isLoading) {
+      if (this.state.questions.type == "true_false") {
+        return (
+          <View style={styles.container}>
+            <Text>{this.state.questions.question}</Text>
+            <Button containerStyle={styles.truefalse_button} title="True" onPress={() => this.isCorrect("true")} />
+            <Button containerStyle={styles.truefalse_button} title="False" onPress={() => this.isCorrect("false")} />
+          </View>
+        );
+      } else if (this.state.questions.type == "multi_choice") {
+        return (
+          <View style={styles.container}>
+            <Text> {this.state.questions.question}</Text>
+            <View style={styles.inlinebuttons}>
+              <Button title={this.state.questions.options[0]} value={this.state.questions.options[0]} onPress={() => this.isCorrect(this.state.questions.options[0])} />
+              <Button title={this.state.questions.options[1]} value ={this.state.questions.options[1]} onPress={() => this.isCorrect(this.state.questions.options[1])} />
+            </View>
+            <View style={styles.inlinebuttons}>
+              <Button title={this.state.questions.options[2]} value={this.state.questions.options[2]} onPress={() => this.isCorrect(this.state.questions.options[2])} />
+              <Button title={this.state.questions.options[3]} value={this.state.questions.options[3]} onPress={() => this.isCorrect(this.state.questions.options[3])} />
+            </View>
+          </View>
+        );
+      } else if (this.state.questions.type == "normal_answer") {
+        return (
+          <View style={styles.container}>
+            <Text> {this.state.questions.question}</Text>
+            <Input placeholder="Answer here" onChangeText={(item) => this.setState({normalAnswer: item})}/>
+            <Button title="Check answer" onPress={() => this.isCorrect(this.state.normalAnswer)} />
+          </View>
+        );
+      } else {
+        return (
+          <View style={styles.container}>
+            <Text> {this.state.questions.question}</Text>
+            <Input placeholder="Answer here" onChangeText={(answer) => this.setState({normalAnswer: answer})}/>
+            <Button title="Check answer" onPress={() => this.isCorrect(this.state.normalAnswer)} />
+          </View>
+        );
+      }
+    } else {
+      return (
+        <View> 
+          <ActivityIndicator />
+          <Text>Loading Question.....This may take unknown time.</Text>
+        </View>
+      );
+    }
+  }
+}
+
+class CheckAnswer extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      question: [],
+      correct: false,
+      selectedAnswer: "",
+      isSending: true
+    }
+  }
+
+  async componentDidMount() {  
+    // console.log("chosenAnswer" + this.props.navigation.getParam("chosenAnswer"));
+    // console.log(this.props.navigation.getParam("Question"));
+    // console.log(this.props.navigation.getParam("Question").options[0] + "This is the answer");
+    this.setState({
+      question: this.props.navigation.getParam("Question"),
+      correct: this.props.navigation.getParam("correct"),
+      selectedAnswer: this.props.navigation.getParam("chosenAnswer")
+    }, () => console.log(this.props.navigation.getParam("chosenAnswer") + "=" + this.state.selectedAnswer));
+    // const setParamsAction = NavigationActions.setParams({
+    //   params: {hideTabBar: true},
+    //   key: 'tab-name'
+    // });
+    // this.props.navigation.dispatch(setParamsAction);
+    // console.log("isSending: " + this.state.isSending);
+    // console.log("id: " + this.state.question._id);
+    // let token = await AsyncStorage.getItem("id");
+    // try {
+    //   let response = await fetch('http://192.168.0.16:3000/questions/marks', {
+    //     method: "POST",
+    //     headers: {
+    //       Accept: 'application/json',
+    //       "Content-Type": 'application/json',
+    //       "Authorization": "Bearer " + token,
+    //     },
+    //     body: JSON.stringify({
+    //       question_id: this.state.question._id,
+    //       correct: this.state.correct,
+    //       answer: this.state.answer
+    //     }),
+    //   });
+    //   let res = await response.json();
+    //   if (res.success === true) {
+    //     this.setState({isSending: false}); 
+    //   // } else {
+    //   //   this.props.navigation.navigate("Questions");
+    //   //   alert("Not done");
+    //   }
+    //   // }
+    // } catch (err) {
+    //   // console.log(err);
+    //   // console.log("Error occurred");
+    // }
+  }
+
+  selectedStyle(value) {
+    const styles = {};
+    if (value == this.state.selectedAnswer) {
+      styles.borderColor = 'blue';
+      styles.borderWidth = 0.5; 
+      if (value != this.state.question.answer) {
+        styles.backgroundColor = 'red';
+      }
+    }
+    if (value == this.state.question.answer) {
+      styles.backgroundColor = 'green';
+    }
+    return styles;
+  }
+
+  render() {
+    if (this.state.question.type === "true_false") {
+      return (
+        <View style={styles.container}>
+          <Text>{this.state.question.question}</Text>
+          <Button disabled title="True" disabledStyle={this.selectedStyle("True")} />
+          <Button disabled title="False" disabledStyle={this.selectedStyle("False")} />
+          <AnswerScheme isAnswered={true} answer={this.state.question.answer} answerScheme={this.state.question.solution} correct={this.state.correct} givenAnswer={this.state.selectedAnswer} />
+          <View>
+            <Button title="Click here to go home!" onPress={() => this.props.navigation.popToTop()}/> 
+          </View>
+        </View>
+      );
+    } else if (this.state.question.type === "multi_choice") {
+      return (
+        <View style={styles.container}>
+          <Text> {this.state.question.question}</Text>
+          <Button title={this.state.question.options[0]} value={this.state.question.options[0]} disabled disabledStyle={this.selectedStyle(this.state.question.options[0])} />
+          <Button title={this.state.question.options[1]} value={this.state.question.options[1]} disabled disabledStyle={this.selectedStyle(this.state.question.options[1])} />
+          <Button title={this.state.question.options[2]} value={this.state.question.options[2]} disabled disabledStyle={this.selectedStyle(this.state.question.options[2])} />
+          <Button title={this.state.question.options[3]} value={this.state.question.options[3]} disabled disabledStyle={this.selectedStyle(this.state.question.options[3])} />
+          <AnswerScheme isAnswered={true} givenAnswer={this.state.selectedAnswer} answerScheme={this.state.question.solution} answer={this.state.question.answer} correct={this.state.correct} />
+          <View>
+            <Button title="Click here to go home!" onPress={() => this.props.navigation.popToTop()}/> 
+          </View>
+        </View>
+      );
+    } else if (this.state.question.type === "normal_answer") {
+      return (
+        <ScrollView>
+          <Text> {this.state.question.question}</Text>
+          <Input placeholder={this.state.normalAnswer} disabled disabledInputStyle={this.selectedStyle} />
+          <Button title="Check answer" disabled />
+          <AnswerScheme isAnswered={true} givenAnswer={this.state.answer} answerScheme={this.state.question.solution} answer={this.state.question.answer} correct={this.state.correct} />
+          <View>
+            <View>
+              <ActivityIndicator />
+              <Text>Just wait, your result is being sent!</Text>
+            </View>
+            <Button title="Click here to go home!" onPress={() => this.props.navigation.popToTop()}/> 
+          </View>
+        </ScrollView>
+      );
+    } else {
+      return (
+        <ScrollView>
+          <Text> {this.state.question.question}</Text>
+          <Input placeholder={this.state.normalAnswer} disabled disabledInputStyle={this.selectedStyle}/>
+          <Button title="Check answer" disabled/>
+          <AnswerScheme isAnswered={true} givenAnswer={this.state.chosenAnswer} answerScheme={this.state.question.solution} answer={this.state.question.answer} correct={this.state.correct} />
+          <View>          
+            <Button title="Click here to go home!" onPress={() => this.props.navigation.popToTop()}/> 
+          </View>
+        </ScrollView>
+      );
+    }
   }
 }
 
@@ -1052,12 +1426,18 @@ class EditQuestion extends Component {
       name: "",
       question: "",
       type: "",
+      topic: "",
       options: [],
+      optionList: [],
+      option1: "",
+      option2: "",
+      option3: "",
+      option4: "",
       answer: "",
       solution: "",
       difficulty: 1,
-      topic: "",
       isLoading: false,
+      selectedType: "",
     }
   }
 
@@ -1066,12 +1446,30 @@ class EditQuestion extends Component {
       id: this.props.navigation.getParam("Question")._id,
       name: this.props.navigation.getParam("Question").name,
       question: this.props.navigation.getParam("Question").question,
-      type: this.props.navigation.getParam("Question").type,
-      options: this.props.navigation.getParam("Question").options,
+      topic: this.props.navigation.getParam("Question").topic,
+      option1:  this.props.navigation.getParam("Question").options[0],
+      option2: this.props.navigation.getParam("Question").options[1],
+      option3:this.props.navigation.getParam("Question").options[2],
+      option4: this.props.navigation.getParam("Question").options[3],
       answer: this.props.navigation.getParam("Question").answer,
       solution: this.props.navigation.getParam("Question").solution,
       difficulty: this.props.navigation.getParam("Question").difficulty,
     });
+    switch (this.state.type) {
+      case "true_false":
+        this.setState({selectedType: "True-False"});
+        break;
+        case "multi_choice":
+          this.setState({selectedType: "Multiple Choice"});
+          break;
+        case "normal_answer":
+          this.setState({selectedType: "Normal Answer"});
+          break;
+        default: 
+          this.setState({selectedType: "Normal Answer"});
+          break;
+    }
+    this.addToArray();
     // let response = await fetch("http://192.168.0.16:3000/topics/all", {
     //   method: 'GET',
     //   headers: {
@@ -1097,7 +1495,7 @@ class EditQuestion extends Component {
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer' + adminToken,
+        'Authorization': 'Bearer ' + adminToken,
       },
       body: JSON.stringify({
         id: this.state.id,
@@ -1114,7 +1512,7 @@ class EditQuestion extends Component {
     let res = await response.json();
     if (res.success === true) {
       alert("Done");
-      this.props.navigate.goBack();
+      this.props.navigation.goBack();
     } else {
       console.log("Not done");
     }
@@ -1138,7 +1536,7 @@ class EditQuestion extends Component {
   async removeObject(item) {
     var entry = item.text;
     console.log(item.text);
-    this.setState({answer: entry}, () => console.log(this.state.answer));
+    this.setState({answer: entry});
   }
 
   async booleanToObject(item) {
@@ -1149,7 +1547,7 @@ class EditQuestion extends Component {
     } else {
       boolean = false;
     }
-    this.setState({answer: boolean}, () => console.log(this.state.answer));
+    this.setState({answer: boolean});
   }
 
   async addType(item) {
@@ -1171,7 +1569,6 @@ class EditQuestion extends Component {
         break;
     }
   }
-
   render() {
     const types = [
       {text: "True-False"},
@@ -1183,6 +1580,10 @@ class EditQuestion extends Component {
       {text: "Context Free Languages"},
       {text: "Turing Machines"},
     ];
+    const boolean = [
+      {text: "True"},
+      {text: "False"}
+    ];
     return (
       <ScrollView>
       <Text>Here we can make new questions!</Text>
@@ -1190,28 +1591,27 @@ class EditQuestion extends Component {
       <Input placeholder={this.state.question} multiline={true} onChangeText={(ques) => this.setState({question: ques})} />
       <Text>Please select the question topic:</Text>
       <Select
-        placeholder="Select Question Topic"
-        data={topics}
-        selectedOption={this.state.topic}
-        onSelect={(item) => this.setState({topic: item.text}, () => console.log(this.state.topic))} 
-      />  
-      <Text>Please set a question type:</Text>
-      <Select
-        placeholder="Select Question Type"
-        data={types}
-        selectedOption={this.state.type}
-        onSelect={(item) => this.addType(item)}
-      />
-      {(this.state.selectedType == "Multiple Choice") && (
-      <View style={styles.container}> 
-        <Input placeholder="Option 1" onChangeText={(text) => this.setState({option1: text})} />
-        <Input placeholder="Option 2" onChangeText={(text) => this.setState({option2: text})} />
-        <Input placeholder="Option 3" onChangeText={(text) => this.setState({option3: text})} />
-        <Input placeholder="Option 4" onChangeText={(text) => this.setState({option4: text})} />
-        <Button raised type="outline" title="Set your options here!" onPress={() => this.addToArray()} />
-        <Text>Select your answer here!</Text>
-        <Text></Text>
-        <View>
+          placeholder={this.state.topic}
+          data={topics}
+          selectedOption={this.state.topic}
+          onSelect={(item) => this.setState({topic: item.text}, () => console.log(this.state.topic))} 
+        />  
+        <Text>Please set a question type:</Text>
+        <Select
+          placeholder="Select Question Type"
+          data={types}
+          selectedOption={this.state.type}
+          onSelect={(item) => this.addType(item)}
+        />
+        {(this.state.selectedType == "Multiple Choice") && (
+        <View style={styles.container}> 
+          <Input placeholder="Option 1" onChangeText={(text) => this.setState({option1: text})} />
+          <Input placeholder="Option 2" onChangeText={(text) => this.setState({option2: text})} />
+          <Input placeholder="Option 3" onChangeText={(text) => this.setState({option3: text})} />
+          <Input placeholder="Option 4" onChangeText={(text) => this.setState({option4: text})} />
+          <Button raised type="outline" title="Set your options here!" onPress={() => this.addToArray()} />
+          <Text>Select your answer here!</Text>
+          <Text></Text>
           <Select 
             placeholder="Select Answer"
             data={this.state.optionList}
@@ -1219,33 +1619,26 @@ class EditQuestion extends Component {
             onSelect={(object) => this.removeObject(object)}
           />
         </View>
-        {/* <Select 
-          placeholder="Select Answer"
-          data={this.state.optionList}
-          selectedOption={this.state.answer}
-          onSelect={(object) => this.removeObject(object)}
-        /> */}
-      </View>
-      )}
-      {(this.state.selectedType == "Normal Answer") && (
-      <View style={styles.container}>
-        <Text>No options required - move onto next field!</Text> 
-        <Input placeholder="Enter your answer here" onChange={(text) => this.setState({answer: text})} />
-      </View>
-      )}
-      {(this.state.selectedType == "True-False") && (
+        )}
+        {(this.state.selectedType == "Normal Answer") && (
         <View style={styles.container}>
-          <Button disabled title="True"/> 
-          <Button disabled title="False"/>
-          <Select
-            data={boolean}
-            selectedOption={this.state.answer}
-            onSelect={(object) => this.booleanToObject(object)}
-          />
+          <Text>No options required - move onto next field!</Text> 
+          <Input placeholder="Enter your answer here" onChangeText={(text) => this.setState({answer: text})} />
         </View>
-      )}
+        )}
+        {(this.state.selectedType == "True-False") && (
+          <View style={styles.container}>
+            <Button disabled title="True"/> 
+            <Button disabled title="False"/>
+            <Select
+              data={boolean}
+              selectedOption={this.state.answer}
+              onSelect={(object) => this.booleanToObject(object)}
+            />
+          </View>
+        )}
       <View style={styles.container}>
-        <Input placeholder="Solution to problem" multiline={true} numberOfLines={5} maxLength={1000} onChangeText={(text) => this.setState({solution: text})} />
+        <Input placeholder={this.state.solution} multiline={true} numberOfLines={5} maxLength={1000} onChangeText={(text) => this.setState({solution: text})} />
       </View>
       <Slider maximumValue={5} minimumValue={1} step={1} value={this.state.difficulty} onSlidingComplete={(value) => this.setState({difficulty: value})} />
       <Text>Difficulty: {this.state.difficulty}</Text>
@@ -1502,7 +1895,7 @@ class MakeQuestion extends Component {
         {(this.state.selectedType == "Normal Answer") && (
         <View style={styles.container}>
           <Text>No options required - move onto next field!</Text> 
-          <Input placeholder="Enter your answer here" onChange={(text) => this.setState({answer: text})} />
+          <Input placeholder="Enter your answer here" onChangeText={(text) => this.setState({answer: text})} />
         </View>
         )}
         {(this.state.selectedType == "True-False") && (
@@ -1643,15 +2036,15 @@ class Profile extends Component {
     }
     let admin = await AsyncStorage.getItem("admin");
     if (admin != null) {
-      let response = await fetch("http://192.168.0.16:3000/admin/logout", {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + token
-        }
-      });
-      let res = await response.json();
+      // let response = await fetch("http://192.168.0.16:3000/admin/logout", {
+      //   method: "GET",
+      //   headers: {
+      //     Accept: "application/json",
+      //     "Content-Type": "application/json",
+      //     "Authorization": "Bearer " + admin
+      //   }
+      // });
+      // let res = await response.json();
       await AsyncStorage.removeItem("admin");
     }
     this.props.navigation.navigate("Login");
@@ -1689,7 +2082,6 @@ class Profile extends Component {
         <Settings />
         <Statistics />
         <Account /> */}
-
         {list.map((item, i) => (
           <ListItem
             key={i}
@@ -1700,7 +2092,7 @@ class Profile extends Component {
           />
         ))
         }
-        <Button title="Logout" onPress={() => this._handleLogout()} />
+        <Button containerStyle={styles.forgotButton} title="Logout" onPress={() => this._handleLogout()} />
       </ScrollView>
     );
   }
@@ -1740,7 +2132,7 @@ class Accordion extends Component {
     return (
       <Card>
         <View>
-          <Text>{this.state.question.title}</Text>
+          <Text>{this.state.question.name}</Text>
           <Icon />
         </View>
         {this.state.expanded && (
@@ -1974,15 +2366,15 @@ class Account extends Component {
           <Text>Last Name: {this.state.lastname}</Text>
           <Text>Email address: {this.state.email}</Text>
         </View>
-        {this.state.edit && (
-        <View>
-          <Input placeholder={this.state.username} label="Edit your username here" onEndEditing={(text) => this.setState({username: text})} />
-          <Input placeholder={this.state.firstname} label="Edit your first name here:" onEndEditing={(text) => this.setState({firstname: text})}/>
-          <Input placeholder={this.state.lastname} label="Edit your last name here:" onEndEditing={(text) => this.setState({lastname: text})} />
-          <Input placeholder={this.state.email} label="Edit the email address used for correspondence" onEndEditing={(text) => this.setState({email: text})} />
-          <Button title="Save changes" onPress={() => this.sendData()} />
-        </View>
-        )}
+        {/* {this.state.edit && (
+        // <View>
+        //   <Input placeholder={this.state.username} label="Edit your username here" onEndEditing={(text) => this.setState({username: text})} />
+        //   <Input placeholder={this.state.firstname} label="Edit your first name here:" onEndEditing={(text) => this.setState({firstname: text})}/>
+        //   <Input placeholder={this.state.lastname} label="Edit your last name here:" onEndEditing={(text) => this.setState({lastname: text})} />
+        //   <Input placeholder={this.state.email} label="Edit the email address used for correspondence" onEndEditing={(text) => this.setState({email: text})} />
+        //   <Button title="Save changes" onPress={() => this.sendData()} />
+        // </View>
+        )} */}
       </View>
     );
   }
@@ -1994,7 +2386,7 @@ class DataUpload extends Component {
     this.state = {
       question: [],
       correct: false,
-      selectedAnswer: "",
+      answer: "",
       isSending: true
     }
   }
@@ -2007,7 +2399,7 @@ class DataUpload extends Component {
       question: this.props.navigation.getParam("Question"),
       correct: this.props.navigation.getParam("correct"),
       answer: this.props.navigation.getParam("chosenAnswer")
-    }, () => console.log(this.props.navigation.getParam("chosenAnswer") + "=" + this.state.answer));
+    });
     // const setParamsAction = NavigationActions.setParams({
     //   params: {hideTabBar: true},
     //   key: 'tab-name'
@@ -2046,8 +2438,9 @@ class DataUpload extends Component {
 
   selectedStyle(value) {
     const styles = {};
-    if (value == this.state.selectedAnswer) {
+    if (value == this.state.answer) {
       styles.borderColor = 'blue';
+      styles.borderWidth = 0.5; 
       if (value != this.state.question.answer) {
         styles.backgroundColor = 'red';
       }
@@ -2063,8 +2456,8 @@ class DataUpload extends Component {
       return (
         <View style={styles.container}>
           <Text>{this.state.question.question}</Text>
-          <Button title="True" style={this.selectedStyle("True")} />
-          <Button title="False" style={this.selectedStyle("False")} />
+          <Button title="True" disabled disabledStyle={this.selectedStyle("true")} />
+          <Button title="False" disabled disabledStyle={this.selectedStyle("false")} />
           <AnswerScheme isAnswered={true} answer={this.state.question.answer} answerScheme={this.state.question.solution} correct={this.state.correct} givenAnswer={this.state.answer} />
           <View>
           {this.state.isSending ? 
@@ -2101,9 +2494,9 @@ class DataUpload extends Component {
       );
     } else if (this.state.question.type === "normal_answer") {
       return (
-        <ScrollView>
+        <View style={styles.container}>
           <Text> {this.state.question.question}</Text>
-          <Input placeholder={this.state.normalAnswer} disabled disabledInputStyle={this.selectedStyle} />
+          <Input placeholder={this.state.answer} disabled disabledInputStyle={this.selectedStyle} />
           <Button title="Check answer" disabled />
           <AnswerScheme isAnswered={true} givenAnswer={this.state.answer} answerScheme={this.state.question.solution} answer={this.state.question.answer} correct={this.state.correct} />
           <View>
@@ -2116,7 +2509,7 @@ class DataUpload extends Component {
             <Button title="Click here to go home!" onPress={() => this.props.navigation.navigate("Favourites")}/> 
           }
           </View>
-        </ScrollView>
+        </View>
       );
     } else {
       return (
@@ -2185,6 +2578,7 @@ const AuthStack = createStackNavigator({
   },
 });
 
+
 // const Stack = createStackNavigator();
 
 // const AuthStackNavigator = () => (
@@ -2214,21 +2608,45 @@ const AuthStack = createStackNavigator({
 //   </Stack.Navigator>
 // );
 
+
+
 const adminQuestionStackNavigator = createStackNavigator({
   Questions: {
     screen: AdminQuestions,
+    navigationOptions: {
+      headerShown: false,
+    },
   },
   AdminViewQuestion: {
-    screen: AdminViewQuestion
+    screen: AdminViewQuestion,
+    navigationOptions: {
+      headerShown: false,
+    },
   },
   MakeQuestion: {
     screen: MakeQuestion,
+    navigationOptions: {
+      headerShown: false,
+    },
   },
   EditQuestion: {
     screen: EditQuestion,
+    navigationOptions: {
+      headerShown: false,
+    },
   },
-  Quiz: Quiz,
-  DataUpload: DataUpload,
+  TestQuiz: {
+    screen: TestQuiz,
+    navigationOptions: {
+      headerShown: false,
+    },
+  },
+  CheckAnswer: {
+    screen: CheckAnswer,
+    navigationOptions: {
+      headerShown: false,
+    },
+  },
 });
 
 adminQuestionStackNavigator.navigationOptions = {
@@ -2240,16 +2658,15 @@ const questionStackNavigator = createStackNavigator({
   Questions: {
     screen: Questions,
   },
-  MakeQuestion: {
-    screen: MakeQuestion,
-  },
   ViewQuestion: {
     screen: ViewQuestion,
+  },
+  MakeQuestion: {
+    screen: MakeQuestion,
   },
 });
 
 questionStackNavigator.navigationOptions = {
-  tabBarLabel: 'Questions',
   initialRouteName: 'Questions',
   defaultNavigationOptions: {
     headerStyle: {
@@ -2262,6 +2679,7 @@ questionStackNavigator.navigationOptions = {
     }
   }
 };
+
 
 const questionSwitchNavigator = createSwitchNavigator({
   Favourites: {
@@ -2317,16 +2735,26 @@ profileNavigator.navigationOptions = {
 //   initialRouteName: 'Favourites',
 // };
 
+// const topTabNavigator = createMaterialTopTabNavigator({
+//   questionStack: questionStackNavigator,
+//   MakeQuestion: MakeQuestion,
+//   Questions: Questions,
+// });
+
+// topTabNavigator.navigationOptions = {
+//   initialRouteName: 'questionStack',
+// };
+
 const AdminHomepageTabNavigator = createBottomTabNavigator({
-  Home,
-  adminQuestionStackNavigator,
+  Home: AdminHome,
+  Question: adminQuestionStackNavigator,
   BlacklistUsers,
-  profileNavigator,
+  Profile: profileNavigator,
 });
 
 const HomepageTabNavigator = createBottomTabNavigator({
   Home,
-  questionStackNavigator,
+  Questions: questionStackNavigator,
   questionSwitchNavigator,
   profileNavigator
 });
@@ -2482,7 +2910,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     position: "relative",
-    flex:1,
+    marginBottom: 10,
+  },
+  truefalse_buttons: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
   itemStyle: {
     backgroundColor: 'yellow',
@@ -2492,6 +2926,10 @@ const styles = StyleSheet.create({
     flex: 1,
     margin: 1,
     height: WIDTH / 2
+  },
+  truefalse_button: {
+    flex: 1,
+    height: 60, 
   },
   katex: {
     flex: 1,

@@ -51,11 +51,11 @@ async (req, res) => {
     return res.status(422).json(errors.array());
   } else {
     if (req.body.passwordconf != req.body.password) {
-      return res.status(422).send({"msg": "Passwords don't match"})
+      return res.status(422).send({"typ": "password", "msg": "Passwords don't match"})
     }
     const emailExists = await User.findOne({ email: req.body.email });
     if (emailExists) {
-      return res.status(400).send({'msg': 'Email already exists'});
+      return res.status(400).send({"typ": "email",'msg': 'Email already exists'});
     }
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(req.body.password, salt);
@@ -126,8 +126,13 @@ router.get('/login', async (req, res) => {
         console.log(id);
         return res.send({"success": "false", "msg": "Fake token, user doesn't exist!", "error": "X"});
       } else {
-        console.log("SUCCESS");
-        return res.send({"success": "true" ,"msg": "Login successful"});
+        if (user.blacklisted_until > Date.now()) {
+          return res.send({"success": false, "typ": "ban", "msg": "User is currently blacklisted!"})
+        } else {
+          console.log("SUCCESS");
+          return res.send({"success": "true" ,"msg": "Login successful"});
+        }
+        
       }
     } catch (err) {
       console.log(err);
@@ -163,15 +168,14 @@ async (req, res) => {
     length: 0
   };
 
-  await User.update({_id: user._id}, { $push: {last_10_sessions_length: object}});
-  await User.update({_id: user._id}, { $set: { last_sign_in: new Date() } });
-  var time = 20;
+  await User.updateOne({_id: user._id}, { $push: {last_10_sessions_length: object}});
+  await User.updateOne({_id: user._id}, { $set: { last_sign_in: new Date() } });
+  var time = 60 * 60 * 60;
   if (req.body.remember == true) {
-    time = 20 * 3 * 3;
+    time = 60 * 60 * 60 * 12;
   }
-  var expiryTime = new Date();
-  expiryTime.setMinutes(expiryTime.getMinutes() + time);  
-  const token = jwt.sign({_id: user._id, exp: expiryTime}, "This is secret",  );
+  var expiryTime = new Date(time * 1000); 
+  const token = jwt.sign({_id: user._id}, "This is secret");
   console.log("Login successful");
   return res.status(200).send({'success': "true", 'msg': 'Login successful', 'token': token});
 });
