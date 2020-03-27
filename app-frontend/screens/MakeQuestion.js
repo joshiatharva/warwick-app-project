@@ -1,19 +1,16 @@
 import React, { Component } from 'react';
-import { StyleSheet, View,  FlatList, AsyncStorage, KeyboardAvoidingView, ActivityIndicator, TouchableOpacity, ScrollView, Dimensions, Platform, Alert, InputAccessoryView, ListView } from 'react-native';
-import { createAppContainer, createSwitchNavigator, NavigationActions } from 'react-navigation';
+import { StyleSheet, View,  FlatList, AsyncStorage, ActivityIndicator, ScrollView, Dimensions, Platform, Alert, InputAccessoryView, ListView, RefreshControl, Modal } from 'react-native';
+import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import { createBottomTabNavigator } from 'react-navigation-tabs';
-import { SearchBar, CheckBox, Button, ListItem, Slider, Avatar, Header } from 'react-native-elements';
+import { createMaterialTopTabNavigator } from 'react-navigation-tabs';
+import { SearchBar, CheckBox, Button, ListItem, Slider, Input } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { WebView } from 'react-native-webview';
 import { Linking } from 'expo';
-// import Canvas from 'react-native-canvas';
-// import SlidingUpPanel from 'rn-sliding-up-panel';
-// import MathJax from 'react-native-mathjax';
-import { ApplicationProvider, Select, Text, Card, Datepicker, Input, Layout, TopNavigation, TabView} from '@ui-kitten/components';
-//import * as UI from '@ui-kitten/components';
+import { ApplicationProvider, Select, Text, Card, Datepicker, TopNavigation, TabView} from '@ui-kitten/components';
 import { mapping, light } from '@eva-design/eva';
-import { ContributionGraph, StackedBarChart, ProgressChart } from "react-native-chart-kit"
+import { ContributionGraph, StackedBarChart, ProgressChart } from "react-native-chart-kit";
+import styles from '../style/styles';
 
 export default class MakeQuestion extends Component {
   constructor(props){
@@ -34,45 +31,115 @@ export default class MakeQuestion extends Component {
       option3: '',
       option4: '',
       selectedType: '',
+      blankNameMsg: 'Please provide a name!',
+      blankQuestionMsg: 'Please provide the question.',
+      blankTypeMsg: 'Please provide a type!',
+      blankTopicMsg: 'Please provide a question topic.',
+      blankNormalMsg: 'Please fill in an answer.',
+      blankSolutionMsg: 'Please provide a solution.',
+      blankOption1Msg: 'Please provide the first option.',
+      blankOption2Msg: 'Please provide the second option.',
+      blankOption3Msg: 'Please provide the third option.',
+      blankOption4Msg: 'Please provide the fourth option.',
+      blankAnswerMsg: 'Please provide an answer.',
+      blankNameFlag: true,
+      blankQuestionFlag: true,
+      blankTypeFlag: true,
+      blankTopicFlag: true,
+      blackNormalFlag: false,
+      blankSolutionFlag: true,
+      blankOption1Flag: false,
+      blankOption2Flag: false,
+      blankOption3Flag: false,
+      blankOption4Flag: false,
+      blankAnswerFlag: true,
     }
   }
 
   async sendData() {
-    if (this.state.type == "true_false") {
-      this.setState({options: [true, false]});
-    }
-    console.log(this.state.type);
-    try { 
-      var token = await AsyncStorage.getItem("id");
-      // console.log(this.state);
-      let response = await fetch('http://172.31.199.57:3000/questions/new', {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          "Content-Type": 'application/json',
-          "Authorization": "Bearer " + token
-        },
-        body: JSON.stringify({
-          name: this.state.name,
-          type: this.state.type,
-          question: this.state.question,
-          options: this.state.options,
-          difficulty: this.state.difficulty,
-          answer: this.state.answer,
-          solution: this.state.solution,
-          topic: this.state.topic
-        }),
-      });
-      let res = await response.json();
-      if (res.success == true) {
-        alert("Question made");
-      } else {
-        alert("Question not made");
+    if (this.validateResults() == false) {
+      alert("Creation failed - please see messages for more information");
+    } else {
+      if (this.state.type == "true_false") {
+        this.setState({options: [true, false]});
       }
-      this.props.navigation.navigate("Questions");
-    } catch (err) {
-      // console.log(err);
-      alert(err);
+      console.log(this.state.type);
+      try { 
+        var token = await AsyncStorage.getItem("id");
+        // console.log(this.state);
+        let response = await fetch('http://192.168.0.12:3000/questions/new', {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            "Content-Type": 'application/json',
+            "Authorization": "Bearer " + token
+          },
+          body: JSON.stringify({
+            name: this.state.name,
+            type: this.state.type,
+            question: this.state.question,
+            options: this.state.options,
+            difficulty: this.state.difficulty,
+            answer: this.state.answer,
+            solution: this.state.solution,
+            topic: this.state.topic
+          }),
+        });
+        let res = await response.json();
+        if (res.success == true) {
+          alert("Question made");
+        } else {
+          alert("Question not made");
+        }
+        this.props.navigation.navigate("Questions");
+      } catch (err) {
+        // console.log(err);
+        alert("Unfortunately, the server couldn't be accessed right now. Please try again later.");
+      }
+    }
+  }
+
+  validateResults() {
+    if (this.state.name == '') {
+      this.setState({blankNameFlag: true});
+    }
+    if (this.state.question == '') {
+      this.setState({blankQuestionFlag: true});
+    }
+    if (this.state.type == '') {
+      this.setState({blankTypeFlag: true});
+    }
+    if (this.state.topic == '') {
+      this.setState({blankTopicFlag: true});
+    }
+    if (this.state.solution == '') {
+      this.setState({blankSolutionFlag: true});
+    }
+    if (this.state.type == 'normal_answer' && this.state.answer == '') {
+      this.setState({blankNormalFlag: true});
+    }
+    if (this.state.type == 'multi_choice' && this.state.option1 == '') {
+      this.setState({blankOption1Flag: true});
+    }
+    if (this.state.type == 'multi_choice' && this.state.option2 == '') {
+      this.setState({blankOption2Flag: true});
+    }
+    if (this.state.type == 'multi_choice' && this.state.option3 == '') {
+      this.setState({blankOption3Flag: true});
+    }
+    if (this.state.type == 'multi_choice' && this.state.option4 == '') {
+      this.setState({blankOption4Flag: true});
+    }
+    if (this.state.type == 'true_false' && this.state.answer == '') {
+      this.setState({blankAnswerFlag: true});
+    }
+    if (this.state.type == 'multi_choice' && this.state.answer == '') {
+      this.setState({blankAnswerFlag: true});
+    }
+    if (this.state.blankNameFlag || this.state.blankQuestionFlag || this.state.blankTypeFlag || this.state.blankTopicFlag || this.state.blankNormalFlag || this.state.blankSolutionFlag || this.state.blankOption1Flag || this.state.blankOption2Flag || this.state.blankOption3Flag || this.state.blankOption4Flag || this.state.blankAnswerFlag) {
+      return false;
+    } else {
+      return true;
     }
   }
 
@@ -146,6 +213,36 @@ export default class MakeQuestion extends Component {
 
     return (
       <ScrollView>
+        {(this.state.blankNameFlag) && (
+          <Text>{this.state.blankNameMsg}</Text>
+        )}
+        {(this.state.blankQuestionFlag) && (
+          <Text>{this.state.blankQuestionMsg}</Text>
+        )}
+        {(this.state.blankTopicFlag) &&(
+          <Text>{this.state.blankTopicMsg}</Text>
+        )}
+        {(this.state.blankTypeFlag) && (
+          <Text>{this.state.blankTypeMsg}</Text>
+        )}
+        {(this.state.blankOption1Flag) && (
+          <Text>{this.state.blankOption1Msg}</Text>
+        )}
+        {(this.state.blankOption2Flag) && (
+          <Text>{this.state.blankOption2Msg}</Text>
+        )}
+        {(this.state.blankOption3Flag) && (
+          <Text>{this.state.blankOption3Msg}</Text>
+        )}
+        {(this.state.blankOption4Flag) && (
+          <Text>{this.state.blankOption4Msg}</Text>
+        )}
+        {(this.state.blankNormalFlag && !this.state.type=="normal_answer") && (
+          <Text>{this.state.blankNormalFlag}</Text>
+        )}
+        {(this.state.blankAnswerFlag) && (
+          <Text>{this.state.blankAnswerFlag}</Text>
+        )}
         <Text>Here we can make new questions!</Text>
         <Input placeholder="Question Title"  onChangeText={(name) => this.setState({name: name})} />
         <Input placeholder="Name the question" multiline={true} onChangeText={(ques) => this.setState({question: ques})} />
@@ -183,7 +280,7 @@ export default class MakeQuestion extends Component {
         {(this.state.selectedType == "Normal Answer") && (
         <View style={styles.container}>
           <Text>No options required - move onto next field!</Text> 
-          <Input placeholder="Enter your answer here" onChange={(text) => this.setState({answer: text})} />
+          <Input placeholder="Enter your answer here" onChangeText={(text) => this.setState({answer: text})} />
         </View>
         )}
         {(this.state.selectedType == "True-False") && (

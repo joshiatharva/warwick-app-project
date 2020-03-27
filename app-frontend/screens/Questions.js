@@ -1,19 +1,16 @@
 import React, { Component } from 'react';
-import { StyleSheet, View,  FlatList, AsyncStorage, KeyboardAvoidingView, ActivityIndicator, TouchableOpacity, ScrollView, Dimensions, Platform, Alert, InputAccessoryView, ListView } from 'react-native';
-import { createAppContainer, createSwitchNavigator, NavigationActions } from 'react-navigation';
+import { StyleSheet, View,  FlatList, AsyncStorage, ActivityIndicator, ScrollView, Dimensions, Platform, Alert, InputAccessoryView, ListView, RefreshControl, Modal } from 'react-native';
+import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import { createBottomTabNavigator } from 'react-navigation-tabs';
-import { SearchBar, CheckBox, Button, ListItem, Slider, Avatar, Header } from 'react-native-elements';
+import { createMaterialTopTabNavigator } from 'react-navigation-tabs';
+import { SearchBar, CheckBox, Button, ListItem, Slider, Input } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { WebView } from 'react-native-webview';
 import { Linking } from 'expo';
-// import Canvas from 'react-native-canvas';
-// import SlidingUpPanel from 'rn-sliding-up-panel';
-// import MathJax from 'react-native-mathjax';
-import { ApplicationProvider, Select, Text, Card, Datepicker, Input, Layout, TopNavigation, TabView} from '@ui-kitten/components';
-//import * as UI from '@ui-kitten/components';
+import { ApplicationProvider, Select, Text, Card, Datepicker, TopNavigation, TabView} from '@ui-kitten/components';
 import { mapping, light } from '@eva-design/eva';
-import { ContributionGraph, StackedBarChart, ProgressChart } from "react-native-chart-kit"
+import { ContributionGraph, StackedBarChart, ProgressChart } from "react-native-chart-kit";
+import styles from '../style/styles';
 
 export default class Questions extends Component {
   constructor(props) {
@@ -23,6 +20,7 @@ export default class Questions extends Component {
       isLoading: true,
       error: null,
       search: '',
+      filteredQuestions: [],
     }
   }
 
@@ -31,8 +29,9 @@ export default class Questions extends Component {
       headerRight: () => (
         <Icon
           name='plus'
-          size={10}
+          size={20}
           onPress={() => {navigation.navigate("MakeQuestion")}}
+          style={{marginRight: 10}}
         />
       ),
     };
@@ -46,7 +45,7 @@ export default class Questions extends Component {
   async getQuestions() {
     try {
       const token = await AsyncStorage.getItem("id");
-      let response = await fetch('http://172.31.199.57:3000/questions/all', {
+      let response = await fetch('http://192.168.0.12:3000/questions/all', {
         method: 'GET',
         headers: {
           Accept: 'application/json',
@@ -55,7 +54,7 @@ export default class Questions extends Component {
         },
       });
       let json = await response.json();
-      this.setState({questions: json, isLoading: false});
+      this.setState({questions: json, filteredQuestions: json, isLoading: false});
       if (res.msg == "Token expired") {
         this.props.navigation.navigate("Login");
         alert("Unfortunately, your token has expired! Please sign in again!");
@@ -65,39 +64,39 @@ export default class Questions extends Component {
     }
   }
 
-  async getData() {
-    const token = await AsyncStorage.getItem("id");
-    try {
-      let response = await fetch(`http://172.31.199.57:3000/questions/${this.state.topic}/${this.state.search}`, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token,  
-        }
-      });
-      let res = await response.json();
-      if (res.msg == "Token expired") {
-        this.props.navigation.navigate("Login");
-        alert("Unfortunately, your token has expired! Please sign in again!");
-      }
-      if (res.success) {
-        this.setState({questions: res.json});
-      }
-      if (res.msg == "Token expired") {
-        this.props.navigation.navigate("Login");
-        alert("Unfortunately, your token has expired! Please sign in again!");
-      }
-    } catch (err) {
-      console.log("Error occurred: " + err);
-    }
+  // async getData() {
+  //   const token = await AsyncStorage.getItem("id");
+  //   try {
+  //     let response = await fetch(`http://192.168.0.16:3000/questions/${this.state.topic}/${this.state.search}`, {
+  //       method: 'GET',
+  //       headers: {
+  //         Accept: 'application/json',
+  //         'Content-Type': 'application/json',
+  //         'Authorization': 'Bearer ' + token,  
+  //       }
+  //     });
+  //     let res = await response.json();
+  //     if (res.msg == "Token expired") {
+  //       this.props.navigation.navigate("Login");
+  //       alert("Unfortunately, your token has expired! Please sign in again!");
+  //     }
+  //     if (res.success) {
+  //       this.setState({questions: res.json});
+  //     }
+  //     if (res.msg == "Token expired") {
+  //       this.props.navigation.navigate("Login");
+  //       alert("Unfortunately, your token has expired! Please sign in again!");
+  //     }
+  //   } catch (err) {
+  //     console.log("Error occurred: " + err);
+  //   }
 
-  }
+  // }
 
   async saveQuestion(id) {
     try {
       const token = await AsyncStorage.getItem("id");
-      let response = await fetch('http://172.31.199.57:3000/questions/save',{
+      let response = await fetch('http://192.168.0.12:3000/questions/save',{
         method: 'POST',
         headers: {
           Accept: 'application/json',
@@ -121,31 +120,79 @@ export default class Questions extends Component {
     }
   }
 
-  async getQuestion(item) {
+  async viewQuestion(item) {
     console.log(item);
     this.props.navigation.navigate("ViewQuestion", {
       id: item
     });
   }
 
+  getData = search => {
+    if (search == '') {
+      this.setState({filteredQuestions: this.state.questions, search: ''});
+    }
+    this.setState({search: search});
+    let filtered = this.state.filteredQuestions.filter(function(item) {
+      console.log(search + "+" +  (item.name.includes(search)).name);
+      return item.name.includes(search); 
+    });
+    console.log(filtered);
+    this.setState({filteredQuestions: filtered});
+  }
+
+  async resetData() { 
+    this.setState({filteredQuestions: this.state.questions, search: ''});
+  }
+
+  async _handleRefresh() {
+    this.setState({isLoading: true});
+    this.getQuestions();
+    this.setState({isLoading: false});
+  }
+
+
   render() {
+    // const data = [
+    //   {
+    //     index: 0,
+    //     screen: "Questions",
+    //   },
+    //   {
+    //     index: 1,
+    //     screen: "MakeQuestion",
+    //   }
+    // ];
       return (
-        <ScrollView>
+        <ScrollView refreshControl={<RefreshControl 
+          refreshing={this.state.isLoading}
+          onRefresh={() => this._handleRefresh()}/>
+        }>
+          {/* <TopNavigation 
+            title='Questions'
+            alignment='center'
+          /> */}
+          {/* <TabView 
+            selectedIndex={data.index}
+            onSelect={(item) => this.props.navigation.navigate(item.screen)}
+          >
+            <Tab></Tab>
+          </TabView> */}
           <SearchBar 
-          onChangeText={(item) => this.setState({search: item})}
-          onClearText={()=> this.setState({search: ''})}
+          value={this.state.search}
+          onChangeText={this.getData}
+          // onClearText={this.getData}
           lightTheme
           placeholder='Enter here....'
           />
           <FlatList 
-            data={this.state.questions}
+            data={this.state.filteredQuestions}
             renderItem = {({item, index}) =>
               <ListItem
                 title={item.name}
                 subtitle={item.topic}
                 bottomDivider
                 chevron
-                onPress={() => this.getQuestion(item)}
+                onPress={() => this.viewQuestion(item)}
               />
             }
             keyExtractor={(item, index) => index.toString()}

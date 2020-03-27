@@ -12,22 +12,12 @@ const Demo_scores = require('../models/Demo_scores');
 const Admin = require('../models/Admin');
 const isValidated = require('../routes/protectedRoute');
 const crypto = require("crypto");
+const success = require('../messages/success');
 
 
-router.post('/', async (req,res) => {
-  var token = req.headers.authorization.split(" ")[1];
-  try {
-    var id = jwt.verify(token, "This is secret");
-    body = req.body;
-    body.created_by = id;
-    body.createdAt = Date.now();
-    body.accesses = 0;
-    body.correct = 0;
-    console.log(body);
-  } catch (err) {
-
-  }
-  return res.send({"success": true});
+router.get('/', async (req,res) => {
+    var id = "abcd"
+    return res.status(200).send({"success": id});
 });
 
 router.post('/register', [
@@ -124,19 +114,19 @@ router.get('/login', async (req, res) => {
       // var admin = await Admin.findOne({_id: id}).
       if (!user) { 
         console.log(id);
-        return res.send({"success": "false", "msg": "Fake token, user doesn't exist!", "error": "X"});
+        return res.status(401).send({"success": "false", "msg": "User doesn't exist!", "error": "No user"});
       } else {
         if (user.blacklisted_until > Date.now()) {
-          return res.send({"success": false, "typ": "ban", "msg": "User is currently blacklisted!"})
+          return res.status(401).send({"success": false, "error": "Blacklist", "msg": "User is currently blacklisted!"})
         } else {
           console.log("SUCCESS");
-          return res.send({"success": "true" ,"msg": "Login successful"});
+          return res.status(200).send({"success": "true", "msg": "Login successful", "error": "none"});
         }
         
       }
     } catch (err) {
       console.log(err);
-      return res.send({"success": "false","msg": "Token expired", "error": "X"});
+      return res.status(401).send({"success": "false","msg": "Token expired", "error": "Token"});
     }
   }
   console.log("DIDNT PASS THROUGH");
@@ -152,10 +142,10 @@ async (req, res) => {
     return res.status(422).json({'msg': errors.array()});
     // res.send({'success': false, 'error': errors.array()})
   }
-  const user = await User.findOne({ username: req.body.username });
+  const user = await User.findOne({username: req.body.username});
   console.log({username: req.body.username});
   if (!user) {
-    return res.status(400).send({'success': "false",'msg': 'Username does not exist'});
+    return res.status(400).send({'success': "false",'msg': 'Username does not exist', "error": "No user"});
   }
   const isValidPassword = await bcrypt.compare(req.body.password, user.password);
   console.log(isValidPassword);
@@ -168,16 +158,23 @@ async (req, res) => {
     length: 0
   };
 
+  var before = await User.findOne({_id: user._id});
+  console.log(before.last_sign_in)
+  console.log(before.last_10_sessions_length)  
   await User.updateOne({_id: user._id}, { $push: {last_10_sessions_length: object}});
-  await User.updateOne({_id: user._id}, { $set: { last_sign_in: new Date() } });
+  await User.updateOne({_id: user._id}, { $set: { last_sign_in: new Date()} });
+  var after = await User.findOne({_id: user._id});
+  console.log(after.last_sign_in)
+  console.log(after.last_10_sessions_length) 
   var time = 60 * 60 * 60;
   if (req.body.remember == true) {
     time = 60 * 60 * 60 * 12;
   }
-  var expiryTime = new Date(time * 1000); 
-  const token = jwt.sign({_id: user._id}, "This is secret");
+  const now = Date.now() / 1000
+  var expiryTime = now + (10 * 60);
+  const token = jwt.sign({_id: user._id, iat: now, exp: expiryTime}, "This is secret", {algorithm: 'HS256'});
   console.log("Login successful");
-  return res.status(200).send({'success': "true", 'msg': 'Login successful', 'token': token});
+  return res.status(200).send({'success': true, 'msg': 'Login successful', 'token': token});
 });
 
 router.post('/forgot', [
@@ -185,21 +182,20 @@ router.post('/forgot', [
   ],
   async (req, res) => {
     console.log("Endpoint hit");
-  if (isValidated(req.headers.authorization.split(" ")[1])) {
-    return res.send({"message": "/"});
-  }
-  const user = await User.findOne({email: req.body.email});
-  console.log(`"URL: ${req.body.url}, path: ${req.body.path}`);
-  const url = req.body.url + req.body.path;
-  if (user) {
-    console.log("User exists");
-    const forgotToken = crypto.randomBytes(16).toString('hex');
+    if (isValidated(req.headers.authorization.split(" ")[1])) {
+      return res.send({"message": "/"});
+    }
+    const user = await User.findOne({email: req.body.email});
+    console.log(`"URL: ${req.body.url}, path: ${req.body.path}`);
+    if (user) {
+      console.log("User exists");
+      const forgotToken = crypto.randomBytes(16).toString('hex');
     // const expiry = new Date()
-    await User_forgot_password.updateOne({user_id: user._id}, { $set: {forgotPasswordToken: forgotToken}});
+      await User_forgot_password.updateOne({user_id: user._id}, { $set: {forgotPasswordToken: forgotToken}});
     // let testAccount = await nodemailer.createTestAccount();
-    const url = req.body.url+req.body.path+"/"+forgotToken;
-    console.log(url);
-    let transporter = nodemailer.createTransport({
+      const url = req.body.url+req.body.path+"/"+forgotToken;
+      console.log(url);
+      let transporter = nodemailer.createTransport({
       // host: "smtp.ethereal.email",
       // port: 587,
       // secure: false,
@@ -207,12 +203,12 @@ router.post('/forgot', [
       //   user: testAccount.user,
       //   pass: testAccount.pass
       // }
-      service: 'gmail',
-      auth: {
-        user: 'joshiatharvaRM@gmail.com',
-        pass: 'aj241162'
-      }
-    });
+        service: 'gmail',
+        auth: {
+          user: 'joshiatharvaRM@gmail.com',
+          pass: 'aj241162'
+        }
+      });
 
     var message = {
       from: 'joshiatharvaRM@gmail.com',
@@ -236,12 +232,14 @@ router.post('/forgot', [
     transporter.sendMail(message, function(err, data) {
       if (err) {
         console.log("error done")
-        return res.send({"error": "email not sent"});
+        return res.status(400).send({"error": "email not sent"});
       } else {
         console.log("message sent");
-        return res.send({"msg": forgotToken, "messageID": info.messageId, "success": "true", "id": user._id});
+        return res.status(200).send({"msg": forgotToken, "messageID": info.messageId, "success": "true", "id": user._id});
       }
     });
+  } else {
+    return res.status(401).send({"success": false, "msg": "Email not user's email"});
   }
     //send email
 
@@ -254,21 +252,20 @@ router.post('/reset/:token', async (req, res) => {
   if (newPassword != passwordConf) {
     return res.send({"success": false, "typ": "password", "msg": "Passwords don't match"});
   }
-  var passwordToken = await User_forgot_password.findOne({})
-  var user = await User_forgot_password.findOne({user_id: req.body.id });
+  var user = await User_forgot_password.findOne({user_id: req.body.id});
   if(user.forgotPassword) {
     var forgot = user.forgotPasswordToken;
-    if (forgot == resetToken) {
+    if (forgot === resetToken) {
         console.log("Yes it works!");
         salt = bcrypt.genSalt(10);
         newPassword = bcrypt.hash(newPassword, salt);
-        await User.update({_id: data._id}, { $set: {password: newPassword} });
-        return res.send({"msg": "Password updated", "success": true});
+        await User.update({_id: user._id}, { $set: {password: newPassword}});
+        return res.status(201).send({"msg": "Password updated", "success": true});
     } else {
-      return res.send({"success": false, "typ": "token", "msg": "Tokens do not match!" });
+      return res.status(401).send({"success": false, "typ": "token", "msg": "Tokens do not match!" });
     }
   } else {
-    return res.send({"success": false, "typ": "user", "msg": "User hasn't clicked forgot password!"});
+    return res.status(401).send({"success": false, "typ": "user", "msg": "User hasn't clicked forgot password!"});
   }
 });
 
@@ -288,7 +285,7 @@ router.get('/logout', async(req,res) => {
       await User.updateOne({_id: data}, { $push: {last_10_sessions_length: object}});
       console.log(`Signin time: ${signin}\nSignout time: ${signout}\nTime in between: ${timeinbetween}`);
       console.log("Signout complete");
-      return res.send({"success": true, "remember": false});
+      return res.status(200).send({"success": true, "remember": false});
     } catch (err) {
       console.log(err);
     }

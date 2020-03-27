@@ -14,13 +14,17 @@ router.get('/login', async(req,res) => {
   var token = req.headers.authorization.split(" ")[1];
   try {
     var id = jwt.verify(token, "This is secret");
-    var admin = await Admin.findOne({user_id: id});
-    if (admin) {
-      return res.send({"success": true, "msg": admin});
+    if (!id.allowEntry) {
+      return res.status(401).send({"success": false, "msg": "Complete 2SA", "type": "2fa"});
+    } else {
+      var admin = await Admin.findOne({user_id: id});
+      if (admin) {
+        return res.status(200).send({"success": true, "msg": admin});
+      }
     }
   } catch(err) {
     console.log(err);
-    return res.send({"success": false, "msg": "Token expired"});
+    return res.status(401).send({"success": false, "msg": "Token expired"});
   }
 });
 
@@ -47,7 +51,7 @@ async (req, res) => {
   // if (req.body.remember === "true") {
   //   time = 60 * 60 * 60 * 60 * 24;
   // }
-  const token = jwt.sign({_id: admin.user_id}, "This is secret");
+  const token = jwt.sign({_id: admin.user_id, allowEntry: false}, "This is secret");
   console.log("Login successful");
   return res.status(200).send({'success': "true", 'msg': 'Login successful', 'token': token});
 });
@@ -58,10 +62,10 @@ router.get('/profile', async(req, res) => {
     var id = jwt.verify(token, "This is secret");
     var admin = await Admin.findOne({user_id: id});
     console.log(admin);
-    return res.send({"success": true, "msg": admin});
+    return res.status(200).send({"success": true, "msg": admin});
   } catch (err) {
     console.log(err);
-    return res.send({"success": false, "msg": "Token expired"});
+    return res.status(401).send({"success": false, "msg": "Token expired"});
   }
 });
 
@@ -70,18 +74,19 @@ router.get('/2fa', async(req, res) => {
   var token = req.headers.authorization.split(" ")[1];
   try {
     id = jwt.verify(token, "This is secret");
-    var admin = await Admin.findOne({user_id: id});
+    console.log(id._id);
+    var admin = await Admin.findOne({user_id: id._id});
     if (!admin) {
-      return res.send({"success": false, "msg": "not admin"});
+      return res.status(401).send({"success": false, "msg": "not admin"});
     } else {
       var index = Math.round(Math.random() * Math.floor(2));
       console.log(index);
       var question = admin.rememberQuestions[index].question;
       // console.log(question);
-      return res.send({"success": true, "question": question, "admin": true});
+      return res.status(200).send({"success": true, "question": question, "admin": true, "index": index});
     }
   } catch (err) {
-    return res.send({"success": false, "message": err});
+    return res.sttaus(400).send({"success": false, "msg": err});
   }
 });
 
@@ -90,23 +95,18 @@ router.post('/2fa', async(req, res) => {
   try {
     id = jwt.verify(token, "This is secret");
     console.log("endpoint hit");
-    var admin = await Admin.findOne({user_id: id, "rememberQuestions.question": req.body.question});
+    var admin = await Admin.findOne({user_id: id});
     console.log(admin);
-    var index;
-    for (var i = 0; i < admin.rememberQuestions.length; i++) {
-      if (admin.rememberQuestions[i].question == req.body.question) {
-        index = i;
-      }
-    }
+    var index = req.body.index;
     console.log(index);
     console.log(req.body.answer + " + " + admin.rememberQuestions[index].answer);
     if (req.body.answer === admin.rememberQuestions[index].answer) {
-      return res.send({"success": true, "user": admin.username});
+      return res.status(200).send({"success": true, "user": admin.username});
     } else {
-      return res.send({"success": false, "message": "Answer incorrect!"});
+      return res.status(401).send({"success": false, "msg": "Answer incorrect!"});
     }
   } catch (err) {
-    return res.send({"success": false, "message": err});
+    return res.status(401).send({"success": false, "msg": err});
   }
 });
 
@@ -117,13 +117,13 @@ router.get('/users', async (req,res) => {
     let admin = await Admin.findOne({user_id: id});
     if (admin) {
       var user = await User.find({});
-      return res.send({"success": true, "msg": user});
+      return res.status(200).send({"success": true, "msg": user});
     } else {
-      return res.send({"success": false, "msg": "Not admin"});
+      return res.status(401).send({"success": false, "msg": "Not admin"});
     }
   } catch (err) {
     console.log(err);
-    return res.send({"success": false, "msg": "Token invalid"});
+    return res.status(400).send({"success": false, "msg": "Token expired"});
   }
 });
 
@@ -140,6 +140,7 @@ router.post('/blacklist', async (req, res) => {
       var admin = jwt.verify(token, "This is secret");
     } catch (err) {
       console.log("Token expired");
+      return res.status(401).send({"success": false, "msg": "Token expired", "typ": "token"});
     }
     var admin = await Admin.findOne({user_id: admin});
 
@@ -161,7 +162,7 @@ router.post('/blacklist', async (req, res) => {
         }
       });
 
-      let message = {
+      let msg = {
         from: 'joshiatharvaRM@gmail.com',
         to: user.email,
         subject: "Password Reset",
@@ -179,13 +180,13 @@ router.post('/blacklist', async (req, res) => {
       // url: ${nodemailer.getTestMessageUrl(info)}
       );
   
-      transporter.sendMail(message, function(err, data) {
+      transporter.sendMail(msg, function(err, data) {
         if (err) {
           console.log("error done")
-          return res.send({"error": "email not sent"});
+          return res.status(400).send({"error": "email not sent"});
         } else {
-          console.log("message sent");
-          return res.send({"success": "true", "msg": forgotToken, "messageID": info.messageId});
+          console.log("msg sent");
+          return res.status(200).send({"success": "true", "msg": forgotToken, "messageID": data.messageId});
         }
       });
 });
@@ -206,11 +207,11 @@ router.post('/edit', async (req, res) => {
         solution: req.body.solution,
         difficulty: req.body.difficulty,
       }});
-      return res.send({"success": true});
+      return res.status(200).send({"success": true});
     }
   } catch (err) {
     console.log(err);
-    return res.send({"success": false, "msg": "Token expired"});
+    return res.status(401).send({"success": false, "msg": "Token expired"});
   }
 });
 
@@ -220,13 +221,13 @@ router.get('/logout', async (req, res) => {
     var id = jwt.verify(token, "This is secret");
     var admin = await Admin.findOne({user_id: id});
     if (admin) {
-      return res.send({"success": true, "msg": "Logged out"});
+      return res.status(200).send({"success": true, "msg": "Logged out"});
     } else {
-      return res.send({"success": true, "msg": "Admin doesn't exist"});
+      return res.status(401).send({"success": false, "msg": "Admin doesn't exist"});
     }
   } catch (err) {
     console.log(err);
-    return res.send({"success": true, "msg": "Token invalid"});
+    return res.status(401).send({"success": false, "msg": "Token invalid", "typ": "token"});
   }
 });
 
@@ -237,10 +238,10 @@ router.get('/stats', async (req, res) => {
     var today = new Date();
     var questions = await Question.count({created_at: today});
     var users = await User.count({created_at: today});
-    return res.send({"success": true, "msg": "Successful", "users": users, "questions": questions});
+    return res.status(200).send({"success": true, "msg": "Successful", "users": users, "questions": questions});
   } catch (err) {
     console.log(err);
-    return res.send({"success": false, "msg": "Token invalid"});
+    return res.status(401).send({"success": false, "msg": "Token invalid", "typ": "token"});
   }
 });
 

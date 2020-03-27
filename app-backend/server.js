@@ -37,7 +37,7 @@ mongoose.set('useUnifiedTopology', true);
 
 
 app.get('/', function (req, res) {
-  return res.json("Hello World!");
+  return res.status(200).send({"message":"Hello World!"});
 });
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -52,9 +52,9 @@ app.use('/admin', adminRoute);
 
 // app.use('/topics', topicsRoute);
 
-app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
-});
+// app.listen(port, () => {
+//   console.log(`Server listening on port ${port}`);
+// });
 
 // var server = https.createServer(credentials, app);
 

@@ -2,17 +2,22 @@ const router = require('express').Router();
 const Question = require('../models/Question');
 const isValidated = require("./protectedRoute");
 const jwt = require('jsonwebtoken');
-const {difficulty, data, User_scores} = require("../models/User_scores");
 const User = require('../models/User');
 const Demo_scores = require('../models/Demo_scores');
+const successMsf = require('../messages/success');
+const tokenMsg =  require('../messages/token');
+
+router.get('/', async (req, res) => {
+    return res.status(200).send(tokenMsg);
+})
 
 router.get('/all', async (req, res) => {
     var token = req.headers.authorization.split(" ")[1]; 
     if (isValidated(token)) {
         let questions = await Question.find({});
-        return res.send(questions);
+        return res.status(200).send(questions);
     } else {
-        return res.status(200).send({"message":"Unauthorized"});
+        return res.status(401).send({"msg":"Unauthorized"});
     }
 });
 
@@ -20,20 +25,10 @@ router.get('/:id', async (req, res) => {
     var token = req.headers.authorization.split(" ")[1]; 
     if (isValidated(token)) {
         var id = req.params.id;
-        // if (selection.topic === 'true-false') {
-        //     let tf = await Question.find({true_false: true});
-        //     return res.status(200).send(tf);
-        // } else if (selection.topic === 'multi-choice') {
-        //     let mc = await Question.find({multi_choice: true});
-        //     return res.status(200).send(mc);
-        // } else {
-        //     let normal = await Question.find({normal_answer: true});
-        //     return res.status(200).send(normal);
-        // }
         let value = await Question.findOne({_id: id});
         return res.status(200).send({"success": true, "question": value});
     } else {
-        return res.status(401).send({"message": "Unauthorized"});
+        return res.status(401).send({"msg": "Unauthorized"});
     }
 });
 
@@ -49,15 +44,15 @@ router.post('/log', async (req, res) => {
             };
             await User.updateOne({_id: id}, { $push: { question_history: object }});
             console.log("pushed");
-            return res.send({"success": true});
+            return res.status(200).send({"success": true});
         } catch (err) {
             console.log(err);
+            return res.status(401).send({"success": false, "msg": "Token invalid"});
         }
     } else {
-        return res.send({"success": false});
+        return res.status(401).send({"success": false, "msg": "Token invalid"});
     }
 });
-
 
 router.post('/new', async (req, res) => {
     var token = req.headers.authorization.split(" ")[1]; 
@@ -78,9 +73,10 @@ router.post('/new', async (req, res) => {
             });
             await question.save();
             console.log(question);
-            res.send({'success': true, "message": "Question added!"});
+            return res.status(200).send({'success': true, "msg": "Question added!"});
         } catch(err) {
             console.log(err);
+            return res.status(401).send({"success": false, "msg": "Token invalid"});
         } 
     }
 //    const qname = await Question.findOne({name: req.body.name});
@@ -101,7 +97,7 @@ router.get('/marks/:qid', async (req,res) => {
         return res.send({"success": true, "correct": correct, "attempts": total});
     } else {
         console.log("Failure");
-        return res.status(401).send({"success": false, "message": "Unauthorized"});
+        return res.status(401).send({"success": false, "msg": "Unauthorized"});
     }
 });
 
@@ -132,11 +128,9 @@ router.post('/marks', async (req, res) => {
             element.correct = cor;
             element.end_date = new Date();
             await User.updateOne({_id: token}, { $push: {question_history: element, last_10_sessions_length: current }});
-            // await User.updateOne({_id: token}, { $push: { question_history: element }});
             var update = {};
-            // var index = 0; 
             if (!question) {
-                return res.send({"message": "Operation failed - no question found", "success": false});
+                return res.status(403).send({"msg": "Operation failed - no question found", "success": false});
             }
             switch (question.difficulty) {
                 case 1:
@@ -162,33 +156,17 @@ router.post('/marks', async (req, res) => {
 
             //TODO: FINISH THIS TOMORROW AND ADD ADMIN SHIT SO THURSDAY IS ONLY MATH COMPONENT
 
-            
-            // var dataArray = user_scores[0].data;
-            // // index = find(user_scores.data, question.type, question.topic);
-            // for (i=0; i < dataArray.length; i++) {
-            //     if ((user_scores[0].data[i].topic == question.topic) && (user_scores[0].data[i].type == question.type)) {
-            //         index = i;
-            //     }
-            // }
-            // console.log(update);
-            // await User_scores.updateOne({user_id: token, 'data.topic': question.topic, 'data.type': question.type}, { $inc: update });
-            // var us = await User_scores.findOne({user_id: token});
-            // console.log(us);
-            // return res.send({"success": true, "new_record": us, "question": question});
-            // await User_scores.updateOne({user_id: token, 'data.topic': question.topic, 'data.type': question.type}, {$inc: update});
-            console.log("Updatestart");
             await Demo_scores.updateOne({user_id: token, topic: question.topic, type: question.type}, update);
-            console.log("Updateend");
-            // var v1 = await User_scores.findOne({user_id: token});
-            // console.log(v1);
+
             var v1 = await Demo_scores.findOne({user_id: token, topic: question.topic, type: question.type});
             console.log(v1);           
-            return res.send({"success": true, "object": v1}); 
+            return res.status(200).send({"success": true, "msg": v1}); 
         } catch (err) {
             console.log(err);
+            return res.status(401).send({"success": false, "msg": "Token invalid", "error": "Token"});
         }
     }
-    return res.send({"message": "Token invalid; please revalidate", "error": "Invalid token", "success": false});
+    return res.send({"msg": "Token invalid; please revalidate", "error": "Token", "success": false});
 });
 
 router.post('/save', async(req,res) => {
@@ -200,9 +178,10 @@ router.post('/save', async(req,res) => {
             await User.updateOne({_id: id}, { $addToSet: { saved_questions: q_id } });
             var user = await User.findOne({_id: id});
             console.log("Pushed: " + user.saved_questions);
-            return res.send({"message": "Successful", "success": true});
+            return res.status(200).send({"msg": "Successful", "success": true});
         } catch(err) {
             console.log(err);
+            return res.status(401).send({"success": true, "msg": "Token invalid", "error": "Token"})
         }
     }
     let u = await User.findOne({_id: id._id});
