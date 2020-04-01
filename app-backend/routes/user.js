@@ -52,7 +52,7 @@ router.get('/profile', async (req, res) => {
                 }
             });
             var userdetails = await User.findOne({_id: id});
-            return res.send({"success": true, "user": userdetails, "rg": rgscore, "cfl": cflscore, "tm": tmscore});
+            return res.status(200).send({"success": true, "user": userdetails, "rg": rgscore, "cfl": cflscore, "tm": tmscore});
         } catch (err) {
             console.log(err);
             return res.status(401).send({"success": false, "msg": err});
@@ -140,9 +140,12 @@ router.get('/history', async (req, res) => {
     var token = req.headers.authorization.split(" ")[1];
     if (isValidated(token)) {
         try {
-
+            var user_id = jwt.verify(token, "This is secret");
+            const user  = await User.findOne({_id: user._id});
+            console.log(user.question_history);
+            return res.status(201).send({"status": true, "msg": user.question_history});
         } catch (err) {
-
+            return res.status(401).send(tokenMsg);
         }
     }
 });

@@ -1,15 +1,10 @@
 import React, { Component } from 'react';
 import { StyleSheet, View,  FlatList, AsyncStorage, ActivityIndicator, ScrollView, Dimensions, Platform, Alert, InputAccessoryView, ListView, RefreshControl, Modal } from 'react-native';
+import { SearchBar, CheckBox, Button, ListItem, Slider } from 'react-native-elements';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
-import { createBottomTabNavigator } from 'react-navigation-tabs';
-import { createMaterialTopTabNavigator } from 'react-navigation-tabs';
-import { SearchBar, CheckBox, Button, ListItem, Slider, Input } from 'react-native-elements';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import { Linking } from 'expo';
-import { ApplicationProvider, Select, Text, Card, Datepicker, TopNavigation, TabView} from '@ui-kitten/components';
-import { mapping, light } from '@eva-design/eva';
-import { ContributionGraph, StackedBarChart, ProgressChart } from "react-native-chart-kit";
+import { ApplicationProvider, Select, Text, Card, Datepicker, TopNavigation, TabView, Input} from '@ui-kitten/components';
 import styles from '../style/styles';
 
 export default class Quiz extends Component {
@@ -21,37 +16,41 @@ export default class Quiz extends Component {
       answered: false,
       value: "",
       questions: [],
-      normalAnswer: "",
-      answer: ""
+      answer: "",
+      emptyAnswerFlag: false,
     }
   }
 
   componentDidMount() {
-    this.setState({questions: this.props.navigation.getParam('Question'), isLoading: false}, () => console.log("Questions: " + this.state.questions));
+    this.setState({
+      questions: this.props.navigation.getParam('Question'), 
+      isLoading: false,
+    });
   }
 
   isCorrect(value) {
     // console.log("Value: " + value);
-    this.setState({
-      answered: true, answer: value, 
-    });
-    if (value === this.state.questions.answer) {
-      this.setState({correct: true}, () => {
-        this.props.navigation.navigate("DataUpload", {
-          Question: this.state.questions,
-          correct: this.state.correct,
-          chosenAnswer: value,
-        });
-      });
+    if (this.state.answer == '') {
+      this.setState({emptyAnswerFlag: true});
     } else {
-      this.setState({correct: false}, () => {
-        this.props.navigation.navigate("DataUpload", {
-          Question: this.state.questions,
-          correct: this.state.correct,
-          chosenAnswer: value,
+      this.setState({answered: true, answer: value});
+      if (value === this.state.questions.answer) {
+        this.setState({correct: true}, () => {
+          this.props.navigation.navigate("DataUpload", {
+            Question: this.state.questions,
+            correct: this.state.correct,
+            chosenAnswer: value,
+          });
         });
-      });
-
+      } else {
+        this.setState({correct: false}, () => {
+          this.props.navigation.navigate("DataUpload", {
+            Question: this.state.questions,
+            correct: this.state.correct,
+            chosenAnswer: value,
+          });
+        });
+      }
     }
   }
 
@@ -83,7 +82,12 @@ export default class Quiz extends Component {
         return (
           <View style={styles.container}>
             <Text> {this.state.questions.question}</Text>
-            <Input placeholder="Answer here" onChangeText={(item) => this.setState({normalAnswer: item})}/>
+            <Input
+              placeholder="Answer here" 
+              onChangeText={(item) => this.setState({answer: item})}
+              status={(!this.state.emptyAnswerFlag) ? 'basic': 'danger'}
+              caption={(!this.state.emptyAnswerFlag) ? '' : 'Please provide your answer.' }
+            />
             <Button title="Check answer" onPress={() => this.isCorrect(this.state.normalAnswer)} />
           </View>
         );
@@ -91,8 +95,13 @@ export default class Quiz extends Component {
         return (
           <View style={styles.container}>
             <Text> {this.state.questions.question}</Text>
-            <Input placeholder="Answer here" onChangeText={(answer) => this.setState({normalAnswer: answer})}/>
-            <Button title="Check answer" onPress={() => this.isCorrect(this.state.normalAnswer)} />
+            <Input 
+              placeholder="Answer here" 
+              onChangeText={(item) => this.setState({answer: item})}
+              status={(!this.state.emptyAnswerFlag) ? 'basic': 'danger'}
+              caption={(!this.state.emptyAnswerFlag) ? '' : 'Please provide your answer.' }
+            />
+            <Button title="Check answer" onPress={() => this.isCorrect(this.state.answer)} />
           </View>
         );
       }

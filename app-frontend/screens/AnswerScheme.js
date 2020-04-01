@@ -14,7 +14,7 @@ import styles from '../style/styles';
 
 export default class AnswerScheme extends Component {
     render() {
-      console.log(this.props.answer)
+      // console.log(this.props.answer)
       if (this.props.isAnswered) {
         return (
           <View>

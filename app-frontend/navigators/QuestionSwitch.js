@@ -19,7 +19,9 @@ const QuestionSwitch = createSwitchNavigator({
   Favourites: {
     screen: Favourites,
   },
-  Quiz: Quiz,
+  Quiz: {
+    screen: Quiz,
+  },
   DataUpload: {
     screen: DataUpload,
   }

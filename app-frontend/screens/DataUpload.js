@@ -59,11 +59,16 @@ export default class DataUpload extends Component {
       let res = await response.json();
       if (res.success === true) {
         this.setState({isSending: false}); 
-      // } else {
-      //   this.props.navigation.navigate("Questions");
-      //   alert("Not done");
+      } else {
+        var object = {
+          question_id: this.state.question_id,
+          correct: this.state.correct, 
+          answer: this.state.answer
+        };
+        await AsyncStorage.setItem("question_conn_fail", object);
+        this.props.navigation.navigate("Questions");
+        alert("There seemed to be an error with sending your scores. Please try again later.");
       }
-      // }
     } catch (err) {
       console.log(err);
       var object = {

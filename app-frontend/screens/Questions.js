@@ -64,35 +64,6 @@ export default class Questions extends Component {
     }
   }
 
-  // async getData() {
-  //   const token = await AsyncStorage.getItem("id");
-  //   try {
-  //     let response = await fetch(`http://192.168.0.16:3000/questions/${this.state.topic}/${this.state.search}`, {
-  //       method: 'GET',
-  //       headers: {
-  //         Accept: 'application/json',
-  //         'Content-Type': 'application/json',
-  //         'Authorization': 'Bearer ' + token,  
-  //       }
-  //     });
-  //     let res = await response.json();
-  //     if (res.msg == "Token expired") {
-  //       this.props.navigation.navigate("Login");
-  //       alert("Unfortunately, your token has expired! Please sign in again!");
-  //     }
-  //     if (res.success) {
-  //       this.setState({questions: res.json});
-  //     }
-  //     if (res.msg == "Token expired") {
-  //       this.props.navigation.navigate("Login");
-  //       alert("Unfortunately, your token has expired! Please sign in again!");
-  //     }
-  //   } catch (err) {
-  //     console.log("Error occurred: " + err);
-  //   }
-
-  // }
-
   async saveQuestion(id) {
     try {
       const token = await AsyncStorage.getItem("id");
@@ -152,16 +123,6 @@ export default class Questions extends Component {
 
 
   render() {
-    // const data = [
-    //   {
-    //     index: 0,
-    //     screen: "Questions",
-    //   },
-    //   {
-    //     index: 1,
-    //     screen: "MakeQuestion",
-    //   }
-    // ];
       return (
         <ScrollView refreshControl={<RefreshControl 
           refreshing={this.state.isLoading}

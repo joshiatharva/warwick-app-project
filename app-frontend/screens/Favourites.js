@@ -63,13 +63,14 @@ export default class Favourites extends Component {
         })
       });
       let res = await response.json();
-      // if (res.success == true) {
+      if (res.success == true) {
         this.props.navigation.navigate("Quiz", {Question: item});
-      // } else {
-      //   alert("Connection lost");
-      //}
+      } else {
+        return; 
+      }
     } catch (err) {
       console.log(err);
+      alert("Connection lost - please try again.");
     }
   }
 
