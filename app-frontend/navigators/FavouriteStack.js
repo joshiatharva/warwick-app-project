@@ -11,24 +11,12 @@ import { ApplicationProvider, Select, Text, Card, Datepicker, TopNavigation, Tab
 import { mapping, light } from '@eva-design/eva';
 import { ContributionGraph, StackedBarChart, ProgressChart } from "react-native-chart-kit"
 
-import FavouriteStack from './FavouriteStack';
-import Quiz from '../screens/Quiz';
-import DataUpload from '../screens/DataUpload';
+import Favourites from '../screens/Favourites';
 
-const QuestionSwitch = createSwitchNavigator({
-  Favourites: FavouriteStack,
-  Quiz: {
-    screen: Quiz,
-  },
-  DataUpload: {
-    screen: DataUpload,
-  }
+const FavouriteStack = createStackNavigator({
+    Favourites: {
+        screen: Favourites
+    },
 });
 
-QuestionSwitch.navigationOptions = { 
-  tabBarLabel: 'Favourites',
-  initialRouteName: 'Favourites',
-  // tabBarVisible: navigation.state.getParam("hideTabBar") != null ? !(navigation.state.getParam("hideTabBar")) : true,
-};
-
-export default QuestionSwitch;
+export default FavouriteStack;

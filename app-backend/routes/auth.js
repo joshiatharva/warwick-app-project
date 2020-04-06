@@ -126,7 +126,7 @@ router.get('/login', async (req, res) => {
       }
     } catch (err) {
       console.log(err);
-      return res.status(401).send({"success": "false","msg": "Token expired", "error": "Token"});
+      return res.status(301).redirect('/auth/logout');
     }
   }
   console.log("DIDNT PASS THROUGH");
@@ -154,6 +154,7 @@ async (req, res) => {
   }
   var object = {
     signin: new Date(),
+    signout: null,
     questions: 0,
     length: 0
   };
@@ -280,6 +281,7 @@ router.get('/logout', async(req,res) => {
       console.log(timeinbetween);
       var object = user.last_10_sessions_length.pop();
       object.length = timeinbetween;
+      object.signout = signout; 
       await User.updateOne({_id: data}, { $set: {last_sign_out: signout} });
       await User.updateOne({_id: data}, { $inc : {no_of_sessions: 1} });
       await User.updateOne({_id: data}, { $push: {last_10_sessions_length: object}});
@@ -289,7 +291,6 @@ router.get('/logout', async(req,res) => {
     } catch (err) {
       console.log(err);
     }
-
 })
 
 module.exports = router;

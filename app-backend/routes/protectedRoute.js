@@ -7,10 +7,9 @@ const Admin = require('../models/Admin');
 module.exports = function isValidated(token) {
     if (token) {
         try {
-            var payload = jwt.verify(token, "This is secret");
+            var id = jwt.verify(token, "This is secret");
             return true;
         } catch (err) {
-            console.log(payload);
             return false;
         }
     } else {
@@ -18,6 +17,18 @@ module.exports = function isValidated(token) {
     }
 }
 
+// module.exports = async function isValidated(token) {
+//     if (token) {
+//         try {
+//             var id = jwt.verify(token, "This is secret");
+//             return true;
+//         } catch (err) {
+//             return false;
+//         }
+//     } else {
+//         return false;
+//     }
+// }
 // module.exports.isAdminValidated = function(req, res) {
 //     try {
 //         var token = jwt.verify(req.headers.authorization.split(" ")[1], "This is secret");

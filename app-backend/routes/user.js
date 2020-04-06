@@ -22,10 +22,13 @@ const tokenMsg = require('../messages/token');
 //         }
 //     }
 // })
-router.get('/dummy', async (req, res) => {
-            var userdetails = await User_scores.findOne({username: 'atthujoshi', 'data.topic': 'Regular Languages', 'data.type': 'true_false'});
-            return res.json(userdetails);
+router.get('/', async (req, res) => {
+    return res.redirect('/auth/');
 });
+
+router.get('/abcd', async (req, res) => {
+    return res.json("Hello World");
+})
 
 router.get('/profile', async (req, res) => {
     var token = req.headers.authorization.split(" ")[1];
@@ -55,10 +58,10 @@ router.get('/profile', async (req, res) => {
             return res.status(200).send({"success": true, "user": userdetails, "rg": rgscore, "cfl": cflscore, "tm": tmscore});
         } catch (err) {
             console.log(err);
-            return res.status(401).send({"success": false, "msg": err});
+            return res.status(301).redirect('/auth/logout');
         }
     } else {
-        return res.status(401).send({"msg": "Unauthorized"});
+        return res.status(301).redirect('/auth/logout');
     }
 });
 
@@ -72,8 +75,10 @@ router.post('/profile', async (req, res) => {
             var user = await User.findOne({_id: id});
             return res.status(200).send({"success": true, "msg": user});
         } catch (err) {
-            return res.send({"success": false, "msg": "Token invalid"});
-        }a 
+            return res.status(301).redirect('/auth/logout');
+        }
+    } else {
+        return res.status(301).redirect('/auth/logout');
     }
 });
 
@@ -115,8 +120,10 @@ router.get('/statistics', async (req, res) => {
             return res.status(200).send({"user_scores": array, "user": user, "success": true, "questions": questions});
         } catch (err) {
             console.log(err);
-            return res.status(401).send(tokenMsg);
+            return res.status(301).redirect('/auth/logout');
         }
+    } else {
+        return res.status(301).redirect('/auth/logout');
     }
 });
 
@@ -131,8 +138,10 @@ router.get('/questions', async (req, res) => {
             return res.status(200).send(questions);
         } catch (err) {
             console.log(err);
-            return res.status(401).send(tokenMsg);
+            return res.status(301).redirect('/auth/logout');
         }
+    } else {
+        return res.status(301).redirect('/auth/logout');
     }
 });
 
@@ -145,8 +154,10 @@ router.get('/history', async (req, res) => {
             console.log(user.question_history);
             return res.status(201).send({"status": true, "msg": user.question_history});
         } catch (err) {
-            return res.status(401).send(tokenMsg);
+            return res.status(301).redirect('/auth/logout');
         }
+    } else {
+        return res.status(301).redirect('/auth/logout');
     }
 });
 

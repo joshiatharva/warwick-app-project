@@ -17,7 +17,7 @@ router.get('/all', async (req, res) => {
         let questions = await Question.find({});
         return res.status(200).send(questions);
     } else {
-        return res.status(401).send({"msg":"Unauthorized"});
+        return res.status(301).redirect('/auth/logout');
     }
 });
 
@@ -28,7 +28,7 @@ router.get('/:id', async (req, res) => {
         let value = await Question.findOne({_id: id});
         return res.status(200).send({"success": true, "question": value});
     } else {
-        return res.status(401).send({"msg": "Unauthorized"});
+        return res.status(301).redirect('/auth/logout');
     }
 });
 
@@ -47,10 +47,10 @@ router.post('/log', async (req, res) => {
             return res.status(200).send({"success": true});
         } catch (err) {
             console.log(err);
-            return res.status(401).send({"success": false, "msg": "Token invalid"});
+            return res.status(301).redirect('/auth/logout');
         }
     } else {
-        return res.status(401).send({"success": false, "msg": "Token invalid"});
+        return res.status(301).redirect('/auth/logout');
     }
 });
 
@@ -76,8 +76,10 @@ router.post('/new', async (req, res) => {
             return res.status(200).send({'success': true, "msg": "Question added!"});
         } catch(err) {
             console.log(err);
-            return res.status(401).send({"success": false, "msg": "Token invalid"});
+            return res.status(301).redirect('/auth/logout');
         } 
+    } else {
+        return res.status(301).redirect('/auth/logout');
     }
 //    const qname = await Question.findOne({name: req.body.name});
 //    if (!qname.isEmpty()) {
@@ -97,7 +99,7 @@ router.get('/marks/:qid', async (req,res) => {
         return res.send({"success": true, "correct": correct, "attempts": total});
     } else {
         console.log("Failure");
-        return res.status(401).send({"success": false, "msg": "Unauthorized"});
+        return res.status(301).redirect('/auth/logout');
     }
 });
 
@@ -163,10 +165,11 @@ router.post('/marks', async (req, res) => {
             return res.status(200).send({"success": true, "msg": v1}); 
         } catch (err) {
             console.log(err);
-            return res.status(401).send({"success": false, "msg": "Token invalid", "error": "Token"});
+            return res.status(301).redirect('/auth/logout');
         }
+    } else {
+        return res.status(301).redirect('/auth/logout');
     }
-    return res.send({"msg": "Token invalid; please revalidate", "error": "Token", "success": false});
 });
 
 router.post('/save', async(req,res) => {
@@ -181,11 +184,11 @@ router.post('/save', async(req,res) => {
             return res.status(200).send({"msg": "Successful", "success": true});
         } catch(err) {
             console.log(err);
-            return res.status(401).send({"success": true, "msg": "Token invalid", "error": "Token"})
+            return res.status(301).redirect('/auth/logout');
         }
+    } else {
+        return res.status(301).redirect('/auth/logout');
     }
-    let u = await User.findOne({_id: id._id});
-    console.log(u);
 });
 
 

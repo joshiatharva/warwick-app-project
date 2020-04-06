@@ -24,7 +24,7 @@ router.get('/login', async(req,res) => {
     }
   } catch(err) {
     console.log(err);
-    return res.status(401).send({"success": false, "msg": "Token expired"});
+    return res.status(301).redirect('/auth/logout');
   }
 });
 
@@ -65,7 +65,7 @@ router.get('/profile', async(req, res) => {
     return res.status(200).send({"success": true, "msg": admin});
   } catch (err) {
     console.log(err);
-    return res.status(401).send({"success": false, "msg": "Token expired"});
+    return res.status(301).redirect('/auth/logout');
   }
 });
 
@@ -86,7 +86,7 @@ router.get('/2fa', async(req, res) => {
       return res.status(200).send({"success": true, "question": question, "admin": true, "index": index});
     }
   } catch (err) {
-    return res.sttaus(400).send({"success": false, "msg": err});
+    return res.status(301).redirect('/auth/logout');
   }
 });
 
@@ -123,7 +123,7 @@ router.get('/users', async (req,res) => {
     }
   } catch (err) {
     console.log(err);
-    return res.status(400).send({"success": false, "msg": "Token expired"});
+    return res.status(301).redirect('/auth/logout');
   }
 });
 
@@ -140,7 +140,7 @@ router.post('/blacklist', async (req, res) => {
       var admin = jwt.verify(token, "This is secret");
     } catch (err) {
       console.log("Token expired");
-      return res.status(401).send({"success": false, "msg": "Token expired", "typ": "token"});
+      return res.status(301).redirect('/auth/logout');
     }
     var admin = await Admin.findOne({user_id: admin});
 
@@ -211,7 +211,7 @@ router.post('/edit', async (req, res) => {
     }
   } catch (err) {
     console.log(err);
-    return res.status(401).send({"success": false, "msg": "Token expired"});
+    return res.status(301).redirect('/auth/logout');
   }
 });
 
@@ -227,7 +227,7 @@ router.get('/logout', async (req, res) => {
     }
   } catch (err) {
     console.log(err);
-    return res.status(401).send({"success": false, "msg": "Token invalid", "typ": "token"});
+    return res.status(301).redirect('/auth/logout');
   }
 });
 
@@ -241,7 +241,7 @@ router.get('/stats', async (req, res) => {
     return res.status(200).send({"success": true, "msg": "Successful", "users": users, "questions": questions});
   } catch (err) {
     console.log(err);
-    return res.status(401).send({"success": false, "msg": "Token invalid", "typ": "token"});
+    return res.status(301).redirect('/auth/logout');
   }
 });
 

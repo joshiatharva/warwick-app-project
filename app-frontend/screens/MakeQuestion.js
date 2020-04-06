@@ -4,10 +4,10 @@ import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import { createBottomTabNavigator } from 'react-navigation-tabs';
 import { createMaterialTopTabNavigator } from 'react-navigation-tabs';
-import { SearchBar, CheckBox, Button, ListItem, Slider, Input } from 'react-native-elements';
+import { SearchBar, CheckBox, Button, ListItem, Slider } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Linking } from 'expo';
-import { ApplicationProvider, Select, Text, Card, Datepicker, TopNavigation, TabView} from '@ui-kitten/components';
+import { ApplicationProvider, Select, Text, Card, Datepicker, TopNavigation, TabView, Input} from '@ui-kitten/components';
 import { mapping, light } from '@eva-design/eva';
 import { ContributionGraph, StackedBarChart, ProgressChart } from "react-native-chart-kit";
 import styles from '../style/styles';
@@ -262,7 +262,11 @@ export default class MakeQuestion extends Component {
         />
         {(this.state.selectedType == "Multiple Choice") && (
         <View style={styles.container}> 
-          <Input placeholder="Option 1" onChangeText={(text) => this.setState({option1: text})} />
+          <Input 
+            placeholder="Option 1" 
+            onChangeText={(text) => this.setState({option1: text})} 
+            caption  
+          />
           <Input placeholder="Option 2" onChangeText={(text) => this.setState({option2: text})} />
           <Input placeholder="Option 3" onChangeText={(text) => this.setState({option3: text})} />
           <Input placeholder="Option 4" onChangeText={(text) => this.setState({option4: text})} />

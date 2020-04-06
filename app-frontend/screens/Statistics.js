@@ -28,6 +28,8 @@ export default class Statistics extends Component {
       rldata: [],
       ctldata: [],
       tmdata: [],
+      type: '',
+      topic: ''
     }
   }
 
@@ -62,6 +64,10 @@ export default class Statistics extends Component {
       console.log("Error occured");
     }
   }
+
+  addType(item) {
+    return;
+  }
   render() {
     const chartConfig = {
       backgroundColor: '#ffffff',
@@ -75,6 +81,11 @@ export default class Statistics extends Component {
       data: [this.state.rldata, this.state.ctldata, this.state.tmdata],
       barColors: ["#dfe4ea", "#ced6e0", "#a4b0be"]
     };
+    const topics = [
+      {text: "Regular Languages"},
+      {text: "Context Free Languages"},
+      {text: "Turing Machines"},
+    ];
     return (
       <ScrollView>
         <Text>These are your statistics as follows:</Text>
@@ -85,19 +96,23 @@ export default class Statistics extends Component {
           height={400}
           chartConfig={chartConfig}
         />
+        <View>
+          <Select 
+            placeholder="Please pick question topic"
+            data={topics}
+            selectedOption={this.state.type}
+            onSelect={(item) => this.addType(item)}
+          />
+          {/* {true && (
+          )} */}
+        </View>
         <Text>Usage Statistics: </Text>
         <Text>Record of sessions:</Text>
-        <ContributionGraph
-          values={this.state.sessions}
-          endDate={new Date()}
-          numDays={50}
-          chartConfig={chartConfig}
-        />
         <Text>Last sessions:</Text>
         <Text>Questions you've made:</Text>
         <FlatList
           data={this.state.questions_made}
-          renderItem = {({item, index}) =>
+          renderItem = {({item}) =>
             <Accordion
               question={item}
             />

@@ -65,6 +65,7 @@ const userSchema = new mongoose.Schema({
   },
   last_10_sessions_length: [{
     signin: Date,
+    signout: Date,
     length: Number,
     questions: Number,
   }],

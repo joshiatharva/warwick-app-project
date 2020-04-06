@@ -29,7 +29,7 @@ export default class AnswerScheme extends Component {
           </View>
         );
       } else {
-        return null;
+        return false;
       }
     }
   }
