@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
-import { StyleSheet, View,  FlatList, AsyncStorage, ActivityIndicator, ScrollView, Dimensions, Platform, Alert, InputAccessoryView, ListView, RefreshControl, Modal } from 'react-native';
-import { SearchBar, CheckBox, Button, ListItem, Slider, Input } from 'react-native-elements';
-import { ApplicationProvider, Select, Text, Card, Datepicker, TopNavigation, TabView} from '@ui-kitten/components';
+import { StyleSheet, View,  FlatList, AsyncStorage, ActivityIndicator, ScrollView, Dimensions, Platform, Alert, InputAccessoryView, ListView, RefreshControl, Modal, KeyboardAvoidingView } from 'react-native';
+import { SearchBar, CheckBox, ListItem, Slider } from 'react-native-elements';
+import { ApplicationProvider, Select, Text, Button, Card, Datepicker, TopNavigation, Input, TabView, Toggle, Spinner} from '@ui-kitten/components';
+import styles from '../style/styles';
 
 export default class Account extends Component {
   constructor(props) {
@@ -16,6 +17,11 @@ export default class Account extends Component {
       newpasswordconf: '',
       email: '',
       edit: false,
+      isSending: false,
+      tempusername: '',
+      tempfirstname: '',
+      templastname: '',
+      tempemail: '',
     }
   }
 
@@ -36,14 +42,26 @@ export default class Account extends Component {
           firstname: res.user.firstname,
           lastname: res.user.lastname,
           password: res.user.password,
-          email: res.user.email
+          email: res.user.email,
+          tempusername: res.user.username,
+          tempfirstname: res.user.firstname,
+          templastname: res.user.lastname,
+          tempemail: res.user.email
         });
+      } else {
+        if (res.msg == "Token expired") {
+          await AsyncStorage.removeItem("id");
+          this.props.navigation.navigate("Login");
+        }
       }
     }
 
   async sendData() {
+    this.setState({isSending: true});
+    console.log("Endpoint hit");
+    console.log(this.state.tempfirstname + " " + this.state.templastname + " " + this.state.tempemail + " " + this.state.tempusername);
     let token = await AsyncStorage.getItem("id");
-    let response = await fetch("http://192.168.0.16:3000/user/profile", {
+    let response = await fetch("http://192.168.0.12:3000/user/profile", {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -51,46 +69,52 @@ export default class Account extends Component {
         "Authorization": "Bearer " + token
       },
       body: JSON.stringify({
-        username: this.state.username, 
-        firstname: this.state.firstname,
-        lastname: this.state.lastname,
-        email: this.state.email
-      }),
+        username: this.state.tempusername, 
+        firstname: this.state.tempfirstname,
+        lastname: this.state.templastname,
+        email: this.state.tempemail
+      })
     });
+    console.log("Endpoint done");
     let res = await response.json();
     if (res.success == true) {
+      alert("Details sent");
       this.setState({
-        username: req.body.username,
-        firstname: req.body.firstname, 
-        lastname: req.body.lastname, 
-        email: req.body.email
+        username: res.msg.username,
+        firstname: res.msg.firstname, 
+        lastname: res.msg.lastname, 
+        email: res.msg.email,
+        edit: false, 
+        isSending: false
       });
-      this.props.navigation.pop();
-    } 
+    } else {
+      // if (res.msg == "Token expired") {
+      //   await AsyncStorage.removeItem("id");
+      //   this.props.navigation.navigate("Login");
+      // }
+    }
+    console.log("Endpoint done");
   }
+
 
   render() {
     return (
-      <View>
-        <Button title="Edit" onPress={() => this.setState({edit: !this.state.edit})} />
+      <ScrollView>
+        <View>
+          <Toggle text='Edit Profile' status='basic' checked={this.state.edit} onChange={() => this.setState({edit: !this.state.edit}, () => console.log(this.state.edit))}/>
+        </View>
         <Text category='h2'>My details: </Text>
         <Text>Personal Information:</Text>
         <View>
-          <Text>Username: {this.state.username}</Text>
-          <Text>First Name: {this.state.firstname}</Text>
-          <Text>Last Name: {this.state.lastname}</Text>
-          <Text>Email address: {this.state.email}</Text>
+          <Input placeholder={this.state.username} size='large' label="Your current username" disabled={!this.state.edit} style={styles.accountInput} onChangeText={(item) => this.setState({tempusername: item})}/>
+          <Input placeholder={this.state.firstname} size='large'label="You current firstname" disabled={!this.state.edit} style={styles.accountInput} onChangeText={(item) => this.setState({tempfirstname: item})}/>
+          <Input placeholder={this.state.lastname} size='large' label="Your current lastname" disabled={!this.state.edit} style={styles.accountInput} onChangeText={(item) => this.setState({templastname: item})}/>
+          <KeyboardAvoidingView>
+          <Input placeholder={this.state.email} size='large' label="Your current email" disabled={!this.state.edit} style={styles.accountInput} onChangeText={(item) => this.setState({tempemail: item})}/>
+          <Button appearance='outline' onPress={() => this.sendData()} disabled={!this.state.edit}>{!this.state.isSending ? "Edit Profile" : "Loading"}</Button> 
+          </KeyboardAvoidingView>
         </View>
-        {/* {this.state.edit && (
-        // <View>
-        //   <Input placeholder={this.state.username} label="Edit your username here" onEndEditing={(text) => this.setState({username: text})} />
-        //   <Input placeholder={this.state.firstname} label="Edit your first name here:" onEndEditing={(text) => this.setState({firstname: text})}/>
-        //   <Input placeholder={this.state.lastname} label="Edit your last name here:" onEndEditing={(text) => this.setState({lastname: text})} />
-        //   <Input placeholder={this.state.email} label="Edit the email address used for correspondence" onEndEditing={(text) => this.setState({email: text})} />
-        //   <Button title="Save changes" onPress={() => this.sendData()} />
-        // </View>
-        )} */}
-      </View>
+      </ScrollView>
     );
   }
 }

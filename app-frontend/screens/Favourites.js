@@ -25,10 +25,10 @@ export default class Favourites extends Component {
   }
   
   async componentDidMount() {
-    this.getFavourites();
+    this._getFavourites();
   }
 
-  async getFavourites() {
+  async _getFavourites() {
     try {
       const token = await AsyncStorage.getItem("id");
       const response = await fetch('http://192.168.0.12:3000/user/questions', {
@@ -46,9 +46,31 @@ export default class Favourites extends Component {
       this.setState({error: err}, () => console.log("Error: " + this.state.error));
     }
   }
-  
 
-  async sendData(item) {
+  async _handleRefresh() {
+    this.setState({isLoading: true});
+    this._getFavourites();
+    this.setState({isLoading: false});
+  }
+
+  async _fetchLog(item) {
+      let token = await AsyncStorage.getItem("id");
+      let response = await fetch('http://192.168.0.16:3000/questions/log', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({
+          id: item._id,
+        })
+      });
+      let res = await response.json();
+      return res;
+  }
+  
+  async _sendData(item) {
     try {
       let token = await AsyncStorage.getItem("id");
       let response = await fetch('http://192.168.0.16:3000/questions/log', {
@@ -76,19 +98,22 @@ export default class Favourites extends Component {
 
   render() {
     return (
-        <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.container}>
           <FlatList 
-            data={this.state.questions}
-            renderItem = {({item, index}) => (
-                  <Card style={styles.cardContainer} onPress={() => this.sendData(item)}>
+              refreshControl={<RefreshControl 
+              refreshing={this.state.isLoading}
+              onRefresh={() => this._handleRefresh()}/>}
+              data={this.state.questions}
+              renderItem = {({item, index}) => (
+                  <Card style={styles.cardContainer} onPress={() => this._sendData(item)}>
                     <Text>{item.name}</Text>
                     <Text>Topic: {item.topic}</Text>
                     <Text>Difficulty: {item.difficulty}</Text>
                   </Card>
-            )}
-            keyExtractor={(item, index) => index.toString()}
+              )}
+              keyExtractor={(item, index) => index.toString()}
           />
-        </ScrollView>
+        </View>
     );
   }
 }

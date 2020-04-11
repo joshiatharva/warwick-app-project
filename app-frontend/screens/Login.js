@@ -29,8 +29,9 @@ export default class Login extends Component {
 
   async componentDidMount() {
     var token = await AsyncStorage.getItem("id");
-    var admin = await AsyncStorage.getItem("admin");
+    // var admin = await AsyncStorage.getItem("admin");
     if (token != null) {
+      console.log(token);
       try {
         let response = await fetch('http://192.168.0.12:3000/auth/login', {
           method: 'GET',
@@ -41,15 +42,17 @@ export default class Login extends Component {
           }
         });
         let res = await response.json();
-        if (res.success === "true") {
-          this.props.navigation.navigate("Home");
-          return;
+        console.log("token");
+        if (res.success == true) {
+          console.log("token valid");
+          this.props.navigation.navigate("HomeT");
+          // alert("nav end");
         } else {
           if (res.msg == "Token expired") {
             this.setState({ isVerified: false });
-            // console.log("Token present, expired");
+            console.log("Token present, expired");
             await AsyncStorage.removeItem("id");
-            return;
+            console.log("Token removed");
           }
         }
       } catch (err) {
@@ -58,32 +61,32 @@ export default class Login extends Component {
       }
     } else {
       this.setState({ isVerified: false });
-      // console.log("Token not present");
+      // alert("Token not present");
     }
-    if (admin != null) {
-      try {
-        let response = await fetch('http://192.168.0.12:3000/admin/login', {
-          method: 'GET',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + admin
-          }
-        });
-        let res = await response.json();
-        if (res.success == true) {
-          this.props.navigation.navigate("AdminHomepage");
-          // console.log("Token present and valid");
-        } else {
-          this.setState({ isVerified: false });
-          // console.log("Token present, expired");
+    // if (admin != null) {
+    //   try {
+    //     let response = await fetch('http://192.168.0.12:3000/admin/login', {
+    //       method: 'GET',
+    //       headers: {
+    //         Accept: 'application/json',
+    //         'Content-Type': 'application/json',
+    //         'Authorization': 'Bearer ' + admin
+    //       }
+    //     });
+    //     let res = await response.json();
+    //     if (res.success == true) {
+    //       this.props.navigation.navigate("AdminHomepage");
+    //       // console.log("Token present and valid");
+    //     } else {
+    //       this.setState({ isVerified: false });
+    //       // console.log("Token present, expired");
 
-        }
-      } catch (err) {
-        alert(err);
-        // console.log(err);
-      }
-    }
+    //     }
+    //   } catch (err) {
+    //     alert(err);
+    //     // console.log(err);
+    //   }
+    // }
   }
 
   async sendData() {
@@ -112,14 +115,14 @@ export default class Login extends Component {
             })
           });
           let res = await response.json();
-          if (res.success === "true") {
+          if (res.success == true) {
             const id_token = res.token;
             await AsyncStorage.setItem('id', id_token);
             // if (res.remember === true) {
             //   await AsyncStorage.setItem('remember', true);
             // }
             this.setState({ isSending: false, errorMsg: '' });
-            this.props.navigation.navigate('Home');
+            this.props.navigation.navigate('HomeT');
           } else {
             this.setState({ isSending: false, errorMsg: res.msg });
           }
@@ -143,7 +146,7 @@ export default class Login extends Component {
             })
           });
           let res = await response.json()
-          if (res.success === "true") {
+          if (res.success == true) {
             console.log("success");
             await AsyncStorage.setItem('admin', res.token);
             // if (res.remember === true) {

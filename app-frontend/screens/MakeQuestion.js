@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, View,  FlatList, AsyncStorage, ActivityIndicator, ScrollView, Dimensions, Platform, Alert, InputAccessoryView, ListView, RefreshControl, Modal } from 'react-native';
+import { StyleSheet, View,  FlatList, AsyncStorage, ActivityIndicator, ScrollView, Dimensions, Platform, Alert, KeyboardAvoidingView, ListView, RefreshControl, Modal } from 'react-native';
 import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import { createBottomTabNavigator } from 'react-navigation-tabs';
@@ -42,17 +42,17 @@ export default class MakeQuestion extends Component {
       blankOption3Msg: 'Please provide the third option.',
       blankOption4Msg: 'Please provide the fourth option.',
       blankAnswerMsg: 'Please provide an answer.',
-      blankNameFlag: true,
-      blankQuestionFlag: true,
-      blankTypeFlag: true,
-      blankTopicFlag: true,
+      blankNameFlag: false,
+      blankQuestionFlag: false,
+      blankTypeFlag: false,
+      blankTopicFlag: false,
       blackNormalFlag: false,
-      blankSolutionFlag: true,
+      blankSolutionFlag: false,
       blankOption1Flag: false,
       blankOption2Flag: false,
       blankOption3Flag: false,
       blankOption4Flag: false,
-      blankAnswerFlag: true,
+      blankAnswerFlag: false,
     }
   }
 
@@ -102,44 +102,68 @@ export default class MakeQuestion extends Component {
   validateResults() {
     if (this.state.name == '') {
       this.setState({blankNameFlag: true});
+    } else {
+      this.setState({blankNameFlag: false});
     }
     if (this.state.question == '') {
       this.setState({blankQuestionFlag: true});
+    } else {
+      this.setState({blankQuestionFlag: false});
     }
     if (this.state.type == '') {
       this.setState({blankTypeFlag: true});
+    } else {
+      this.setState({blankTypeFlag: false});
     }
     if (this.state.topic == '') {
       this.setState({blankTopicFlag: true});
+    } else {
+      this.setState({blankTopicFlag: false});
     }
     if (this.state.solution == '') {
       this.setState({blankSolutionFlag: true});
+    } else {
+      this.setState({blankSolutionFlag: false});
     }
     if (this.state.type == 'normal_answer' && this.state.answer == '') {
       this.setState({blankNormalFlag: true});
+    } else {
+      this.setState({blankNormalFlag: false});
     }
     if (this.state.type == 'multi_choice' && this.state.option1 == '') {
       this.setState({blankOption1Flag: true});
+    } else {
+      this.setState({blankOption1Flag: false});
     }
     if (this.state.type == 'multi_choice' && this.state.option2 == '') {
       this.setState({blankOption2Flag: true});
+    } else {
+      this.setState({blankOption2Flag: false});
     }
     if (this.state.type == 'multi_choice' && this.state.option3 == '') {
       this.setState({blankOption3Flag: true});
+    } else {
+      this.setState({blankOption3Flag: false});
     }
     if (this.state.type == 'multi_choice' && this.state.option4 == '') {
       this.setState({blankOption4Flag: true});
+    } else {
+      this.setState({blankOption4Flag: false});
     }
     if (this.state.type == 'true_false' && this.state.answer == '') {
       this.setState({blankAnswerFlag: true});
+    } else {
+      this.setState({blankAnswerFlag: false});
     }
     if (this.state.type == 'multi_choice' && this.state.answer == '') {
       this.setState({blankAnswerFlag: true});
-    }
-    if (this.state.blankNameFlag || this.state.blankQuestionFlag || this.state.blankTypeFlag || this.state.blankTopicFlag || this.state.blankNormalFlag || this.state.blankSolutionFlag || this.state.blankOption1Flag || this.state.blankOption2Flag || this.state.blankOption3Flag || this.state.blankOption4Flag || this.state.blankAnswerFlag) {
-      return false;
     } else {
+      this.setState({blankAnswerFlag: false});
+    }
+    if (!this.state.blankNameFlag && !this.state.blankQuestionFlag && !this.state.blankTypeFlag && !this.state.blankTopicFlag && !this.state.blankNormalFlag && !this.state.blankSolutionFlag && !this.state.blankOption1Flag && !this.state.blankOption2Flag && !this.state.blankOption3Flag && !this.state.blankOption4Flag && !this.state.blankAnswerFlag) {
       return true;
+    } else {
+      return false;
     }
   }
 
@@ -213,7 +237,7 @@ export default class MakeQuestion extends Component {
 
     return (
       <ScrollView>
-        {(this.state.blankNameFlag) && (
+        {/* {(this.state.blankNameFlag) && (
           <Text>{this.state.blankNameMsg}</Text>
         )}
         {(this.state.blankQuestionFlag) && (
@@ -224,7 +248,7 @@ export default class MakeQuestion extends Component {
         )}
         {(this.state.blankTypeFlag) && (
           <Text>{this.state.blankTypeMsg}</Text>
-        )}
+        )} */}
         {(this.state.blankOption1Flag) && (
           <Text>{this.state.blankOption1Msg}</Text>
         )}
@@ -240,12 +264,20 @@ export default class MakeQuestion extends Component {
         {(this.state.blankNormalFlag && !this.state.type=="normal_answer") && (
           <Text>{this.state.blankNormalFlag}</Text>
         )}
-        {(this.state.blankAnswerFlag) && (
-          <Text>{this.state.blankAnswerFlag}</Text>
-        )}
         <Text>Here we can make new questions!</Text>
-        <Input placeholder="Question Title"  onChangeText={(name) => this.setState({name: name})} />
-        <Input placeholder="Name the question" multiline={true} onChangeText={(ques) => this.setState({question: ques})} />
+        <Input 
+          placeholder="Question Title"  
+          onChangeText={(item) => this.setState({name: item})} 
+          status={!this.state.blankNameFlag ? 'basic' : 'danger'}
+          caption={!this.state.blankNameFlag ? '' : this.state.blankNameMsg}  
+        />
+        <Input 
+          placeholder="Name the question" 
+          multiline={true} 
+          onChangeText={(ques) => this.setState({question: ques})} 
+          status={!this.state.blankQuestionFlag ? 'basic' : 'danger'}
+          caption={!this.state.blankQuestionFlag ? '' : this.state.blankQuestionMsg}  
+        />
         <Text>Please select the question topic:</Text>
         <Select
           placeholder="Select Question Topic"
@@ -253,6 +285,9 @@ export default class MakeQuestion extends Component {
           selectedOption={this.state.topic}
           onSelect={(item) => this.setState({topic: item.text}, () => console.log(this.state.topic))} 
         />  
+        {(this.state.blankTypeFlag) && (
+          <Text>{this.state.blankTypeMsg}</Text>
+        )}
         <Text>Please set a question type:</Text>
         <Select
           placeholder="Select Question Type"
@@ -260,25 +295,46 @@ export default class MakeQuestion extends Component {
           selectedOption={this.state.type}
           onSelect={(item) => this.addType(item)}
         />
+        {(this.state.blankTypeFlag) && (
+          <Text>{this.state.blankTypeMsg}</Text>
+        )}
         {(this.state.selectedType == "Multiple Choice") && (
         <View style={styles.container}> 
           <Input 
             placeholder="Option 1" 
             onChangeText={(text) => this.setState({option1: text})} 
-            caption  
+            status={!this.state.blankOption1Flag ? 'basic': 'danger'}
+            caption={!this.state.blankOption1Flag ? '' : this.state.blankOption1Msg} 
           />
-          <Input placeholder="Option 2" onChangeText={(text) => this.setState({option2: text})} />
-          <Input placeholder="Option 3" onChangeText={(text) => this.setState({option3: text})} />
-          <Input placeholder="Option 4" onChangeText={(text) => this.setState({option4: text})} />
+          <Input 
+            placeholder="Option 2" 
+            onChangeText={(text) => this.setState({option2: text})} 
+            status={!this.state.blankOption2Flag ? 'basic': 'danger'}
+            caption={!this.state.blankOption2Flag ? '' : this.state.blankOption2Msg}
+          />
+          <Input 
+            placeholder="Option 3" 
+            onChangeText={(text) => this.setState({option3: text})} 
+            status={!this.state.blankOption3Flag ? 'basic':'danger'}
+            caption={!this.state.blankOption3Flag ? '': this.state.blankQuestion3Msg}
+          />
+          <Input 
+            placeholder="Option 4" 
+            onChangeText={(text) => this.setState({option4: text})} 
+            status={!this.state.blankOption4Flag ? 'basic':'danger'}
+            caption={!this.state.blankOption4Flag ? '' : this.state.blankOption4Msg}  
+          />
           <Button raised type="outline" title="Set your options here!" onPress={() => this.addToArray()} />
           <Text>Select your answer here!</Text>
-          <Text></Text>
           <Select 
             placeholder="Select Answer"
             data={this.state.optionList}
             selectedOption={this.state.answer}
             onSelect={(object) => this.removeObject(object)}
           />
+          {(this.state.blankAnswerFlag) && (
+            <Text>{this.state.blankAnswerFlag}</Text>
+          )}
         </View>
         )}
         {(this.state.selectedType == "Normal Answer") && (
@@ -298,10 +354,10 @@ export default class MakeQuestion extends Component {
             />
           </View>
         )}
-        <View style={styles.container}>
+        <KeyboardAvoidingView>
           <Input placeholder="Solution to problem" multiline={true} numberOfLines={5} maxLength={1000} onChangeText={(text) => this.setState({solution: text})} />
-        </View>
-        <Slider maximumValue={5} minimumValue={1} step={1} value={this.state.difficulty} onSlidingComplete={(value) => this.setState({difficulty: value})} />
+        </KeyboardAvoidingView>
+        <Slider maximumValue={5} minimumValue={1} step={1} value={this.state.difficulty} onSlidingComplete={(value) => this.setState({difficulty: value})} style={{marginRight:40 , marginLeft: 40}} />
         <Text>Difficulty: {this.state.difficulty}</Text>
         <Button raised type="outline" style={styles.button} title="Submit question!" onPress={() => this.sendData()} />
       </ScrollView>

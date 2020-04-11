@@ -4,18 +4,15 @@ const isValidated = require("./protectedRoute");
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Demo_scores = require('../models/Demo_scores');
-const successMsf = require('../messages/success');
+const successMsg = require('../messages/success');
 const tokenMsg =  require('../messages/token');
 
-router.get('/', async (req, res) => {
-    return res.status(200).send(tokenMsg);
-})
 
 router.get('/all', async (req, res) => {
     var token = req.headers.authorization.split(" ")[1]; 
     if (isValidated(token)) {
         let questions = await Question.find({});
-        return res.status(200).send(questions);
+        return res.status(200).send({"msg": questions, "success": true});
     } else {
         return res.status(301).redirect('/auth/logout');
     }
@@ -54,11 +51,26 @@ router.post('/log', async (req, res) => {
     }
 });
 
+
+
+
+// router.get('/late', async (req, res) => {
+//         try { 
+//             jwt.verify(req.headers.authorization.split(" ")[1], "This is secret");
+//             var questions = 1234;
+//             console.log(questions);
+//             return res.status(200).send({"success": true, "msg": questions});
+//         } catch (err) {
+//             return res.redirect('/auth/logout');
+//         } 
+// });
+
 router.post('/new', async (req, res) => {
     var token = req.headers.authorization.split(" ")[1]; 
     if (isValidated(token)) {
         try {
             var id = jwt.verify(token, "This is secret");
+            console.log(id._id);
             const question = new Question({
                 name: req.body.name,
                 type: req.body.type,
@@ -68,7 +80,7 @@ router.post('/new', async (req, res) => {
                 difficulty: req.body.difficulty,
                 options: req.body.options,
                 topic: req.body.topic,
-                created_by: id,
+                created_by: id._id,
                 updated_by: null
             });
             await question.save();
@@ -126,7 +138,7 @@ router.post('/marks', async (req, res) => {
             var user = await User.findOne({_id: token});
             var element = user.question_history.pop();
             var current = user.last_10_sessions_length.pop();
-            current.questions = current.questions + 1;
+            current.questions++;
             element.correct = cor;
             element.end_date = new Date();
             await User.updateOne({_id: token}, { $push: {question_history: element, last_10_sessions_length: current }});

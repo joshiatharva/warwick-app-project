@@ -24,7 +24,7 @@ const AppSwitch = createSwitchNavigator({
     path: 'forgotpassword/:token'
   },
   AdminLogin: AdminLogin,
-  Home: HomepageTab,
+  HomeT: HomepageTab,
   AdminHomepage: AdminHomepageTab
 });
 

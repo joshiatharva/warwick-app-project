@@ -4,10 +4,10 @@ import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import { createBottomTabNavigator } from 'react-navigation-tabs';
 import { createMaterialTopTabNavigator } from 'react-navigation-tabs';
-import { SearchBar, CheckBox, Button, ListItem, Slider, Input } from 'react-native-elements';
+import { Button } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Linking } from 'expo';
-import { ApplicationProvider, Select, Text, Card, Datepicker, TopNavigation, TabView} from '@ui-kitten/components';
+import { ApplicationProvider, Select, Text, Card, Datepicker, TopNavigation, TabView, Divider, CardHeader} from '@ui-kitten/components';
 import { mapping, light } from '@eva-design/eva';
 import { ContributionGraph, StackedBarChart, ProgressChart } from "react-native-chart-kit";
 
@@ -24,40 +24,67 @@ export default class Home extends Component {
       rlscore: 0,
       cflscore: 0,
       tmscore: 0,
+      newq: [],
     }
   }
 
   async componentDidMount() {
     let token = await AsyncStorage.getItem("id");
     if (token != null) {
-      let response = await fetch('http://192.168.0.12:3000/user/profile', {
-        method: "GET",
-        headers : {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + token
+      try {
+        let response = await fetch('http://192.168.0.12:3000/user/profile', {
+          method: "GET",
+          headers : {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+          }
+        });
+        let res = await response.json();
+        if (res.success === true) {
+          console.log("rlscore: " + res.rg + " " + "cflscore: " + res.cfl + " " + "tmscore: " + res.tm);
+          this.setState({user: res.user, rlscore: res.rg, cflscore: res.cfl, tmscore: res.tm});
+          if (this.state.rlscore == null) {
+            this.setState({rlscore: 0});
+          }
+          if (this.state.cflscore == null) {
+            this.setState({cflscore: 0});
+          }
+          if (this.state.tmscore == null) {
+            this.setState({tmscore: 0});
+          }
+        } else {
+          this.setState({err: res.message});
+          if (res.msg == "Token expired") {
+            this.props.navigation.navigate("Login");
+            alert("Unfortunately, your token has expired! Please sign in again.");
+          }
         }
-      });
-      let res = await response.json();
-      if (res.success === true) {
-        this.setState({user: res.user, rlscore: res.rlscore, cflscore: res.cflscore, tmscore: res.tmscore});
-        if (this.state.rlscore === null) {
-          this.setState({rlscore: 0});
-        }
-        if (this.state.cflscore === null) {
-          this.setState({cflscore: 0});
-        }
-        if (this.state.tmscore === null) {
-          this.setState({tmscore: 0});
-        }
-      } else {
-        this.setState({err: res.message});
-        if (res.msg == "Token expired") {
-          this.props.navigation.navigate("Login");
-          alert("Unfortunately, your token has expired! Please sign in again.");
-        }
+      } catch (err) {
+        alert("Unfortunately, the network could not be connected to");
       }
     }
+    // try {
+    //   let response2 = await fetch('http://192.168.0.12:3000/questions/new', {
+    //     method: 'GET',
+    //     headers: {
+    //       Accept: 'application/json',
+    //       'Content-Type': 'application/json',
+    //       'Authorization': 'Bearer ' + token
+    //     }
+    //   });
+    //   let res2 = await response2.json();
+    //   if (res2.success === true) {
+    //     this.setState({newq: res2.msg});
+    //   } else {
+    //     if (res.msg == "Token expired") {
+    //       await AsyncStorage.removeItem('id');
+    //       this.props.navigation.navigate("Login");
+    //     }
+    //   }
+    // } catch (err) {
+    //   alert("Unfortunately, the network is down. Please try again");
+    // }
   }
 
   // async getData() {
@@ -92,17 +119,36 @@ export default class Home extends Component {
       <View style={styles.headerContainer}>
         <Text>Welcome back,</Text>
         <Text category="h2">{this.state.user.firstname}!</Text> 
+        <Text>Ready for a quiz?</Text>
       </View>
       <Text style={{textAlign: 'center', fontSize: 18, padding: 16, marginTop: 16}}>Your current success average is:</Text>
-      <ProgressChart
+      <Card style={styles.statCard}>
+        <ProgressChart
           data={data}
           width={Dimensions.get('window').width}
-          height={220}
+          height={200}
           chartConfig={chartConfig}
           hideLegend={false}
-      />
+        />
+      </Card>
       <Text status="control" category="h3">Questions:</Text>
-      <Text>{this.state.questions_made_today} questions have been made today.</Text>
+      <View>
+        <Divider />
+        <Text category="h2">Recently Made Questions</Text>
+        <Divider /> 
+      </View>
+      <FlatList 
+        data={this.state.newq}
+        renderItem={(item) => (
+          <Card header={<CardHeader><Text category="h4">{item.name}</Text></CardHeader>}>
+            <Text>
+            Made by: {item.created_by}
+            Difficulty: {item.difficulty}
+            </Text>
+          </Card>
+        )}
+      />
+
       <Text>Let's get started with quizzing:</Text>
       <Button title="Get Started!" onPress={() => this.props.navigation.navigate("Questions")} />
       

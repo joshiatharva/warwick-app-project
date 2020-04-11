@@ -14,7 +14,6 @@
     "@ui-kitten/components": "^4.3.2",
     "@ui-kitten/eva-icons": "^4.3.2",
     "expo": "^36.0.0",
-    "galio-framework": "^0.6.3",
     "linking": "^0.1.0-beta.5",
     "navigation": "^5.2.0",
     "npm": "^6.13.7",

@@ -53,11 +53,13 @@ export default class Questions extends Component {
           'Authorization': 'Bearer ' + token
         },
       });
-      let json = await response.json();
-      this.setState({questions: json, filteredQuestions: json, isLoading: false});
+      let res = await response.json();
       if (res.msg == "Token expired") {
         this.props.navigation.navigate("Login");
         alert("Unfortunately, your token has expired! Please sign in again!");
+      }
+      if (res.success == true) {
+        this.setState({questions: res.msg, filteredQuestions: res.msg, isLoading: false});
       }
     } catch (err) {
       this.setState({error: err}, () => console.log("Error: " + this.state.error));
@@ -121,13 +123,9 @@ export default class Questions extends Component {
     this.setState({isLoading: false});
   }
 
-
   render() {
       return (
-        <ScrollView refreshControl={<RefreshControl 
-          refreshing={this.state.isLoading}
-          onRefresh={() => this._handleRefresh()}/>
-        }>
+        <View>
           {/* <TopNavigation 
             title='Questions'
             alignment='center'
@@ -146,6 +144,9 @@ export default class Questions extends Component {
           placeholder='Enter here....'
           />
           <FlatList 
+            refreshControl={<RefreshControl 
+              refreshing={this.state.isLoading}
+              onRefresh={() => this._handleRefresh()}/>}
             data={this.state.filteredQuestions}
             renderItem = {({item, index}) =>
               <ListItem
@@ -158,7 +159,7 @@ export default class Questions extends Component {
             }
             keyExtractor={(item, index) => index.toString()}
           />
-        </ScrollView>
+        </View>
       );
   }
 }

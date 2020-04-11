@@ -8,7 +8,7 @@ import { SearchBar, CheckBox, Button, ListItem, Slider, Input } from 'react-nati
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Linking } from 'expo';
 import { ApplicationProvider, Select, Text, Card, Datepicker, TopNavigation, TabView} from '@ui-kitten/components';
-import { mapping, light } from '@eva-design/eva';
+import { mapping, dark, light } from '@eva-design/eva';
 import { ContributionGraph, StackedBarChart, ProgressChart } from "react-native-chart-kit";
 
 // import Welcome from './components/Welcome';
