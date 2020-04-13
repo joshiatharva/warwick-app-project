@@ -22,6 +22,7 @@ router.get('/:id', async (req, res) => {
     var token = req.headers.authorization.split(" ")[1]; 
     if (isValidated(token)) {
         var id = req.params.id;
+        console.log(id);
         let value = await Question.findOne({_id: id});
         return res.status(200).send({"success": true, "question": value});
     } else {
@@ -50,20 +51,6 @@ router.post('/log', async (req, res) => {
         return res.status(301).redirect('/auth/logout');
     }
 });
-
-
-
-
-// router.get('/late', async (req, res) => {
-//         try { 
-//             jwt.verify(req.headers.authorization.split(" ")[1], "This is secret");
-//             var questions = 1234;
-//             console.log(questions);
-//             return res.status(200).send({"success": true, "msg": questions});
-//         } catch (err) {
-//             return res.redirect('/auth/logout');
-//         } 
-// });
 
 router.post('/new', async (req, res) => {
     var token = req.headers.authorization.split(" ")[1]; 
@@ -201,6 +188,16 @@ router.post('/save', async(req,res) => {
     } else {
         return res.status(301).redirect('/auth/logout');
     }
+});
+
+router.get('/ate', async(req, res) => {
+    try { 
+        var token = jwt.verify(req.headers.authorization.split(" ")[1], "This is secret");
+        var questions = await User.find({_id: token._id });
+        return res.status(200).send({"success": true, "msg": questions});
+    } catch (err) {
+        return res.redirect('/auth/logout');
+    } 
 });
 
 

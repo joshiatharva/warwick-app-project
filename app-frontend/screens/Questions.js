@@ -117,7 +117,7 @@ export default class Questions extends Component {
     this.setState({filteredQuestions: this.state.questions, search: ''});
   }
 
-  async _handleRefresh() {
+  async handleRefresh() {
     this.setState({isLoading: true});
     this.getQuestions();
     this.setState({isLoading: false});
@@ -146,7 +146,7 @@ export default class Questions extends Component {
           <FlatList 
             refreshControl={<RefreshControl 
               refreshing={this.state.isLoading}
-              onRefresh={() => this._handleRefresh()}/>}
+              onRefresh={() => this.handleRefresh()}/>}
             data={this.state.filteredQuestions}
             renderItem = {({item, index}) =>
               <ListItem
