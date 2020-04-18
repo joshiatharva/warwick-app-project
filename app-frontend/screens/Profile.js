@@ -17,7 +17,7 @@ export default class Profile extends Component {
     super(props);
   }
 
-  async _handleLogout(){
+  async handleLogout(){
     let token = await AsyncStorage.getItem("id");
     if (token != null) {
       let response = await fetch("http://192.168.0.12:3000/auth/logout", {
@@ -29,22 +29,27 @@ export default class Profile extends Component {
         }
       });
       let res = await response.json();
-      await AsyncStorage.removeItem("id");
+      if (res.success == true) {
+        await AsyncStorage.removeItem("id");
+        this.props.navigation.navigate("Login");
+      }
     }
     let admin = await AsyncStorage.getItem("admin");
     if (admin != null) {
-      // let response = await fetch("http://192.168.0.16:3000/admin/logout", {
-      //   method: "GET",
-      //   headers: {
-      //     Accept: "application/json",
-      //     "Content-Type": "application/json",
-      //     "Authorization": "Bearer " + admin
-      //   }
-      // });
-      // let res = await response.json();
-      await AsyncStorage.removeItem("admin");
+      let response2 = await fetch("http://192.168.0.16:3000/admin/logout", {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + admin
+        }
+      });
+      let res2 = await response2.json();
+      if (res2.success == true) {
+        await AsyncStorage.removeItem("admin");
+        this.props.navigation.navigate("Login");
+      }
     }
-    this.props.navigation.navigate("Login");
   }
 
 
@@ -89,7 +94,7 @@ export default class Profile extends Component {
           />
         ))
         }
-        <Button containerStyle={styles.forgotButton} title="Logout" onPress={() => this._handleLogout()} />
+        <Button containerStyle={styles.forgotButton} title="Logout" onPress={() => this.handleLogout()} />
       </ScrollView>
     );
   }

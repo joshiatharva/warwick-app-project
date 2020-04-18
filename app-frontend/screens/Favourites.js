@@ -55,7 +55,7 @@ export default class Favourites extends Component {
 
   async _fetchLog(item) {
       let token = await AsyncStorage.getItem("id");
-      let response = await fetch('http://192.168.0.16:3000/questions/log', {
+      let response = await fetch('http://192.168.0.12:3000/questions/log', {
         method: 'POST',
         headers: {
           Accept: 'application/json',
@@ -73,7 +73,7 @@ export default class Favourites extends Component {
   async _sendData(item) {
     try {
       let token = await AsyncStorage.getItem("id");
-      let response = await fetch('http://192.168.0.16:3000/questions/log', {
+      let response = await fetch('http://192.168.0.12:3000/questions/log', {
         method: 'POST',
         headers: {
           Accept: 'application/json',
