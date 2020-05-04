@@ -18,6 +18,7 @@ export default class Quiz extends Component {
       questions: [],
       answer: "",
       emptyAnswerFlag: false,
+      page: "",
     }
   }
 
@@ -29,13 +30,13 @@ export default class Quiz extends Component {
   }
 
   isCorrect(value) {
-    // console.log("Value: " + value);
-    if (this.state.answer == '') {
+    console.log("Value: " + value);
+    if (this.state.answer == '' && this.state.questions.type == "normal_answer") {
       this.setState({emptyAnswerFlag: true});
     } else {
       this.setState({answered: true, answer: value});
       if (value === this.state.questions.answer) {
-        this.setState({correct: true}, () => {
+        this.setState({correct: true, page: "DataUpload"}, () => {
           this.props.navigation.navigate("DataUpload", {
             Question: this.state.questions,
             correct: this.state.correct,
@@ -43,7 +44,7 @@ export default class Quiz extends Component {
           });
         });
       } else {
-        this.setState({correct: false}, () => {
+        this.setState({correct: false,page: "DataUpload"}, () => {
           this.props.navigation.navigate("DataUpload", {
             Question: this.state.questions,
             correct: this.state.correct,
@@ -88,7 +89,7 @@ export default class Quiz extends Component {
               status={(!this.state.emptyAnswerFlag) ? 'basic': 'danger'}
               caption={(!this.state.emptyAnswerFlag) ? '' : 'Please provide your answer.' }
             />
-            <Button title="Check answer" onPress={() => this.isCorrect(this.state.normalAnswer)} />
+            <Button title="Check answer" onPress={() => this.isCorrect(this.state.answer)} />
           </View>
         );
       } else {

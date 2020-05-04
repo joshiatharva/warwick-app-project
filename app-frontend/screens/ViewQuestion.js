@@ -1,15 +1,8 @@
 import React, { Component } from 'react';
-import { StyleSheet, View,  FlatList, AsyncStorage, ActivityIndicator, ScrollView, Dimensions, Platform, Alert, InputAccessoryView, ListView, RefreshControl, Modal } from 'react-native';
-import { createAppContainer, createSwitchNavigator } from 'react-navigation';
-import { createStackNavigator } from 'react-navigation-stack';
-import { createBottomTabNavigator } from 'react-navigation-tabs';
-import { createMaterialTopTabNavigator } from 'react-navigation-tabs';
-import { SearchBar, CheckBox, Button, ListItem, Slider, Input } from 'react-native-elements';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import { Linking } from 'expo';
-import { ApplicationProvider, Select, Text, Card, Datepicker, TopNavigation, TabView} from '@ui-kitten/components';
-import { mapping, light } from '@eva-design/eva';
-import { ContributionGraph, StackedBarChart, ProgressChart } from "react-native-chart-kit";
+import { View, AsyncStorage } from 'react-native';
+
+import { Button } from 'react-native-elements';
+import { Text, Card } from '@ui-kitten/components';
 
 import styles from '../style/styles';
 
@@ -18,14 +11,13 @@ export default class ViewQuestion extends Component {
     super(props);
     this.state = {
       question: [],
-      q_type: '',
+      status: ""
     };
   }
 
   async componentDidMount() {
-    var qid = this.props.navigation.getParam('id');
-    console.log(qid);
-    this.setState({question: qid}); 
+    var question = this.props.navigation.getParam('id');
+    this.setState({question: question}); 
   }
 
   async saveQuestion(id) {
@@ -45,6 +37,9 @@ export default class ViewQuestion extends Component {
       let res = await response.json();
       if (res.success == true) {
         alert("Question has been saved to Favourites!");
+        this.setState({status: "success"});
+      } else {
+        this.setState({status: "failure"});
       }
       // console.log(res.message);
     } catch (err) {

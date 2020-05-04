@@ -25,6 +25,7 @@ export default class Home extends Component {
       cflscore: 0,
       tmscore: 0,
       newq: [],
+      status: "",
     }
   }
 
@@ -53,9 +54,11 @@ export default class Home extends Component {
           if (this.state.tmscore == null) {
             this.setState({tmscore: 0});
           }
+          this.setState({status: "Success"});
         } else {
-          this.setState({err: res.message});
+          this.setState({err: res.msg});
           if (res.msg == "Token expired") {
+            this.setState({status: "Failed"}); 
             this.props.navigation.navigate("Login");
             alert("Unfortunately, your token has expired! Please sign in again.");
           }
@@ -63,6 +66,9 @@ export default class Home extends Component {
       } catch (err) {
         alert("Unfortunately, the network could not be connected to");
       }
+    } else {
+      this.setState({err: "No token", status: "Failed"});
+      this.props.navigation.navigate("Login");
     }
     // try {
     //   let response2 = await fetch('http://192.168.0.12:3000/questions/new', {

@@ -24,14 +24,18 @@ export default class Login extends Component {
       errorMsg: '',
       usernameFlag: false,
       passwordFlag: false,
+      status: '',
     }
   }
 
   async componentDidMount() {
+    this.setState({status: 'start'});
     var token = await AsyncStorage.getItem("id");
     // var admin = await AsyncStorage.getItem("admin");
+    this.setState({status: 'end'});
+    console.log(token);
     if (token != null) {
-      console.log(token);
+      this.setState({status: token})
       try {
         let response = await fetch('http://192.168.0.12:3000/auth/login', {
           method: 'GET',
@@ -42,25 +46,25 @@ export default class Login extends Component {
           }
         });
         let res = await response.json();
-        console.log("token");
+        this.setState({status: "token"});
         if (res.success == true) {
-          console.log("token valid");
+          this.setState({status: 'valid'});
           this.props.navigation.navigate("HomeT");
           // alert("nav end");
         } else {
           if (res.msg == "Token expired") {
-            this.setState({ isVerified: false });
-            console.log("Token present, expired");
+            this.setState({isSending: false});
             await AsyncStorage.removeItem("id");
-            console.log("Token removed");
+            this.setState({status: 'removed'});
           }
         }
       } catch (err) {
-        alert(err);
+        this.setState({status: "error"});
+
         // console.log(err);
       }
     } else {
-      this.setState({ isVerified: false });
+      this.setState({ isSending: false, status: "no token"});
       // alert("Token not present");
     }
     // if (admin != null) {
@@ -91,14 +95,16 @@ export default class Login extends Component {
 
   async sendData() {
     if (this.state.username == '') {
-      this.setState({ usernameFlag: true });
+      this.setState({ usernameFlag: true, status: "no username"});
       if (this.state.password == '') {
-        this.setState({ passwordFlag: true });
+        this.setState({ passwordFlag: true, status: "no password" });
       }
+      return false;
     } else if (this.state.password == '') {
-      this.setState({ passwordFlag: true });
+      this.setState({ passwordFlag: true, status: "no password" });
+      return false;
     } else {
-      this.setState({ isSending: true });
+      this.setState({ isSending: true, status: "start"});
       if (!this.state.admin) {
         try {
           let response = await fetch('http://192.168.0.12:3000/auth/login', {
@@ -121,10 +127,12 @@ export default class Login extends Component {
             // if (res.remember === true) {
             //   await AsyncStorage.setItem('remember', true);
             // }
-            this.setState({ isSending: false, errorMsg: '' });
+            this.setState({ isSending: false, errorMsg: '', status: id_token});
             this.props.navigation.navigate('HomeT');
+            return "HomeT"
           } else {
-            this.setState({ isSending: false, errorMsg: res.msg });
+            this.setState({ isSending: false, errorMsg: res.msg, status: "error" });
+            return false;
           }
         } catch (err) {
           console.log(err);
@@ -147,15 +155,16 @@ export default class Login extends Component {
           });
           let res = await response.json()
           if (res.success == true) {
-            console.log("success");
             await AsyncStorage.setItem('admin', res.token);
             // if (res.remember === true) {
             //   await AsyncStorage.setItem('remember', true);
             // }
-            this.setState({ isSending: false });
+            this.setState({ isSending: false, status: 'admin success'});
             this.props.navigation.navigate('AdminLogin');
+            return 'AdminLogin';
           } else {
-            console.log(res.message);
+            this.setState({isSending: false, status: "no account"});
+            alert("Account not found - please try again");
           }
         } catch (err) {
           console.log(err);

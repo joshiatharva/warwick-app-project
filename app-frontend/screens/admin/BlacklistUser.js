@@ -65,7 +65,7 @@ export default class BlacklistUsers extends Component {
       }),
     });
     let res = await response.json();
-    if (res.success == "true") {
+    if (res.success == true) {
       alert("Your request has been submitted. "+ this.state.username +" will receive an email concerning their blacklist");
       this.setState({username: '', reason: '', date: null, users: []});
     } else {

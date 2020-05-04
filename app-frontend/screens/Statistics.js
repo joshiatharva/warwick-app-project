@@ -23,8 +23,8 @@ export default class Statistics extends Component {
       user_scores: [],
       q_history: [],
       questions_made: [],
+      question_history: [],
       sessions: [],
-      questions_made: [],
       rldata: [],
       ctldata: [],
       tmdata: [],
@@ -33,7 +33,8 @@ export default class Statistics extends Component {
       tmtotal: [],
       array: [],
       type: '',
-      topic: ''
+      topic: '',
+      status: ''
     }
   }
 
@@ -69,14 +70,45 @@ export default class Statistics extends Component {
           array = [element.d1_correct, element.d2_correct, element.d3_correct, element.d4_correct, element.d5_correct];
           array2 = [element.d1_total, element.d2_total, element.d3_total, element.d4_total, element.d5_total];
           this.setState({tmdata: array, tmtotal: array2});
-        }
+        } 
       });
+      // let response2 = await fetch("http://192.168.0.12:3000/user/statistics", {
+      //   method: "GET",
+      //   headers: {
+      //   Accept: "application/json",
+      //   "Content-Type": "application/json",
+      //   "Authorization": "Bearer " + token
+      //   }
+      // });
+      // let res2 = await response2.json();
+      // if (res2.success == true) {
+      //   this.setState({sessions: res2.msg, questions_made: res2.questions, question_history: res2.history});
+      // }
     } else {
       console.log("Error occured");
+      this.setState({status: "error"});
+      if (res.msg=="Token expired") {
+        //logout
+      }
     }
   }
 
-  addType(item) {
+  async getUserHistory() {
+    let token = await AsyncStorage.getItem("id");
+    let response = await fetch("http://192.168.0.12:3000/user/statistics", {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token
+      }
+    });
+    let res = await response.json();
+    if (res.success == true) {
+      this.setState({sessions: res.msg, questions_made: res.questions, question_history: res.history});
+  }
+
+  addTopic(item) {
     console.log(item.text);
     this.setState({topic: item.text});
     console.log(this.state.topic);
@@ -118,7 +150,7 @@ export default class Statistics extends Component {
             placeholder="Please pick question topic"
             data={topics}
             selectedOption={this.state.topic}
-            onSelect={(item) => this.addType(item)}
+            onSelect={(item) => this.addTopic(item)}
           />
           {this.state.topic == "Regular Languages" && (
             <View>
@@ -171,10 +203,20 @@ export default class Statistics extends Component {
         </View>
 
         <Text>Usage Statistics:</Text>
-        <Text>Record of sessions:</Text>
-        <Text>Last sessions:</Text>
+        <Text>Sessions:</Text>
+            {this.state.sessions.map(({item}) => (
+              <View>
+                <Text>{item.start}</Text>
+                <Text>{item.end}</Text>
+              </View>
+            ))}
         <Text>Questions you've made:</Text>
-
+        {this.state.questions_made.map(({item}) => (
+              <View>
+                <Text>{item.start}</Text>
+                <Text>{item.end}</Text>
+              </View>
+            ))}
         {/* <FlatList
           data={this.state.questions_made}
           renderItem = {({item}) =>
@@ -185,7 +227,12 @@ export default class Statistics extends Component {
           keyExtractor={(item, index) => index.toString()}
         /> */}
         <Text>Question History:</Text>
-        <Text>Average time spent on questions:</Text>
+        {this.state.question_history.map(({item}) => (
+              <View>
+                <Text>{item.start}</Text>
+                <Text>{item.end}</Text>
+              </View>
+        ))}
       </ScrollView>
     );
   }

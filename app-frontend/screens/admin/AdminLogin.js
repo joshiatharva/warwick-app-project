@@ -20,7 +20,8 @@ export default class AdminLogin extends Component {
       isLoading: false,
       isSending: false,
       err: '',
-      answer: ','
+      answer: '',
+      index: 0,
     }
   }
 
@@ -37,9 +38,9 @@ export default class AdminLogin extends Component {
     });
     let res = await response.json();
     if (res.success === true) {
-      this.setState({question: res.question, isLoading: false})
+      this.setState({question: res.question, index: res.index, isLoading: false})
     } else {
-      this.setState({isLoading: false, err: res.message});
+      this.setState({isLoading: false, err: res.msg});
       if (res.msg == "Token expired") {
         this.props.navigation.navigate("Login");
         alert("Unfortunately, your token has expired!");
@@ -50,7 +51,8 @@ export default class AdminLogin extends Component {
   async sendData() {
     this.setState({isSending: true});
     let adminToken = await AsyncStorage.getItem("admin");
-    let response = await fetch("http://192.168.0.16:3000/admin/2fa", {
+    console.log(adminToken);
+    let response = await fetch("http://192.168.0.12:3000/admin/2fa", {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -60,12 +62,19 @@ export default class AdminLogin extends Component {
       body: JSON.stringify({
         question: this.state.question,
         answer: this.state.answer,
+        index: this.state.index,
       })
     });
+    console.log("Sent");
     let res = await response.json();
     if (res.success === true) {
       this.setState({isSending: false});
+      console.log(res.token);
+      await AsyncStorage.setItem("admin", res.token);
       this.props.navigation.navigate("AdminHomepage");
+    } else {
+      this.setState({isSending: false});
+      alert("Answer incorrect. Please try again.")
     }
   }
 
@@ -77,6 +86,7 @@ export default class AdminLogin extends Component {
             <Text>{this.state.question}</Text>
             <Input placeholder="Enter your answer here!" onChangeText={(text) => this.setState({answer: text})} />
             <Button title="Submit your answer!" loading={this.state.isSending} onPress={() => this.sendData()} />
+            <Button title="Back to Login" onPress={ async () => {await AsyncStorage.removeItem("admin"); this.props.navigation.navigate("Login");}} />
           </View>
         );
     } else {
@@ -84,7 +94,7 @@ export default class AdminLogin extends Component {
         <View style={styles.formContainer}>
           <Text>Sorry, the page has developed the following error:</Text>
           <Text>{this.state.err}</Text>
-          <Button title="Go Back to Login" onPress={() => this.props.navigation.goBack()}/>
+          <Button title="Go Back to Login" onPress={() => this.props.navigation.navigate("Login")}/>
         </View>
       )
     }

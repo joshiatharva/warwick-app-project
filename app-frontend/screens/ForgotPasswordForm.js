@@ -19,7 +19,9 @@ export default class ForgotPasswordForm extends Component {
       password: "",
       passwordconf: "",
       isLoading: true,
-      error: null
+      error: null,
+      page: "",
+      status: ""
     }
   }
 
@@ -41,18 +43,18 @@ export default class ForgotPasswordForm extends Component {
     // });
     // let res = await response.json();
     // this.setState({error: res.error});
+    this.handleDeepLink;
   }
 
   async sendData() {
     let token = await AsyncStorage.getItem("forgot_Token");
     let id = await AsyncStorage.getItem("id_token");
-    let response = await fetch(`http://192.168.0.12:3000:3000/auth/reset/${forgot}`, {
+    let response = await fetch(`http://192.168.0.12:3000:3000/auth/reset/${token}`, {
       method: "POST",
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
         'Authorization': 'Bearer'
-
       },
       body: JSON.stringify({
         "user_id": id,
@@ -63,16 +65,13 @@ export default class ForgotPasswordForm extends Component {
     });
     let res = await response.json();
     if (res.success == "true") {
+      alert("Password successfully changed");
+      this.setState({page: "Login", status: "Password changed"});
       this.props.navigation.navigate("Login");
     } else {
-      if (res.typ == "token") {
-        alert(res.msg);
+        alert(res.status + ":" + res.msg);
+        this.setState({page: "Login", status: "Failed"});
         this.props.navigation.navigate("Login");
-      }
-      if (res.typ == "user") {
-        alert(res.msg);
-        this.props.navigation.navigate("Login");
-      }
     }
   }
 

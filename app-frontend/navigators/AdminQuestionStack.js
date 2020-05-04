@@ -21,33 +21,18 @@ import CheckAnswer from '../screens/admin/CheckAnswer';
 const AdminQuestionStack = createStackNavigator({
   Questions: {
     screen: AdminQuestions,
-    navigationOptions: {
-      headerShown: false,
-    },
   },
   AdminViewQuestion: {
     screen: AdminViewQuestion,
-    navigationOptions: {
-      headerShown: false,
-    },
   },
   MakeQuestion: {
     screen: MakeQuestion,
-    navigationOptions: {
-      headerShown: false,
-    },
   },
   EditQuestion: {
     screen: EditQuestion,
-    navigationOptions: {
-      headerShown: false,
-    },
   },
   TestQuiz: {
     screen: TestQuiz,
-    navigationOptions: {
-      headerShown: false,
-    },
   },
   CheckAnswer: {
     screen: CheckAnswer,

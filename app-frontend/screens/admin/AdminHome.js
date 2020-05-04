@@ -67,17 +67,20 @@ export default class AdminHome extends Component {
       return (
       // <DFADrawingComponent />
       <ScrollView>
-        <TopNavigation 
+        {/* <TopNavigation 
           title='Home'
           alignment='center'
-        />
+        /> */}
         <View style={styles.headerContainer}>
           <Text>Welcome back,</Text>
           <Text category="h2">{this.state.user.username}!</Text> 
         </View>
         <View>
-          <Text>Hello there</Text>
-          <Text>There are currently 1 new users signed up today!</Text>
+          <Text category="h1" status="basic">Dashboard</Text>
+          <Text category="h6">Number of users:</Text>
+          <Text>{this.state.questions}</Text>
+          <Text category="h1">New Questions</Text>
+          
         </View>
       </ScrollView>
       );

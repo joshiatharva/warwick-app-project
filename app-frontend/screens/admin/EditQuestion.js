@@ -19,18 +19,26 @@ export default class EditQuestion extends Component {
     this.state = {
       id: null,
       name: "",
+      tempName: "",
       question: "",
+      tempQuestion: "",
       type: "",
+      tempType: "",
       topic: "",
+      tempTopic: "",
       options: [],
+      tempOptions: [],
       optionList: [],
-      option1: "",
-      option2: "",
-      option3: "",
-      option4: "",
+      tempOption1: "",
+      tempOption2: "",
+      tempOption3: "",
+      tempOption4: "",
       answer: "",
+      tempAnswer: "",
       solution: "",
+      tempSolution: "",
       difficulty: 1,
+      tempDifficulty: 1,
       isLoading: false,
       selectedType: "",
     }
@@ -40,30 +48,38 @@ export default class EditQuestion extends Component {
     this.setState({
       id: this.props.navigation.getParam("Question")._id,
       name: this.props.navigation.getParam("Question").name,
+      tempName: this.props.navigation.getParam("Question").name,
       question: this.props.navigation.getParam("Question").question,
+      tempQuestion: this.props.navigation.getParam("Question").question,
+      type: this.props.navigation.getParam("Question").type,
+      tempType: this.props.navigation.getParam("Question").type,
       topic: this.props.navigation.getParam("Question").topic,
-      option1:  this.props.navigation.getParam("Question").options[0],
-      option2: this.props.navigation.getParam("Question").options[1],
-      option3:this.props.navigation.getParam("Question").options[2],
-      option4: this.props.navigation.getParam("Question").options[3],
+      tempTopic: this.props.navigation.getParam("Question").topic,
+      options: this.props.navigation.getParam("Question").options,
       answer: this.props.navigation.getParam("Question").answer,
       solution: this.props.navigation.getParam("Question").solution,
+      tempSolution: this.props.navigation.getParam("Question").solution,
       difficulty: this.props.navigation.getParam("Question").difficulty,
+      tempDifficulty: this.props.navigation.getParam("Question").difficulty,
+    }, () => {
+      switch (this.state.type) {
+        case "true_false":
+          this.setState({selectedType: "True-False"});
+          break;
+          case "multi_choice":
+            this.setState({selectedType: "Multiple Choice"});
+            break;
+          case "normal_answer":
+            this.setState({selectedType: "Normal Answer"});
+            break;
+          default: 
+            this.setState({selectedType: "Normal Answer"});
+            break;
+      }
+      console.log(this.state.type + " " + this.state.tempType);
+      console.log(this.state.options);
     });
-    switch (this.state.type) {
-      case "true_false":
-        this.setState({selectedType: "True-False"});
-        break;
-        case "multi_choice":
-          this.setState({selectedType: "Multiple Choice"});
-          break;
-        case "normal_answer":
-          this.setState({selectedType: "Normal Answer"});
-          break;
-        default: 
-          this.setState({selectedType: "Normal Answer"});
-          break;
-    }
+    console.log(this.state.type);
     this.addToArray();
     // let response = await fetch("http://192.168.0.16:3000/topics/all", {
     //   method: 'GET',
@@ -84,6 +100,14 @@ export default class EditQuestion extends Component {
   }
 
   async editQuestion() {
+    this.checkTypes();
+    let name = (this.state.tempName !="") ? this.state.tempName : this.state.name; 
+    let question = (this.state.tempQuestion != "") ? this.state.tempQuestion : this.state.question;
+    let topic = (this.state.tempTopic != "") ? this.state.tempTopic : this.state.topic;
+    let type = (this.state.tempType != "") ? this.state.tempType : this.state.type;
+    let options = (this.checkTempArray()) ? this.state.tempOptions : this.state.options;
+    let answer = (this.state.tempAnswer != "") ? this.state.tempAnswer : this.state.answer;
+    let solution = (this.state.tempSolution != "") ? this.state.tempSolution : this.state.solution;
     let adminToken = await AsyncStorage.getItem("admin");
     let response = await fetch('http://192.168.0.12:3000/admin/edit', {
       method: 'POST',
@@ -94,14 +118,14 @@ export default class EditQuestion extends Component {
       },
       body: JSON.stringify({
         id: this.state.id,
-        name: this.state.name,
-        question: this.state.question,
-        topic: this.state.topic,
-        type: this.state.type,
-        options: this.state.options,
-        answer: this.state.answer,
-        solution: this.state.solution,
-        difficulty: this.state.difficulty,
+        name: name,
+        question: question,
+        topic: topic,
+        type: type,
+        options: options,
+        answer: answer,
+        solution: solution,
+        difficulty: this.state.tempDifficulty,
       })
     });
     let res = await response.json();
@@ -109,23 +133,48 @@ export default class EditQuestion extends Component {
       alert("Done");
       this.props.navigation.goBack();
     } else {
-      console.log("Not done");
+      if (res.typ == "token") {
+        await AsyncStorage.removeItem("admin");
+        this.props.navigation.navigate("Login");
+      }
     }
   }
 
-  addToArray() {
+  checkTempArray() {
+    if (this.state.tempOptions == [] && this.state.tempType == "multi_choice") {
+      return false;
+    }
+    for (var i = 0; i < this.state.tempOptions.length; i++) {
+      if (this.state.tempOptions[i] == "") {
+        return false;
+      }
+    } return true;
+  }
+  
+  checkTypes() {
+    if (this.state.tempType == "true_false") {
+      this.setState({tempOptions: [true, false]});
+    } else {
+      if (this.state.tempType == "normal_answer") {
+        this.setState({tempOptions: []})
+      }
+    }
+  }
+
+  async addToArray() {
     var objectArray = [];
-    var array = [this.state.option1, this.state.option2, this.state.option3, this.state.option4];
+    var array = [this.state.tempOption1, this.state.tempOption2, this.state.tempOption3, this.state.tempOption4];
     console.log(array);
     for (var i = 0; i < array.length; i++) {
       var object = {
         text: array[i]
       };
       console.log("Opt: " + object);
-      objectArray[i] = (object);
+      objectArray[i] = object;
     }
-    this.setState({optionList: objectArray, options: array}, () => console.log("List: " + this.state.optionList + "\nOptions: " + this.state.options));
-    console.log(this.state.optionList);
+    this.setState({optionList: objectArray, tempOptions: array}, 
+      () => console.log("List: " + this.state.optionList + "\nOptions: " + this.state.options)
+    );
   }
   
   async removeObject(item) {
@@ -142,25 +191,25 @@ export default class EditQuestion extends Component {
     } else {
       boolean = false;
     }
-    this.setState({answer: boolean});
+    this.setState({tempAnswer: boolean});
   }
 
   async addType(item) {
     var entry = item.text;
     this.setState({selectedType: entry});
-    console.log(item.text);
+    console.log(this.state.selectedType);
     switch (entry) {
       case "True-False":
-        this.setState({type: "true_false"});
+        this.setState({tempType: "true_false"});
         break;
       case "Multiple Choice":
-        this.setState({type: "multi_choice"});
+        this.setState({tempType: "multi_choice"});
         break;
       case "Normal Answer":
-        this.setState({type: "normal_answer"});
+        this.setState({tempType: "normal_answer"});
         break;
       default: 
-        this.setState({type: "normal_answer"});
+        this.setState({tempType: "normal_answer"});
         break;
     }
   }
@@ -182,34 +231,38 @@ export default class EditQuestion extends Component {
     return (
       <ScrollView>
       <Text>Here we can make new questions!</Text>
-      <Input placeholder={this.state.name} onChangeText={(name) => this.setState({name: name})} />
-      <Input placeholder={this.state.question} multiline={true} onChangeText={(ques) => this.setState({question: ques})} />
+      <Input placeholder={this.state.name} onChangeText={(name) => this.setState({tempName: name})} />
+      <Input placeholder={this.state.question} multiline={true} onChangeText={(ques) => this.setState({tempQuestion: ques})} />
       <Text>Please select the question topic:</Text>
       <Select
           placeholder={this.state.topic}
           data={topics}
-          selectedOption={this.state.topic}
+          selectedOption={this.state.tempTopic}
           onSelect={(item) => this.setState({topic: item.text}, () => console.log(this.state.topic))} 
         />  
         <Text>Please set a question type:</Text>
         <Select
-          placeholder="Select Question Type"
+          placeholder={this.state.selectedType}
           data={types}
-          selectedOption={this.state.type}
+          selectedOption={this.state.tempType}
           onSelect={(item) => this.addType(item)}
         />
-        {(this.state.selectedType == "Multiple Choice") && (
+        {(this.state.tempType == "multi_choice") && (
         <View style={styles.container}> 
-          <Input placeholder="Option 1" onChangeText={(text) => this.setState({option1: text})} />
-          <Input placeholder="Option 2" onChangeText={(text) => this.setState({option2: text})} />
-          <Input placeholder="Option 3" onChangeText={(text) => this.setState({option3: text})} />
-          <Input placeholder="Option 4" onChangeText={(text) => this.setState({option4: text})} />
+          <Input placeholder="Please input option" onChangeText={(text) => this.setState({tempOption1: text})} />
+          <Input placeholder="Please input option" onChangeText={(text) => this.setState({tempOption2: text})} />
+          <Input placeholder="Please input option" onChangeText={(text) => this.setState({tempOption3: text})} />
+          <Input placeholder="Please input option" onChangeText={(text) => this.setState({tempOption4: text})} />
           <Button raised type="outline" title="Set your options here!" onPress={() => this.addToArray()} />
           <Text>Select your answer here!</Text>
+          {/* <Text>{this.state.optionList[0].text}</Text>
+          <Text>{this.state.optionList[1].text}</Text>
+          <Text>{this.state.optionList[2].text}</Text>
+          <Text>{this.state.optionList[3].text}</Text> */}
           <Select 
-            placeholder="Select Answer"
+            placeholder="Select your answer"
             data={this.state.optionList}
-            selectedOption={this.state.answer}
+            selectedOption={this.state.tempAnswer}
             onSelect={(object) => this.removeObject(object)}
           />
         </View>
@@ -217,7 +270,7 @@ export default class EditQuestion extends Component {
         {(this.state.selectedType == "Normal Answer") && (
         <View style={styles.container}>
           <Text>No options required - move onto next field!</Text> 
-          <Input placeholder="Enter your answer here" onChangeText={(text) => this.setState({answer: text})} />
+          <Input placeholder={this.state.answer} onChangeText={(text) => this.setState({tempAnswer: text})} />
         </View>
         )}
         {(this.state.selectedType == "True-False") && (
@@ -226,7 +279,7 @@ export default class EditQuestion extends Component {
             <Button disabled title="False"/>
             <Select
               data={boolean}
-              selectedOption={this.state.answer}
+              selectedOption={this.state.tempAnswer}
               onSelect={(object) => this.booleanToObject(object)}
             />
           </View>

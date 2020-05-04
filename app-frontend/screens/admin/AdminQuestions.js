@@ -23,6 +23,18 @@ export default class AdminQuestions extends Component {
       type: 'all'
     }
   }
+  static navigationOptions = ({navigation}) => {
+    return {
+      headerRight: () => (
+        <Icon
+          name='plus'
+          size={20}
+          onPress={() => {navigation.navigate("MakeQuestion")}}
+          style={{marginRight: 10}}
+        />
+      ),
+    };
+  }
 
   async componentDidMount() {
     this.getQuestions();
@@ -81,8 +93,9 @@ export default class AdminQuestions extends Component {
           'Authorization': 'Bearer ' + token
         },
       });
-      let json = await response.json();
-      this.setState({questions: json});
+      let res = await response.json();
+      this.setState({questions: res.msg, isLoading: false});
+      console.log(questions);
     } catch (err) {
       console.log("Error occured");
       this.setState({error: err});
@@ -91,7 +104,6 @@ export default class AdminQuestions extends Component {
   async _handleRefresh() {
     this.setState({isLoading: true});
     this.getQuestions();
-    this.setState({isLoading: false});
   }
 
   render() {

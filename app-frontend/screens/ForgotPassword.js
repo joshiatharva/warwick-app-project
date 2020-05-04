@@ -23,7 +23,8 @@ export default class ForgotPassword extends Component {
   }
 
   async sendData() {
-    let response = await fetch('http://192.168.0.16:3000/auth/forgot', {
+    const initialUrl = "exp://192.168.0.12/--/"
+    let response = await fetch('http://192.168.0.12:3000/auth/forgot', {
       method: 'POST',
       headers: {
         Accept: "application/json",
@@ -37,12 +38,13 @@ export default class ForgotPassword extends Component {
       })
     });
     let res = await response.json();
-    if (res.message == "/") {
+    if (res.msg == "/" && res.success == false) {
+      this.setState({error: true});
       alert("You have already logged in and have a token present on your device. Please log into your account and reset your password from there!");
       this.props.navigation.goBack();
     }
-    if (res.success == "true") {
-      this.setState({received: true});
+    if (res.success == true) {
+      this.setState({received: true}, () => console.log(this.state.received));
       await AsyncStorage.setItem("forgot_Token", res.msg);
       await AsyncStorage.setItem("id_token", res.id);
     } else {

@@ -17,11 +17,25 @@ export default class AdminViewQuestion extends Component {
     super(props);
     this.state = {
       question: [],
+      type: "",
     }
   }
 
-  async componentDidMount() {
-    this.setState({question: this.props.navigation.getParam("question")});
+  componentDidMount() {
+    this.setState({question: this.props.navigation.getParam("question")}, 
+    () => this.setType());
+  }
+
+  setType() {
+    if (this.state.question.type == 'true_false') {
+      this.setState({type: "True-False"});
+    } else if (this.state.question.type === "multi_choice") {
+      this.setState({type: "Multiple Choice"});
+    } else if (this.state.question.type === "normal_answer") {
+      this.setState({type: "Normal Answer"});
+    } else {
+      return;
+    }
   }
 
   async saveQuestion(id) {
@@ -51,7 +65,7 @@ export default class AdminViewQuestion extends Component {
           <Card style={styles.container}>
           <Text status='control' category='h4'> Name: {this.state.question.name}</Text>
           <Text>Topic: {this.state.question.topic}</Text>
-          <Text>Type: {this.state.question.type}</Text>
+          <Text>Type: {this.state.type}</Text>
           <Text>Question definition: {this.state.question.question}</Text>
           <Text>Answer: {this.state.question.answer}</Text>
           <Text>Solution: {this.state.question.solution}</Text>

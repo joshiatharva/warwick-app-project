@@ -25,6 +25,7 @@ export default class Register extends Component {
       passwordFlag: false,
       passwordconfFlag: false,
       passwordMismatchFlag: false,
+      status: "",
     }
   }
 
@@ -58,6 +59,7 @@ export default class Register extends Component {
           if (res.success === true) {
             const id_token = res.token;
             await AsyncStorage.setItem('id', id_token);
+            this.setState({status: id_token});
             this.props.navigation.navigate('Home');
           } else {
             if (res.typ == "password" || res.typ == "email") {

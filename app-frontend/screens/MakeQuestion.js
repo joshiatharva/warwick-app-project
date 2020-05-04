@@ -21,7 +21,6 @@ export default class MakeQuestion extends Component {
       question: '',
       topic: '',
       difficulty: 1,
-      content: '',
       answer: '',
       solution: '',
       options: [],
@@ -53,6 +52,7 @@ export default class MakeQuestion extends Component {
       blankOption3Flag: false,
       blankOption4Flag: false,
       blankAnswerFlag: false,
+      status: ""
     }
   }
 
@@ -88,8 +88,10 @@ export default class MakeQuestion extends Component {
         let res = await response.json();
         if (res.success == true) {
           alert("Question made");
+          this.setState({status: "Made"});
         } else {
           alert("Question not made");
+          this.setState({status: "Not Made"})
         }
         this.props.navigation.navigate("Questions");
       } catch (err) {

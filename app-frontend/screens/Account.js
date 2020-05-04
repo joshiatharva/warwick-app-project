@@ -22,6 +22,7 @@ export default class Account extends Component {
       tempfirstname: '',
       templastname: '',
       tempemail: '',
+      status: false,
     }
   }
 
@@ -46,11 +47,13 @@ export default class Account extends Component {
           tempusername: res.user.username,
           tempfirstname: res.user.firstname,
           templastname: res.user.lastname,
-          tempemail: res.user.email
+          tempemail: res.user.email,
+          status: true,
         });
       } else {
         if (res.msg == "Token expired") {
           await AsyncStorage.removeItem("id");
+          this.setState({status: false});
           this.props.navigation.navigate("Login");
         }
       }
@@ -58,8 +61,6 @@ export default class Account extends Component {
 
   async sendData() {
     this.setState({isSending: true});
-    console.log("Endpoint hit");
-    console.log(this.state.tempfirstname + " " + this.state.templastname + " " + this.state.tempemail + " " + this.state.tempusername);
     let token = await AsyncStorage.getItem("id");
     let response = await fetch("http://192.168.0.12:3000/user/profile", {
       method: "POST",
@@ -75,7 +76,6 @@ export default class Account extends Component {
         email: this.state.tempemail
       })
     });
-    console.log("Endpoint done");
     let res = await response.json();
     if (res.success == true) {
       alert("Details sent");
@@ -88,12 +88,11 @@ export default class Account extends Component {
         isSending: false
       });
     } else {
-      // if (res.msg == "Token expired") {
-      //   await AsyncStorage.removeItem("id");
-      //   this.props.navigation.navigate("Login");
-      // }
+      if (res.msg == "Token expired") {
+        await AsyncStorage.removeItem("id");
+        this.props.navigation.navigate("Login");
+      }
     }
-    console.log("Endpoint done");
   }
 
 

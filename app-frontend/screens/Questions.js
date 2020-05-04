@@ -21,6 +21,7 @@ export default class Questions extends Component {
       error: null,
       search: '',
       filteredQuestions: [],
+      status: "",
     }
   }
 
@@ -55,11 +56,12 @@ export default class Questions extends Component {
       });
       let res = await response.json();
       if (res.msg == "Token expired") {
+        this.setState({status: "token", isLoading: false});
         this.props.navigation.navigate("Login");
         alert("Unfortunately, your token has expired! Please sign in again!");
       }
       if (res.success == true) {
-        this.setState({questions: res.msg, filteredQuestions: res.msg, isLoading: false});
+        this.setState({questions: res.msg, filteredQuestions: res.msg, isLoading: false, status: "success"});
       }
     } catch (err) {
       this.setState({error: err}, () => console.log("Error: " + this.state.error));
@@ -68,6 +70,7 @@ export default class Questions extends Component {
 
   async saveQuestion(id) {
     try {
+      this.setState({isLoading: true});
       const token = await AsyncStorage.getItem("id");
       let response = await fetch('http://192.168.0.12:3000/questions/save',{
         method: 'POST',
@@ -83,8 +86,10 @@ export default class Questions extends Component {
       let res = await response.json();
       if (res.success == true) {
         console.log(res);
+        this.setState({status: "saved", isLoading: false});
       }
       if (res.msg == "Token expired") {
+        this.setState({status: "not saved", isLoading: false});
         this.props.navigation.navigate("Login");
         alert("Unfortunately, your token has expired! Please sign in again!");
       }
@@ -95,6 +100,7 @@ export default class Questions extends Component {
 
   async viewQuestion(item) {
     console.log(item);
+    this.setState({status: "ViewQuestion"});
     this.props.navigation.navigate("ViewQuestion", {
       id: item
     });

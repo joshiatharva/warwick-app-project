@@ -21,6 +21,7 @@ export default class Favourites extends Component {
       questions: [],
       error: null,
       isLoading: true,
+      page: "",
     }
   }
   
@@ -86,9 +87,11 @@ export default class Favourites extends Component {
       });
       let res = await response.json();
       if (res.success == true) {
+        console.log("yeet");
+        this.setState({page: "Quiz"})
         this.props.navigation.navigate("Quiz", {Question: item});
       } else {
-        return; 
+        return false; 
       }
     } catch (err) {
       console.log(err);

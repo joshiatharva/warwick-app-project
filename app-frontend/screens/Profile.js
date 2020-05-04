@@ -15,6 +15,9 @@ import styles from '../style/styles';
 export default class Profile extends Component {
   constructor(props) {
     super(props);
+    this.state = {
+      status: ""
+    }
   }
 
   async handleLogout(){
@@ -31,12 +34,13 @@ export default class Profile extends Component {
       let res = await response.json();
       if (res.success == true) {
         await AsyncStorage.removeItem("id");
+        this.setState({status: "User"});
         this.props.navigation.navigate("Login");
       }
     }
     let admin = await AsyncStorage.getItem("admin");
     if (admin != null) {
-      let response2 = await fetch("http://192.168.0.16:3000/admin/logout", {
+      let response2 = await fetch("http://192.168.0.12:3000/admin/logout", {
         method: "GET",
         headers: {
           Accept: "application/json",
@@ -47,6 +51,7 @@ export default class Profile extends Component {
       let res2 = await response2.json();
       if (res2.success == true) {
         await AsyncStorage.removeItem("admin");
+        this.setState({status: "Admin"});
         this.props.navigation.navigate("Login");
       }
     }
