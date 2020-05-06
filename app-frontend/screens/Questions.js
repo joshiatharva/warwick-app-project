@@ -5,7 +5,7 @@ import { createStackNavigator } from 'react-navigation-stack';
 import { createBottomTabNavigator } from 'react-navigation-tabs';
 import { createMaterialTopTabNavigator } from 'react-navigation-tabs';
 import { SearchBar, CheckBox, Button, ListItem, Slider, Input } from 'react-native-elements';
-import Icon from 'react-native-vector-icons/FontAwesome';
+import Icon from 'react-native-vector-icons/AntDesign';
 import { Linking } from 'expo';
 import { ApplicationProvider, Select, Text, Card, Datepicker, TopNavigation, TabView} from '@ui-kitten/components';
 import { mapping, light } from '@eva-design/eva';
@@ -25,12 +25,15 @@ export default class Questions extends Component {
     }
   }
 
+  /******************************************* */
+  /**Loads the plus for the  */
+  /******************** */
   static navigationOptions = ({navigation}) => {
     return {
       headerRight: () => (
         <Icon
           name='plus'
-          size={20}
+          size={30}
           onPress={() => {navigation.navigate("MakeQuestion")}}
           style={{marginRight: 10}}
         />

@@ -13,7 +13,6 @@ import { ContributionGraph, StackedBarChart, ProgressChart } from "react-native-
 
 import Profile from '../screens/Profile';
 import Settings from '../screens/Settings';
-import Personal from '../screens/Personal';
 import Account from '../screens/Account';
 import Statistics from '../screens/Statistics';
 
@@ -27,9 +26,6 @@ const ProfileStack = createStackNavigator({
   },
   Statistics: {
     screen: Statistics,
-  },
-  Personal: {
-    screen: Personal,
   },
   Account: {
     screen: Account,

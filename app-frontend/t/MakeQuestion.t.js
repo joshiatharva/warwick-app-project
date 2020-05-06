@@ -1,4 +1,4 @@
-import MakeQuestion from './screens/MakeQuestion';
+import MakeQuestion from '../screens/MakeQuestion';
 import { ApplicationProvider } from '@ui-kitten/components';
 import { mapping, light } from '@eva-design/eva';
 import React from 'react';

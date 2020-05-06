@@ -33,7 +33,6 @@ export default class Login extends Component {
     var token = await AsyncStorage.getItem("id");
     // var admin = await AsyncStorage.getItem("admin");
     this.setState({status: 'end'});
-    console.log(token);
     if (token != null) {
       this.setState({status: token})
       try {
@@ -56,6 +55,7 @@ export default class Login extends Component {
             this.setState({isSending: false});
             await AsyncStorage.removeItem("id");
             this.setState({status: 'removed'});
+            console.log(this.state.status);
           }
         }
       } catch (err) {
@@ -65,6 +65,7 @@ export default class Login extends Component {
       }
     } else {
       this.setState({ isSending: false, status: "no token"});
+      console.log(this.state.status);
       // alert("Token not present");
     }
     // if (admin != null) {
@@ -188,14 +189,17 @@ export default class Login extends Component {
             titleStyle={{ color: 'white' }}
             onPress={() => this.props.navigation.navigate("Register")} />
         </View>
+        {this.state.errorMsg != ''}
         <View style={styles.formContainer}>
           <Input
+            label="Enter Your Username"
             placeholder='Username'
             onChangeText={(item) => this.setState({ username: item })}
             status={(!this.state.usernameFlag) ? 'basic' : 'danger'}
             caption={(!this.state.usernameFlag) ? '' : 'Please provide your username'}
           />
           <Input
+            label="Enter Your Password"
             style={styles.passwordInput}
             placeholder='********'
             secureTextEntry={true}
@@ -204,7 +208,6 @@ export default class Login extends Component {
             onChangeText={(item) => this.setState({ password: item })}
           />
         </View>
-        {this.state.errorMsg != ''}
         <CheckBox center title='Remember Me' checked={this.state.remember} checkedColor='blue' onPress={() => this.setState({ remember: !this.state.remember })} />
         <CheckBox center title='I am an Admin' checked={this.state.admin} checkedColor='red' onPress={() => this.setState({ admin: !this.state.admin })} />
         <Button style={styles.signinButton} title="Sign In" onPress={() => this.sendData()} loading={this.state.isSending} buttonStyle={styles.signinButton} />

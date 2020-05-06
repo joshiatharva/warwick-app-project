@@ -1,4 +1,4 @@
-import BlacklistUser from './screens/admin/BlacklistUser';
+import BlacklistUser from '../screens/admin/BlacklistUser';
 import { ApplicationProvider } from '@ui-kitten/components';
 import { mapping, light } from '@eva-design/eva';
 import React from 'react';

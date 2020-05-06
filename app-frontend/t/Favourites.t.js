@@ -1,8 +1,6 @@
 import React from 'react';
 import renderer from 'react-test-renderer';
 import Favourites from '../screens/Favourites';
-
-import Favourites from './screens/Favourites';
 import { ApplicationProvider } from '@ui-kitten/components';
 import { mapping, light } from '@eva-design/eva';
 import React from 'react';

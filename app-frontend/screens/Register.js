@@ -110,38 +110,45 @@ export default class Register extends Component {
             <Button icon={<Icon name="arrow-left" size={12} color="white" />} type="clear" titleStyle={{color: "white"}} title="Sign In" onPress={() => this.props.navigation.goBack()} />
           </View>
           <View style={styles.formContainer}>
-            {this.state.errorArray != null && (
+            {/* {this.state.errorArray != null && (
               <View>
                 {this.state.errorArray.map((item) => {
                   <Text style={styles.error}>{item.msg}</Text>
                 })}
               </View>
+            )} */}
+            {(this.state.passwordconf != this.state.password) && (
+              <View style={{alignItems: 'center', marginBottom: 20}}>
+                <Text status="danger">Passwords do not match!</Text>
+              </View>
             )}
             <Input 
+              label="Enter First Name"
               placeholder="First Name" 
               onChangeText={(item) => this.setState({firstname: item})} 
               status={(!this.state.firstnameFlag) ? 'basic': 'danger'}
               caption={(!this.state.firstnameFlag) ? '' : 'Please provide your given name'}
             />
             <Input 
+              label="Enter Last Name"
               placeholder="Last Name" 
               onChangeText={(item) => this.setState({lastname: item})} 
               status={(!this.state.lastnameFlag) ? 'basic' : 'danger'}
               caption={(!this.state.lastnameFlag) ? '' : 'Please provide your surname'}
             />
-            <Input placeholder="Email" onChangeText={(item) => this.setState({email: item})} 
+            <Input label="Enter Your Email" placeholder="Email" onChangeText={(item) => this.setState({email: item})} 
               status={(!this.state.emailFlag && !this.state.emptyEmailFlag)  ? 'basic' : 'danger'}
               caption={(!this.state.emailFlag) ? (!this.state.emptyEmailFlag) ? '' : 'Please provide a valid email' : 'Please provide your email'}
             />
-            <Input placeholder="Username" onChangeText={(item) => this.setState({username: item})} 
+            <Input label="Enter Your Username" placeholder="Username" onChangeText={(item) => this.setState({username: item})} 
               status={(!this.state.usernameFlag) ? 'basic' : 'danger'}
               caption={(!this.state.usernameFlag) ? '' : 'Please provide a username'}
             />
-            <Input placeholder="Password" secureTextEntry={true} onChangeText={(item) => this.setState({password: item})} 
+            <Input label="Enter New Password" placeholder="Password" secureTextEntry={true} onChangeText={(item) => this.setState({password: item})} 
               status={(!this.state.passwordFlag) ? 'basic' : 'danger'}
               caption={(!this.state.passwordFlag) ? '' : 'Please provide a password'}
             />
-            <Input placeholder="Confirm Password" secureTextEntry={true} onChangeText={(item) => this.setState({passwordconf: item})} 
+            <Input label="Confirm Your Password" placeholder="Confirm Password" secureTextEntry={true} onChangeText={(item) => this.setState({passwordconf: item})} 
               status={(!this.state.passwordconfFlag && !this.state.passwordMismatchFlag) ? 'basic' : 'danger'}
               caption={(!this.state.passwordconfFlag) ? (!this.state.passwordMismatchFlag) ? '' : 'Please ensure the passwords match' : 'Please confirm the password'}
             />

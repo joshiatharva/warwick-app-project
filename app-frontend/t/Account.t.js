@@ -1,4 +1,4 @@
-import Account from './screens/Account';
+import Account from '../screens/Account';
 import { ApplicationProvider } from '@ui-kitten/components';
 import { mapping, light } from '@eva-design/eva';
 import React from 'react';

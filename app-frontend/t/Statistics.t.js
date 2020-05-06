@@ -1,4 +1,4 @@
-import Statistics from './screens/Statistics';
+import Statistics from '../screens/Statistics';
 import { ApplicationProvider } from '@ui-kitten/components';
 import { mapping, light } from '@eva-design/eva';
 import React from 'react';

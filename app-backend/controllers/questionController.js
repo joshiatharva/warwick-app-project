@@ -13,7 +13,7 @@ exports.getAllQuestions = async (req, res) => {
         console.log("success");
         return res.status(200).send({"msg": questions, "success": true});
     } else {
-        return res.status(301).redirect('/auth/logout');
+        return res.status(301).redirect(`/auth/logout/${token}`);
     }
 };
 
@@ -25,7 +25,7 @@ exports.getQuestionById = async (req, res) => {
         let value = await Question.findOne({_id: id});
         return res.status(200).send({"success": true, "question": value});
     } else {
-        return res.status(301).redirect('/auth/logout');
+        return res.status(301).redirect(`/auth/logout/${token}`);
     }
 };
 
@@ -44,10 +44,10 @@ exports.logStartTime = async (req, res) => {
             return res.status(200).send({"success": true});
         } catch (err) {
             console.log(err);
-            return res.status(301).redirect('/auth/logout');
+            return res.status(301).redirect(`/auth/logout/${token}`);
         }
     } else {
-        return res.status(301).redirect('/auth/logout');
+        return res.status(301).redirect(`/auth/logout/${token}`);
     }
 };
 
@@ -74,10 +74,10 @@ exports.makeNewQuestion = async (req, res) => {
             return res.status(200).send({'success': true, "msg": "Question added!"});
         } catch(err) {
             console.log(err);
-            return res.status(301).redirect('/auth/logout');
+            return res.status(301).redirect(`/auth/logout/${token}`);
         } 
     } else {
-        return res.status(301).redirect('/auth/logout');
+        return res.status(301).redirect(`/auth/logout/${token}`);
     }
 //    const qname = await Question.findOne({name: req.body.name});
 //    if (!qname.isEmpty()) {
@@ -97,7 +97,7 @@ exports.getMarksById = async (req,res) => {
         return res.send({"success": true, "correct": correct, "attempts": total});
     } else {
         console.log("Failure");
-        return res.status(301).redirect('/auth/logout');
+        return res.status(301).redirect(`/auth/logout/${token}`);
     }
 };
 
@@ -168,10 +168,10 @@ exports.saveMarks = async (req, res) => {
             return res.status(200).send({"success": true, "msg": v1}); 
         } catch (err) {
             console.log(err);
-            return res.status(301).redirect('/auth/logout');
+            return res.status(301).redirect(`/auth/logout/${string}`);
         }
     } else {
-        return res.status(301).redirect('/auth/logout');
+        return res.status(301).redirect(`/auth/logout/${string}`);
     }
 };
 
@@ -191,9 +191,9 @@ exports.saveToUser = async(req,res) => {
             return res.status(200).send({"msg": "Successful", "success": true});
         } catch(err) {
             console.log(err);
-            return res.status(301).redirect('/auth/logout');
+            return res.status(301).redirect(`/auth/logout/${token}`);
         }
     } else {
-        return res.status(301).redirect('/auth/logout');
+        return res.status(301).redirect(`/auth/logout/${token}`);
     }
 };

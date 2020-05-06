@@ -1,4 +1,4 @@
-import Questions from './screens/Questions';
+import Questions from '../screens/Questions';
 import { ApplicationProvider } from '@ui-kitten/components';
 import { mapping, light } from '@eva-design/eva';
 import React from 'react';

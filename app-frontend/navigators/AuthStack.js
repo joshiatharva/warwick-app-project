@@ -13,6 +13,7 @@ import { ContributionGraph, StackedBarChart, ProgressChart } from "react-native-
 
 import Login from '../screens/Login'
 import ForgotPassword from '../screens/ForgotPassword'
+
 import Register from '../screens/Register'
 
 const AuthStack = createStackNavigator({

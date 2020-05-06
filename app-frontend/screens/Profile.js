@@ -23,16 +23,16 @@ export default class Profile extends Component {
   async handleLogout(){
     let token = await AsyncStorage.getItem("id");
     if (token != null) {
-      let response = await fetch("http://192.168.0.12:3000/auth/logout", {
+      let response = await fetch("http://192.168.0.12:3000/auth/logout/" + token, {
         method: "GET",
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-          "Authorization": "Bearer " + token
+          "Authorization": "Bearer"
         }
       });
       let res = await response.json();
-      if (res.success == true) {
+      if (res.msg == "Token expired") {
         await AsyncStorage.removeItem("id");
         this.setState({status: "User"});
         this.props.navigation.navigate("Login");
@@ -66,7 +66,7 @@ export default class Profile extends Component {
         page: 'Statistics',
       },
       {
-        title: 'My Account',
+        title: 'View my Account',
         icon: 'person',
         page: 'Account',
       },
@@ -74,12 +74,6 @@ export default class Profile extends Component {
         title: 'General Settings',
         icon: 'settings',
         page: 'Settings',
-      },
-      {
-        title: 'Edit Profile',
-        icon: 'edit',
-        page: 'Personal',
-
       }
     ];
 

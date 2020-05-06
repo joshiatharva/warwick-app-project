@@ -4,25 +4,39 @@ import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import { createBottomTabNavigator } from 'react-navigation-tabs';
 import { createMaterialTopTabNavigator } from 'react-navigation-tabs';
-import { SearchBar, CheckBox, Button, ListItem, Slider, Input } from 'react-native-elements';
+import { SearchBar, CheckBox, Button, ListItem, Slider } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Linking } from 'expo';
-import { ApplicationProvider, Select, Text, Card, Datepicker, TopNavigation, TabView} from '@ui-kitten/components';
+import { ApplicationProvider, Select, Text, Input, Card, Datepicker, TopNavigation, TabView, Divider} from '@ui-kitten/components';
 import { mapping, light } from '@eva-design/eva';
 import { ContributionGraph, StackedBarChart, ProgressChart } from "react-native-chart-kit";
 import styles from '../style/styles';
+import { FlexStyleProps } from '@ui-kitten/components/ui/support/typings';
 
 export default class ForgotPassword extends Component {
   constructor(props){
     super(props);
     this.state = {
-      email: null,
+      email: "",
+      username: "",
       received: false,
-      error: false
+      error: false,
+      emailFlag: false,
+      usernameFlag: false
     }
   }
-
+  
   async sendData() {
+    if (this.state.username == '') {
+      this.setState({ usernameFlag: true });
+      if (this.state.email == '') {
+        this.setState({ emailFlag: true });
+      }
+      return false;
+    } else if (this.state.email == '') {
+      this.setState({ emailFlag: true });
+      return false;
+    } else {
     const initialUrl = "exp://192.168.0.12/--/"
     let response = await fetch('http://192.168.0.12:3000/auth/forgot', {
       method: 'POST',
@@ -51,21 +65,42 @@ export default class ForgotPassword extends Component {
       alert("Our email sending service might be down at this time. Please try again in a few minutes!");
       this.props.navigation.goBack();
     }
+  }
     
   }
 
   render() {
     if (!this.state.received) {
       return (
-        <View style={styles.container}>
-          <Button type="clear" onPress={() => this.props.navigation.goBack()} />
-          <Text style={styles.forgotPasswordLabel} category="h4" status="control">Forgot Password</Text>
-          <Text style={styles.enterEmail} status='control'>Please enter your username to receive your reset password link:</Text>
-          <View style={styles.formCont}>
-            <Input placeholder="Enter your username here" onChangeText={(item) => this.setState({email: item})} />
+        <View>
+          <View style={styles.signInContainer}>
+          <Button icon={<Icon name="arrow-left" size={12} color="white" />} containerStyle={styles.signUpButton}
+            type="clear"
+            titleStyle={{ color: 'white' }}
+            style={styles.signUpButton} onPress={() => this.props.navigation.goBack()} />
+          <Text category="h4" status="control">Forgot Password</Text>
           </View>
-          <Button type="outline" raised title="Send link" onPress={() => this.sendData()} />
-        </View>
+          <View style={{padding: 20}}>
+            <Text>Please enter your username to receive your reset password link:</Text>
+          </View>
+          <View style={{padding: 10}}>
+            <Input 
+              placeholder="Enter your username here" 
+              onChangeText={(item) => this.setState({username: item})} 
+              status={(!this.state.usernameFlag) ? 'basic' : 'danger'}
+              caption={(!this.state.usernameFlag) ? '' : 'Please provide your username'}
+            />
+            <View style={styles.container}></View>
+            <Input placeholder="Enter your email here" onChangeText={(item) => this.setState({email: item})} status={(!this.state.emailFlag) ? 'basic' : 'danger'}
+            caption={(!this.state.emailFlag) ? '' : 'Please provide your email'} />
+          </View>
+          <View style={styles.formContainer}>
+          </View>
+          <View style={{padding: 10, marginTop: 20}}>
+            <Button style={styles.signInButton} type="outline"  title="Send link" onPress={() => this.sendData()} />
+          </View>
+
+      </View>
       );
     }
     if (this.state.received) {

@@ -55,6 +55,7 @@ export default class Account extends Component {
           await AsyncStorage.removeItem("id");
           this.setState({status: false});
           this.props.navigation.navigate("Login");
+          alert("Your token has expired, please sign in again");
         }
       }
     }
@@ -91,6 +92,7 @@ export default class Account extends Component {
       if (res.msg == "Token expired") {
         await AsyncStorage.removeItem("id");
         this.props.navigation.navigate("Login");
+        alert("Your token has expired, please sign in again");
       }
     }
   }

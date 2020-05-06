@@ -1,4 +1,4 @@
-import Quiz from './screens/Quiz';
+import Quiz from '../screens/Quiz';
 import AnswerScheme from "./screens/AnswerScheme";
 import { ApplicationProvider } from '@ui-kitten/components';
 import { mapping, light } from '@eva-design/eva';

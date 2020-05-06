@@ -1,4 +1,4 @@
-import Home from './screens/Home';
+import Home from '../screens/Home';
 import { ApplicationProvider } from '@ui-kitten/components';
 import { mapping, light } from '@eva-design/eva';
 import React from 'react';

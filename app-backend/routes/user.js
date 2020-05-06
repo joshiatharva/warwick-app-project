@@ -9,9 +9,9 @@ router.post('/profile', userController.editProfile);
 
 router.get('/statistics', userController.getScoreBreakdown);
 
-// router.get('/questions', userController.loadUserQuestions);
+router.get('/questions', userController.loadUserQuestions);
 
-// router.get('/history', userController.loadUserHistory);
+router.get('/history', userController.loadUserHistory);
 
 module.exports = router; 
 

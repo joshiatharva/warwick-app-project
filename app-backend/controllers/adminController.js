@@ -23,7 +23,7 @@ exports.checkAdminLogin = async(req,res) => {
       }
     } catch(err) {
       console.log(err);
-      return res.status(301).redirect('/auth/logout');
+      return res.status(307).redirect('/auth/logout');
     }
 };
 

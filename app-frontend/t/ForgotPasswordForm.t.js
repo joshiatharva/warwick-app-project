@@ -1,4 +1,4 @@
-import ForgotPasswordForm from './screens/ForgotPasswordForm';
+import ForgotPasswordForm from '../screens/ForgotPasswordForm';
 import { ApplicationProvider } from '@ui-kitten/components';
 import { mapping, light } from '@eva-design/eva';
 import React from 'react';

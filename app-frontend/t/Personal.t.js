@@ -1,4 +1,4 @@
-import Personal from './screens/Personal';
+import Personal from '../screens/Personal';
 import { ApplicationProvider } from '@ui-kitten/components';
 import { mapping, light } from '@eva-design/eva';
 import React from 'react';

@@ -55,10 +55,10 @@ exports.getScores = async (req, res) => {
             return res.status(200).send({"success": true, "user": userdetails, "rg": rgscore, "cfl": cflscore, "tm": tmscore});
         } catch (err) {
             console.log(err);
-            return res.status(301).redirect('/auth/logout');
+            return res.status(301).redirect(`/auth/logout/${token}`);
         }
     } else {
-        return res.status(301).redirect('/auth/logout');
+        return res.status(301).redirect(`/auth/logout/${token}`);
     }
 };
 
@@ -73,10 +73,10 @@ exports.editProfile = async (req, res) => {
             console.log(user.username);
             return res.status(200).send({"success": true, "msg": user});
         } catch (err) {
-            return res.status(301).redirect('/auth/logout');
+            return res.status(301).redirect(`/auth/logout/${token}`);
         }
     } else {
-        return res.status(301).redirect('/auth/logout');
+        return res.status(301).redirect(`/auth/logout/${token}`);
     }
 };
 
@@ -129,7 +129,7 @@ if (isValidated(token)) {
             d5_total: 0
         };
         user_scores.forEach((el) => {
-            if (el.topic === "Regular Languages") {
+            if (el.topic == "Regular Languages") {
                 object_rl.d1_correct = object_rl.d1_correct + el.scores.d1_correct;
                 object_rl.d2_correct = object_rl.d2_correct + el.scores.d2_correct;
                 object_rl.d3_correct = object_rl.d3_correct + el.scores.d3_correct;
@@ -141,7 +141,7 @@ if (isValidated(token)) {
                 object_rl.d4_total = object_rl.d4_total + el.scores.d4_total;
                 object_rl.d5_total = object_rl.d5_total + el.scores.d5_total;
                 console.log(object_rl.topic + " 2");
-            } else if (el.topic === "Context Free Languages") {
+            } else if (el.topic == "Context Free Languages") {
                 object_cfl.d1_correct = object_cfl.d1_correct + el.scores.d1_correct;
                 object_cfl.d2_correct = object_cfl.d2_correct + el.scores.d2_correct;
                 object_cfl.d3_correct = object_cfl.d3_correct + el.scores.d3_correct;
@@ -170,14 +170,14 @@ if (isValidated(token)) {
         array.push(object_rl);
         array.push(object_cfl);
         array.push(object_tm);
-        console.log(object_rl);
+        console.log(array);
         return res.status(200).send({"user_scores": array, "user": user, "success": true});
     } catch (err) {
         console.log(err);
-        return res.status(301).redirect('/auth/logout');
+        return res.status(301).redirect(`/auth/logout/${token}`);
     }
 } else {
-    return res.status(301).redirect('/auth/logout');
+    return res.status(301).redirect(`/auth/logout/${token}`);
 }
 };
 
@@ -192,10 +192,10 @@ exports.loadUserQuestions = async (req, res) => {
             return res.status(200).send(questions);
         } catch (err) {
             console.log(err);
-            return res.status(301).redirect('/auth/logout');
+            return res.status(301).redirect(`/auth/logout/${token}`);
         }
     } else {
-        return res.status(301).redirect('/auth/logout');
+        return res.status(301).redirect(`/auth/logout/${token}`);
     }
 };
 
@@ -208,10 +208,10 @@ exports.loadUserHistory = async (req, res) => {
             console.log(user.question_history);
             return res.status(201).send({"success": true, "msg": user.question_history});
         } catch (err) {
-            return res.status(301).redirect('/auth/logout');
+            return res.status(301).redirect(`/auth/logout/${token}`);
         }
     } else {
-        return res.status(301).redirect('/auth/logout');
+        return res.status(301).redirect(`/auth/logout/${token}`);
     }
 };
 

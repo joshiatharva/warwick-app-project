@@ -1,4 +1,4 @@
-import Profile from './screens/Profile';
+import Profile from '../screens/Profile';
 import { ApplicationProvider } from '@ui-kitten/components';
 import { mapping, light } from '@eva-design/eva';
 import React from 'react';
