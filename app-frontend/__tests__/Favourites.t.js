@@ -32,10 +32,10 @@ const favouritesComponent = renderer.create(
         />
     </ApplicationProvider>
 );
-// test('renders', () => {
-//     const tree = accountComponent.toJSON();
-//     expect(tree).toMatchSnapshot();
-// });
+test('renders', () => {
+    const tree = favouritesComponent.toJSON();
+    expect(tree).toMatchSnapshot();
+});
 
 test('tests componentDidMount - success', async () => {
     fetch.mockResponse(JSON.stringify({

@@ -58,10 +58,10 @@ const viewComponent = renderer.create(
         />
     </ApplicationProvider>
 );
-// test('renders', () => {
-//     const tree = accountComponent.toJSON();
-//     expect(tree).toMatchSnapshot();
-// });
+test('renders', () => {
+    const tree = viewComponent.toJSON();
+    expect(tree).toMatchSnapshot();
+});
 
 test('tests componentDidMount() 1', async () => {
     const component = viewComponent.root.findByType(CheckAnswer).instance;

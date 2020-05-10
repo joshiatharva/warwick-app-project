@@ -32,10 +32,10 @@ const forgotComponent = renderer.create(
         />
     </ApplicationProvider>
 );
-// test('renders', () => {
-//     const tree = accountComponent.toJSON();
-//     expect(tree).toMatchSnapshot();
-// });
+test('renders', () => {
+    const tree = forgotComponent.toJSON();
+    expect(tree).toMatchSnapshot();
+});
 
 test('tests sendData', async () => {
     const component = forgotComponent.root.findByType(ForgotPasswordForm).instance;

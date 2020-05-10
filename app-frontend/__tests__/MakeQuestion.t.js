@@ -166,10 +166,10 @@ const makeComponent = renderer.create(
         />
     </ApplicationProvider>
 );
-// test('renders', () => {
-//     const tree = accountComponent.toJSON();
-//     expect(tree).toMatchSnapshot();
-// });
+test('renders', () => {
+    const tree = makeComponent.toJSON();
+    expect(tree).toMatchSnapshot();
+});
 
 test('tests validateResults', async () => {
     const component = makeComponent.root.findByType(MakeQuestion).instance;

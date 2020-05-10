@@ -28,10 +28,10 @@ const loginComponent = renderer.create(
     }} />} />
 );
 
-// test('renders correctly', () => {
-// const tree = renderer.create(<MockProvider component={<Login />} />).toJSON();
-//     expect(tree).toMatchSnapshot();
-// });
+test('renders correctly', () => {
+const tree = renderer.create(<MockProvider component={<Login />} />).toJSON();
+    expect(tree).toMatchSnapshot();
+});
 
 
 test('calling sendData() - no username', async () => {

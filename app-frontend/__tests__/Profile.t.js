@@ -29,10 +29,10 @@ const profileComponent = renderer.create(
         />
     </ApplicationProvider>
 );
-// test('renders', () => {
-//     const tree = accountComponent.toJSON();
-//     expect(tree).toMatchSnapshot();
-// });
+test('renders', () => {
+    const tree = profileComponent.toJSON();
+    expect(tree).toMatchSnapshot();
+});
 
 test('tests handleLogout()', async () => {
     await AsyncStorage.setItem("id", "atharva");

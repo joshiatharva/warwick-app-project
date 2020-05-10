@@ -33,10 +33,10 @@ const accountComponent = renderer.create(
         />
     </ApplicationProvider>
 );
-// test('renders', () => {
-//     const tree = accountComponent.toJSON();
-//     expect(tree).toMatchSnapshot();
-// });
+test('renders', () => {
+    const tree = accountComponent.toJSON();
+    expect(tree).toMatchSnapshot();
+});
 
 test('tests componentDidMount - success', async () => {
     fetch.mockResponse(JSON.stringify({ "user": {

@@ -52,10 +52,10 @@ const registerComponent = renderer.create(
         />
     </ApplicationProvider>
 );
-// test('renders', () => {
-//     const tree = accountComponent.toJSON();
-//     expect(tree).toMatchSnapshot();
-// });
+test('renders', () => {
+    const tree = registerComponent.toJSON();
+    expect(tree).toMatchSnapshot();
+});
 
 test('tests componentDidMount()', async () => {
     const component = registerComponent.root.findByType(Register).instance;
