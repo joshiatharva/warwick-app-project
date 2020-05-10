@@ -55,7 +55,10 @@ export default class Statistics extends Component {
       }
     });
     let res = await response.json();
-
+    /************************************************************************** */
+    /** If successful, store each different score as an element within an array */
+    /** and set arrays as State data for Bar Graph                              */
+    /************************************************************************** */
     if (res.success == true) {
       var history = res.user.question_history.slice(0, 10);
       var sessions = res.user.last_10_sessions_length.slice(0,10);
@@ -82,6 +85,12 @@ export default class Statistics extends Component {
           this.setState({ tmdata: array, tmtotal: array2 }, () => { console.log(this.state.tmdata + " " + this.state.tmtotal) });
         }
       });
+      /********************************************** */
+      /** Chart Kit breaks when all scores == 0, so   */
+      /** we check if all scores equal 0; if so, then */
+      /** we render a Card instead, else the Graph is */
+      /** rendered out with the appropriate scores    */
+      /********************************************** */
       var rtotal = 0;
       var ctotal = 0;
       var ttotal = 0;
@@ -92,8 +101,14 @@ export default class Statistics extends Component {
       }
       console.log(rtotal + " " + ctotal + " " + ttotal);
       if (rtotal == 0 && ctotal == 0 && ttotal == 0) {
+        /**
+         * There are no scores - graph cannot render.
+         */
         this.setState({ hasScore: false });
       } else {
+        /**
+         * Scores exist - render the graph.
+         */
         this.setState({ hasScore: true });
       }
 
@@ -107,6 +122,12 @@ export default class Statistics extends Component {
         await AsyncStorage.removeItem("id");
         this.props.navigation.navigate("Login");
         alert("Your token has expired. Please sign in again.");
+      } else {
+        /****************/
+        /* Server error */
+        /****************/
+        alert("Unfortunately, the server is down. Please try again.");
+        this.props.navigation.goBack();
       }
     }
   }

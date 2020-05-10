@@ -27,15 +27,31 @@ export default class TestQuiz extends Component {
       }
     }
   
+    /********************************************* */
+    /** Mounts the component and sets the question */
+    /** in the same way as the normal Quiz view in */
+    /** the user's functionality - see Quiz comp.  */
+    /********************************************* */
     componentDidMount() {
       this.setState({questions: this.props.navigation.getParam('Question'), isLoading: false}, () => console.log("Questions: " + this.state.questions));
     }
   
+
+    /********************************************* */
+    /** Takes answer as input and checks whether   */
+    /** the answer is equal to the answer within   */
+    /** the Question object. Navigates to CheckAns.*/
+    /********************************************* */
     isCorrect(value) {
-      // console.log("Value: " + value);
       this.setState({
         answered: true, answer: value, 
       });
+      /**
+       * If value is correct, then navigate
+       * to CheckAnswer with the Question,
+       * provided answer and whether the
+       * answer is correct or not.
+       */
       if (value === this.state.questions.answer) {
         this.setState({correct: true}, () => {
           this.props.navigation.navigate("CheckAnswer", {
@@ -56,6 +72,9 @@ export default class TestQuiz extends Component {
       }
     }
   
+    /**
+     * Renders the UI in the Exact same way as the Quiz.
+     */
     render() {
       if (!this.state.isLoading) {
         if (this.state.questions.type == "true_false") {

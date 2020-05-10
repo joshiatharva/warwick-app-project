@@ -14,16 +14,28 @@ import styles from '../style/styles';
 
 export default class AnswerScheme extends Component {
     render() {
-      // console.log(this.props.answer)
+      /**
+       * Checks whether the question has been answered.
+       */
       if (this.props.isAnswered) {
         return (
+          /**
+           * Renders a message for the correct answer.
+           */
           <View>
             {this.props.correct && (
               <Text>Congratulations! You answered {this.props.givenAnswer} and the answer was {this.props.answer}!</Text>
             )}
+            {/**
+             * Renders a message in the case of an incorrect answer. 
+            */}
             {!this.props.correct && (
               <Text>Sorry! Whereas you picked {this.props.givenAnswer}, the answer was {this.props.answer}!</Text>
             )}
+            {/**
+             * Displays the question's solution
+             * for the problem for users to understand
+             */}
             <Text>Here's the solution:</Text>
             <Text>{this.props.answerScheme}</Text>
           </View>

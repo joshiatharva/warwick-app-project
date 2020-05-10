@@ -53,7 +53,7 @@ router.get('/users', adminController.getAllUsers);
 
 router.post('/blacklist', adminController.blacklistUsers);
 
-router.post('/edit', adminController.editQuestion);
+router.put('/edit', adminController.editQuestion);
 
 router.get('/logout', adminController.logout);
 

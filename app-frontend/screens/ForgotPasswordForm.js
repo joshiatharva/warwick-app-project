@@ -33,22 +33,25 @@ export default class ForgotPasswordForm extends Component {
   }
 
   async componentDidMount() {
-    // var forgot = await AsyncStorage.getItem("forgot_Token");
-    // Linking.addEventListener('url', this.handleDeepLink);
-    // let response = await fetch(`http://192.168.0.16:3000/auth/reset/${forgot}`, {
-    //   method: 'GET',
-    //   headers: {
-    //     Accept: 'application/json',
-    //     'Content-Type': 'application/json',
-    //     'Authorization': 'Bearer'
-    //   },
-    // });
-    // let res = await response.json();
-    // this.setState({error: res.error});
+    /*************************************************** */
+    /** Implementation for extracting token from the URL */
+    /** Hard to test and conceive as the URL is not explictly shown */
+    /************************************************************** */
+
     this.handleDeepLink;
   }
 
+  /************************************************************ */
+  /** Sends new password data to /reset/, given that endpoint   */
+  /** verifies user requested a password change and is the      */
+  /** correct user (verified by the token sent by the endpoint) */
+  /************************************************************ */
   async sendData() {
+    /**
+     * If password and/or password confirmation do not match
+     * or are both empty, then return validation messages and
+     * return false
+     */
     if (this.state.password == "") {
       this.setState({emptyPasswordFlag: true});
       if (this.state.passwordconf == "") {
@@ -61,6 +64,10 @@ export default class ForgotPasswordForm extends Component {
     } else if (this.state.password != this.state.passwordconf) {
       return false; 
     } else {
+      /**
+       * Get both ID and forgot token (hash string) from AsyncStorage
+       * with password and password confirmation in the body
+       */
       let token = await AsyncStorage.getItem("forgot_Token");
       let id = await AsyncStorage.getItem("id_token");
       let response = await fetch(`http://192.168.0.12:3000:3000/auth/reset/${token}`, {
@@ -77,12 +84,19 @@ export default class ForgotPasswordForm extends Component {
           "passwordconf": this.state.passwordconf,
         })
       });
+      /**
+       * Converts Response to JSON, if success is true then alert success
+       * and navigate back to the Login page.
+       */
       let res = await response.json();
       if (res.success == "true") {
         alert("Password successfully changed");
         this.setState({page: "Login", status: "Password changed"});
         this.props.navigation.navigate("Login");
       } else {
+        /**
+         * Server down - return back to Login.
+         */
           alert(res.status + ":" + res.msg);
           this.setState({page: "Login", status: "Failed"});
           this.props.navigation.navigate("Login");
@@ -90,6 +104,9 @@ export default class ForgotPasswordForm extends Component {
     }
   }
 
+  /************************************** */
+  /** Renders the Forgot Password Form UI */
+  /************************************** */
   render() {
     return (
       <View>

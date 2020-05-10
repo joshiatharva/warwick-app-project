@@ -127,6 +127,7 @@ export default StyleSheet.create({
       justifyContent: 'center',
       position: "relative",
       marginBottom: 10,
+      padding: 10,
     },
     truefalse_buttons: {
       flex: 1,

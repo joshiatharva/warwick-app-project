@@ -18,6 +18,15 @@ export default class Settings extends Component {
   }
 
 
+
+  /****************************** */
+  /**
+   * THIS IS A BLANK PAGE
+   * FOR DEVELOPERS TO IMPLEMENT 
+   * MORE FEATURES OR SETTINGS THAT
+   * ARE REQUIRED.
+   */
+  /****************************** */
   render() {
     return (
       <View>

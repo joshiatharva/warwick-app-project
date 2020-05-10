@@ -30,6 +30,9 @@ export default class Home extends Component {
   }
 
   async componentDidMount() {
+    /**
+     * Makes fetch() call to get user statistics
+     */
     let token = await AsyncStorage.getItem("id");
     if (token != null) {
       try {
@@ -41,6 +44,10 @@ export default class Home extends Component {
             "Authorization": "Bearer " + token
           }
         });
+        /**
+         * If successful, then store all scores in this.state
+         * for the Progress Graph to render.
+         */
         let res = await response.json();
         if (res.success === true) {
           console.log("rlscore: " + res.rg + " " + "cflscore: " + res.cfl + " " + "tmscore: " + res.tm);
@@ -56,6 +63,10 @@ export default class Home extends Component {
           }
           this.setState({status: "Success"});
         } else {
+          /**
+           * The token has expired - remove the token from Async Storage
+           * and navigate back to the Login page.
+           */
           this.setState({err: res.msg});
           if (res.msg == "Token expired") {
             this.setState({status: "Failed"}); 
@@ -63,48 +74,25 @@ export default class Home extends Component {
             alert("Unfortunately, your token has expired! Please sign in again.");
           }
         }
+        /**
+         * Server error has occurred
+         */
       } catch (err) {
         alert("Unfortunately, the network could not be connected to");
       }
     } else {
+      /**
+       * No token exists - navigate back to Login
+       */
       this.setState({err: "No token", status: "Failed"});
       this.props.navigation.navigate("Login");
     }
-    // try {
-    //   let response2 = await fetch('http://192.168.0.12:3000/questions/new', {
-    //     method: 'GET',
-    //     headers: {
-    //       Accept: 'application/json',
-    //       'Content-Type': 'application/json',
-    //       'Authorization': 'Bearer ' + token
-    //     }
-    //   });
-    //   let res2 = await response2.json();
-    //   if (res2.success === true) {
-    //     this.setState({newq: res2.msg});
-    //   } else {
-    //     if (res.msg == "Token expired") {
-    //       await AsyncStorage.removeItem('id');
-    //       this.props.navigation.navigate("Login");
-    //     }
-    //   }
-    // } catch (err) {
-    //   alert("Unfortunately, the network is down. Please try again");
-    // }
   }
 
-  // async getData() {
-  //   let token = await AsyncStorage.getItem("id");
-  //   let response = await fetch('http://192.168.0.16:3000/user/today', {
-  //     method: 'GET',
-  //     headers: {
-  //       Accept: 'application/json',
-  //       'Content-Type': 'application/json',
-  //       'Authorization': 'Bearer ' + token,
-  //     }
-  //   })
-  // }
-
+    /**
+     * Renders the UI - chartConfig is by default required
+     * for the Progress Chart to be rendered.
+     */
   render() {
     const chartConfig = {
       backgroundGradientFrom: "#FFFFFF",
@@ -143,17 +131,12 @@ export default class Home extends Component {
         <Text category="h2">Recently Made Questions</Text>
         <Divider /> 
       </View>
-      <FlatList 
-        data={this.state.newq}
-        renderItem={(item) => (
-          <Card header={<CardHeader><Text category="h4">{item.name}</Text></CardHeader>}>
-            <Text>
-            Made by: {item.created_by}
-            Difficulty: {item.difficulty}
-            </Text>
-          </Card>
-        )}
-      />
+      {this.state.newq.map((item) =>
+        <Card header={<CardHeader><Text category="h4">{item.name}</Text></CardHeader>}>
+          <Text> Made by: {item.created_by}</Text>
+          <Text>Difficulty: {item.difficulty}</Text>
+        </Card>
+      )}
 
       <Text>Let's get started with quizzing:</Text>
       <Button title="Get Started!" onPress={() => this.props.navigation.navigate("Questions")} />

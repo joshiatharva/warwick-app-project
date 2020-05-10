@@ -55,7 +55,14 @@ export default class MakeQuestion extends Component {
       status: ""
     }
   }
-
+  /***************************************************************************************/
+  /** Method for sending data - if inputs are not empty, then executes a GET             */
+  /** Request to /questions/new containing JWT in Header and question name, topic        */
+  /** type, question, difficulty, answer and options. If topic is true_false, options    */
+  /** is set to contain only true/false. On receiving the Response, the method navigates */
+  /** to the Questions page after alerting whether successful or not. If token has       */
+  /** expired, the user is redirected back to Login.                                     */
+  /************************************************************************************* */
   async sendData() {
     if (this.validateResults() == false) {
       alert("Creation failed - please see messages for more information");
@@ -90,8 +97,14 @@ export default class MakeQuestion extends Component {
           alert("Question made");
           this.setState({status: "Made"});
         } else {
-          alert("Question not made");
-          this.setState({status: "Not Made"})
+          if (res.msg == "Token expired") {
+            await AsyncStorage.removeItem("id");
+            this.props.navigation.navigate("Login");
+            alert("Your session has expired. Please log in again");
+          } else {
+            alert("Question not made");
+            this.setState({status: "Not Made"})
+          }
         }
         this.props.navigation.navigate("Questions");
       } catch (err) {
@@ -101,6 +114,11 @@ export default class MakeQuestion extends Component {
     }
   }
 
+
+  /********************************************************** */
+  /** Returns error messages if any fields are left empty     */
+  /** If necessary fields validated, returns true, else false */
+  /********************************************************** */
   validateResults() {
     if (this.state.name == '') {
       this.setState({blankNameFlag: true});
@@ -168,7 +186,10 @@ export default class MakeQuestion extends Component {
       return false;
     }
   }
-
+  /*************************************************** */
+  /**Adds written options (for multiple choice) to our */
+  /**array of current options                          */
+  /*************************************************** */
   addToArray() {
     var objectArray = [];
     var array = [this.state.option1, this.state.option2, this.state.option3, this.state.option4];
@@ -183,13 +204,18 @@ export default class MakeQuestion extends Component {
     this.setState({optionList: objectArray, options: array}, () => console.log("List: " + this.state.optionList + "\nOptions: " + this.state.options));
     console.log(this.state.optionList);
   }
-  
+
+  /******************************************************************** */
+  /** Extracts string from selected option of array of selected answers */
+  /******************************************************************** */
   async removeObject(item) {
     var entry = item.text;
     console.log(item.text);
     this.setState({answer: entry}, () => console.log(this.state.answer));
   }
-
+  /************************************************************************ */
+  /** Converts select options into booleans - used for True/False questions */
+  /************************************************************************ */
   async booleanToObject(item) {
     var entry = item.text;
     var boolean = false; 
@@ -201,6 +227,11 @@ export default class MakeQuestion extends Component {
     this.setState({answer: boolean}, () => console.log(this.state.answer));
   }
 
+  /************************************************* */
+  /** Adds a selected item within the Type dropdown, */
+  /** and adds it selectedType - that way the next   */
+  /** part of the UI can render the appropriate form */
+  /************************************************* */
   async addType(item) {
     var entry = item.text;
     this.setState({selectedType: entry});
@@ -221,6 +252,10 @@ export default class MakeQuestion extends Component {
     }
   }
 
+  /************************ */
+  /** Renders the form for  */
+  /** making new questions  */
+  /************************ */
   render() {
     const types = [
       {text: "True-False"},

@@ -5,7 +5,7 @@ router.get('/', userController.test);
 
 router.get('/profile', userController.getScores);
 
-router.post('/profile', userController.editProfile);
+router.put('/profile', userController.editProfile);
 
 router.get('/statistics', userController.getScoreBreakdown);
 

@@ -21,11 +21,17 @@ export default class AdminViewQuestion extends Component {
     }
   }
 
+  /**
+   * Loads question into state.
+   */
   componentDidMount() {
     this.setState({question: this.props.navigation.getParam("question")}, 
     () => this.setType());
   }
 
+  /**
+   * Formats the type string for presentation.
+   */
   setType() {
     if (this.state.question.type == 'true_false') {
       this.setState({type: "True-False"});
@@ -38,27 +44,34 @@ export default class AdminViewQuestion extends Component {
     }
   }
 
-  async saveQuestion(id) {
-    try {
-      const token = await AsyncStorage.getItem("id");
-      let response = await fetch('http://192.168.0.12:3000/admin/save',{
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token,
-        },
-        body: JSON.stringify({
-          "question_id": id
-        })
-      });
-      let res = await response.json();
-      // console.log(res.message);
-    } catch (err) {
-      // console.log(err);
-    }
-  }
+  /**
+   * Saves the question to a user's Favourites by pushing the ID to Admin's saved question
+   * Not necessary as admins can freely answer questions via Simulate.
+   * */ 
+  // async saveQuestion(id) {
+  //   try {
+  //     const token = await AsyncStorage.getItem("id");
+  //     let response = await fetch('http://192.168.0.12:3000/admin/save',{
+  //       method: 'POST',
+  //       headers: {
+  //         Accept: 'application/json',
+  //         'Content-Type': 'application/json',
+  //         'Authorization': 'Bearer ' + token,
+  //       },
+  //       body: JSON.stringify({
+  //         "question_id": id
+  //       })
+  //     });
+  //     let res = await response.json();
+  //     // console.log(res.message);
+  //   } catch (err) {
+  //     // console.log(err);
+  //   }
+  // }
 
+  /**
+   * Renders the UI - similar to  View Question
+   */
   render() {
     return (
       <View style={styles.container}>

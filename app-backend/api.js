@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const mongoose = require('mongoose');
+// const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 // const https = require('https');
 // const fs = require('fs');
@@ -26,13 +26,13 @@ const adminRoute = require('./routes/admin');
 
 app.use(express.json());
 
-mongoose.connect(
-  'mongodb+srv://root:test@cluster0-fkf5l.mongodb.net/test?retryWrites=true&w=majority',
-  { useNewUrlParser: true },
-  () => console.log('DB conn established!')
-);
-mongoose.set('useFindAndModify', false);
-mongoose.set('useUnifiedTopology', true);
+// mongoose.connect(
+//   'mongodb+srv://root:test@cluster0-fkf5l.mongodb.net/test?retryWrites=true&w=majority',
+//   { useNewUrlParser: true },
+//   () => console.log('DB conn established!')
+// );
+// mongoose.set('useFindAndModify', false);
+// mongoose.set('useUnifiedTopology', true);
 
 
 app.get('/', function (req, res) {

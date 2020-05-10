@@ -26,6 +26,12 @@ export default class Account extends Component {
     }
   }
 
+  /************************************************* */
+  /** Gets user record with ID = id stored in token, */
+  /** then stores the user details within state and  */
+  /** as temp variables (these variables used for    */
+  /** editing details                                */
+  /************************************************* */
   async componentDidMount() {
       let token = await AsyncStorage.getItem("id");
       let response = await fetch("http://192.168.0.12:3000/user/profile", {
@@ -51,6 +57,10 @@ export default class Account extends Component {
           status: true,
         });
       } else {
+        /**
+         * Token has expired - delete 
+         * token and redirect back to Login
+         */
         if (res.msg == "Token expired") {
           await AsyncStorage.removeItem("id");
           this.setState({status: false});
@@ -59,12 +69,17 @@ export default class Account extends Component {
         }
       }
     }
-
+  /************************************ **/
+  /** Sends the edited details as a PUT  */
+  /** Request - if fields unedited, then */
+  /** uses the original user details in  */
+  /** the Request                        */
+  /************************************* */
   async sendData() {
     this.setState({isSending: true});
     let token = await AsyncStorage.getItem("id");
     let response = await fetch("http://192.168.0.12:3000/user/profile", {
-      method: "POST",
+      method: "PUT",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
@@ -78,6 +93,11 @@ export default class Account extends Component {
       })
     });
     let res = await response.json();
+    /**
+     * If successful, then reset the user details
+     * in the component as the new edited variables
+     * so the user can physically see changes.
+     */
     if (res.success == true) {
       alert("Details sent");
       this.setState({
@@ -89,15 +109,26 @@ export default class Account extends Component {
         isSending: false
       });
     } else {
+      /**
+       * Token has expired - redirect user back to Login
+       * and delete their Token from Storage.
+       */
       if (res.msg == "Token expired") {
         await AsyncStorage.removeItem("id");
         this.props.navigation.navigate("Login");
         alert("Your token has expired, please sign in again");
+      } else {
+        /**
+         * Server is down
+         */
+        alert("The server is currently down - please try again later");
       }
     }
   }
 
-
+  /**
+   * Render the page
+   */
   render() {
     return (
       <ScrollView>

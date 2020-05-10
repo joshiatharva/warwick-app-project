@@ -4,10 +4,10 @@ import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import { createBottomTabNavigator } from 'react-navigation-tabs';
 import { createMaterialTopTabNavigator } from 'react-navigation-tabs';
-import { SearchBar, CheckBox, Button, ListItem, Slider, Input } from 'react-native-elements';
+import { SearchBar, CheckBox, Button, ListItem, Slider } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Linking } from 'expo';
-import { ApplicationProvider, Select, Text, Card, Datepicker, TopNavigation, TabView} from '@ui-kitten/components';
+import { ApplicationProvider, Select, Text, Card, Datepicker, TopNavigation, TabView, Input} from '@ui-kitten/components';
 import { mapping, light } from '@eva-design/eva';
 import { ContributionGraph, StackedBarChart, ProgressChart } from "react-native-chart-kit";
 import styles from '../../style/styles';
@@ -23,6 +23,9 @@ export default class BlacklistUsers extends Component {
     }
   }
 
+  /**
+   * Gets a list of users - to be used when Autocomplete implemented.
+   */
   async componentDidMount() {
     this.setState({date: new Date()});
     let adminToken = await AsyncStorage.getItem('admin');
@@ -36,19 +39,31 @@ export default class BlacklistUsers extends Component {
     });
     let res = await response.json();
     if (res.success == true) {
+      /**
+       * If successful then load users into state
+       */
       this.setState({users: res.msg});
     } else {
+      /**
+       * Token expired - remove token from
+       * storage and navigate back to Login
+       */
       if (res.msg == "Token invalid") {
         this.props.navigation.navigate("Login");
         await AsyncStorage.removeItem("admin");
         alert("Unfortunately, your token has expired! Please sign in again here!");
       } else {
-        this.props.navigation.navigate("Login");
-        await AsyncStorage.removeItem("admin");
+        /**
+         * Server error occurred - 
+         */
+        alert("Unfortunaly, the server is down. Please try again later.");
       }
     }
   }
 
+  /**
+   * Sends blacklist request to the endpoint. 
+   */
   async sendData() {
     let adminToken = await AsyncStorage.getItem("admin");
     let response = await fetch("http://192.168.0.12:3000/admin/blacklist", {
@@ -65,26 +80,44 @@ export default class BlacklistUsers extends Component {
       }),
     });
     let res = await response.json();
+    /** 
+     * If successful, then alert of success.
+     */
     if (res.success == true) {
       alert("Your request has been submitted. "+ this.state.username +" will receive an email concerning their blacklist");
       this.setState({username: '', reason: '', date: null, users: []});
     } else {
-      alert("Error occurred, please try again");
+      /**
+       * The token is invalid - remove token from storage
+       * and navigate back to the Login page.
+       */
+      if (res.msg == "Token invalid") {
+        this.props.navigation.navigate("Login");
+        await AsyncStorage.removeItem("admin");
+        alert("Unfortunately, your token has expired! Please sign in again here!");
     }
     alert("Your request has been submitted. "+ this.state.username +" will receive an email concerning their blacklist");
   }
+}
 
   render() {
     return (
-      <View style={{justifyContent: 'center', marginTop: 10, padding: 10}}>
-          <Text>Here is the facility for blacklisting users.</Text>
+      <View>
+          <View style={styles.formContainer}></View>
+          <Text style={{alignItems: 'center'}}>Here is the facility for blacklisting users.</Text>
           <Text>
             NOTE: all blacklist actions require CLEAR and SIGNIFICANT actions against the University of Warwick's Policy.
             This justification will also be sent to the blacklisted user to understand the actions committed and for their chance to appeal the decision.
           </Text>
-        <Datepicker backdropStyle={{marginRight: 0}}size='small' placeholder='Date to be banned until' date={this.state.date} onSelect={(newdate) => this.setState({date: newdate})} boundingMonth={false} />
-        <Input placeholder="Enter the username here" onChangeText={(item) => this.setState({username: item})}/>
+        <View style={{padding: 10}}>
+        <Datepicker backdropStyle={{padding:20}} size='small' placeholder='Date to be banned until' date={this.state.date} onSelect={(newdate) => this.setState({date: newdate})} boundingMonth={false} />
+        </View>
+        <View style={{marginTop:30, padding: 10}}>
+          <Input placeholder="Enter the username here" onChangeText={(item) => this.setState({username: item})}/>
+        </View>
+        <View style={{marginTop:10, padding: 10}}>
         <Input placeholder="Enter the justification for blacklisting this user here" multiline={true} numberOfLines={5} onChangeText={(text) => this.setState({reason: text})} />
+        </View>
         <Button title="Submit blacklist request" onPress={() => this.sendData()} />
       </View>
     );

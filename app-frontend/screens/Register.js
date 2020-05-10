@@ -29,15 +29,27 @@ export default class Register extends Component {
     }
   }
 
+  /******************************************** */
+  /** Sends register data to /register endpoint */
+  /******************************************** */
   async sendData() {
+    /**
+     * Checks for validation error -> if true then abort
+     */
     if (this.validateErrors() == true) {
       return;
     } else {
+      /**
+       * Checks whether passwords match -> abort if true
+       */
       if (this.state.passwordconf != this.state.password) {
         this.setState({passwordMismatchFlag: true});
         return;
       } else {
         try {
+        /**
+         * Send POST to /register/
+         */
           let response = await fetch('http://192.168.0.12:3000/auth/register', {
             method: 'POST',
             headers: {
@@ -56,12 +68,21 @@ export default class Register extends Component {
           });
           let res = await response.json();
           console.log(res);
+          /**
+           * If successful, then set the token in 
+           * AsyncStorage and redirect to the Home 
+           * page. 
+           */
           if (res.success === true) {
             const id_token = res.token;
             await AsyncStorage.setItem('id', id_token);
             this.setState({status: id_token});
             this.props.navigation.navigate('Home');
           } else {
+            /**
+             * In the case of error messages, display those errors 
+             * by storing the messages in state.
+             */
             if (res.typ == "password" || res.typ == "email") {
               this.setState({errorMsg: res.msg});
             } else {
@@ -69,6 +90,9 @@ export default class Register extends Component {
             }
           }
         } catch (err) {
+          /**
+           * Server error occurred.
+           */
           console.log(err);
           alert("A network error occurred. Please try again later.");
         }
@@ -76,6 +100,9 @@ export default class Register extends Component {
     }
   }
 
+  /**
+   * Validate all fields by checking for empty messages.
+   */
   validateErrors() {
     if (this.state.firstname == '') {
       this.setState({firstnameFlag: true});
@@ -102,6 +129,9 @@ export default class Register extends Component {
     }
   }
 
+  /**
+   * Renders the Register form.
+   */
   render() {
       return (
         <ScrollView>

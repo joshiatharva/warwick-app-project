@@ -1,15 +1,6 @@
 import React, { Component } from 'react';
 import { StyleSheet, View,  FlatList, AsyncStorage, ActivityIndicator, ScrollView, Dimensions, Platform, Alert, InputAccessoryView, ListView, RefreshControl, Modal } from 'react-native';
-import { createAppContainer, createSwitchNavigator } from 'react-navigation';
-import { createStackNavigator } from 'react-navigation-stack';
-import { createBottomTabNavigator } from 'react-navigation-tabs';
-import { createMaterialTopTabNavigator } from 'react-navigation-tabs';
 import { SearchBar, CheckBox, Button, ListItem, Slider, Input } from 'react-native-elements';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import { Linking } from 'expo';
-import { ApplicationProvider, Select, Text, Card, Datepicker, TopNavigation, TabView} from '@ui-kitten/components';
-import { mapping, light } from '@eva-design/eva';
-import { ContributionGraph, StackedBarChart, ProgressChart } from "react-native-chart-kit";
 import styles from '../style/styles';
 
 export default class Profile extends Component {
@@ -20,8 +11,23 @@ export default class Profile extends Component {
     }
   }
 
+  /**********************************************************/
+  /* Sends Request containing token to /logout/:token,      */
+  /* which fills in the session object with signout = time  */
+  /* that the endpoint was called, sets signout time and    */
+  /* returns a ({msg: "Token expired"}) Response, which     */
+  /* the method parses, upon which it deletes the token and */
+  /* redirects the user back to the Login page              */
+  /**********************************************************/
+
   async handleLogout(){
+    /*************/
+    /* GET TOKEN */
+    /*************/
     let token = await AsyncStorage.getItem("id");
+    /******************************** */
+    /* If token exists, execute fetch */
+    /******************************** */
     if (token != null) {
       let response = await fetch("http://192.168.0.12:3000/auth/logout/" + token, {
         method: "GET",
@@ -31,13 +37,26 @@ export default class Profile extends Component {
           "Authorization": "Bearer"
         }
       });
+      /************************************************************** */
+      /** Parse Response to see if Token expired message was returned */
+      /************************************************************** */
       let res = await response.json();
       if (res.msg == "Token expired") {
+        /********************************************************** */
+        /* Remove the token from storage and navigate back to Login */
+        /********************************************************** */
         await AsyncStorage.removeItem("id");
+        /********************** */
+        /* For testing purposes */
+        /********************** */
         this.setState({status: "User"});
         this.props.navigation.navigate("Login");
       }
     }
+    /************************************************************** */
+    /* Does same thing but for admin tokens - no sessions recorded, */
+    /* just last signout time is stored *************************** */
+    /************************************************************** */
     let admin = await AsyncStorage.getItem("admin");
     if (admin != null) {
       let response2 = await fetch("http://192.168.0.12:3000/admin/logout", {
@@ -48,8 +67,11 @@ export default class Profile extends Component {
           "Authorization": "Bearer " + admin
         }
       });
+      /************************************************************** */
+      /** Parse Response to see if Token expired message was returned */
+      /************************************************************** */
       let res2 = await response2.json();
-      if (res2.success == true) {
+      if (res2.msg == "Token expired") {
         await AsyncStorage.removeItem("admin");
         this.setState({status: "Admin"});
         this.props.navigation.navigate("Login");
@@ -57,7 +79,10 @@ export default class Profile extends Component {
     }
   }
 
-
+  /******************************** */
+  /** Renders each page as an item  */
+  /** within a list *************** */
+  /******************************** */
   render() {
     const list = [
       {

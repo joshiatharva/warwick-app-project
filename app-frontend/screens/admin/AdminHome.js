@@ -25,7 +25,13 @@ export default class AdminHome extends Component {
         // adminStats: [],
       }
     }
-  
+    /******************************** */
+    /** Gets the admin token on load  */
+    /** and sends a GET to get the    */
+    /** relevant statistics, such as  */
+    /** the new users created and the */
+    /** new questions (to be added)   */
+    /******************************** */
     async componentDidMount() {
       let admin = await AsyncStorage.getItem("admin");
       if (admin != null) {
@@ -38,6 +44,11 @@ export default class AdminHome extends Component {
           }
         });
         let res = await response.json();
+        /**
+         * If successful in retrieving, then make
+         * another GET request to stats to get the
+         * new questions - also sets model in state
+         */
         if (res.success === true) {
           this.setState({user: res.msg, admin: true});
           let newResponse = await fetch('http://192.168.0.12:3000/admin/stats', {
@@ -49,6 +60,10 @@ export default class AdminHome extends Component {
             }
           });
           let newRes = await newResponse.json();
+          /**
+           * If second call successful then save
+           * questions in state too.
+           */
           if (newRes.success == true) {
             this.setState({questions: newRes.questions});
           }
@@ -56,13 +71,23 @@ export default class AdminHome extends Component {
         } else {
           this.setState({err: res.msg});
           if (res.msg == "Token expired") {
+            /**
+             * Token expiry has occurred - 
+             * remove the token and navigate back to Login.
+             */
+            await AsyncStorage.removeItem("admin");
             this.props.navigation.navigate("Login");
             alert("Unfortunately, your token has expired! Please sign in again.");
+          } else {
+            alert("Error occurred - please try again later.");
           }
         }
       }
     }
   
+    /**
+     * Renders the Admin Homepage
+     */
     render() {
       return (
       // <DFADrawingComponent />

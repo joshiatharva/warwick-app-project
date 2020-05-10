@@ -22,6 +22,10 @@ export default class Quiz extends Component {
     }
   }
 
+  /**
+   * Load the question into state to start answering,
+   * and set loading to false to allow user actions.
+   */
   componentDidMount() {
     this.setState({
       questions: this.props.navigation.getParam('Question'), 
@@ -29,11 +33,22 @@ export default class Quiz extends Component {
     });
   }
 
+  /**
+   * Function for checking if the inputted answer is correct or not.
+   */
   isCorrect(value) {
     console.log("Value: " + value);
+    /**
+     * Validating empty fields for Normal Answer
+     */
     if (this.state.answer == '' && this.state.questions.type == "normal_answer") {
       this.setState({emptyAnswerFlag: true});
     } else {
+      /**
+       * Sets the answer in state as the inputted answer, then navigates
+       * to Data Upload, sending the question, given answer and whether
+       * the answer is correct or not.
+       */
       this.setState({answered: true, answer: value});
       if (value === this.state.questions.answer) {
         this.setState({correct: true, page: "DataUpload"}, () => {
@@ -57,6 +72,9 @@ export default class Quiz extends Component {
 
   render() {
     if (!this.state.isLoading) {
+      /**
+       * Render the UI if the question type is True-False
+       */
       if (this.state.questions.type == "true_false") {
         return (
           <View style={styles.container}>
@@ -65,6 +83,9 @@ export default class Quiz extends Component {
             <Button title="False" onPress={() => this.isCorrect("false")} />
           </View>
         );
+        /**
+         * Render the UI if the question type is Multiple Choice
+         */
       } else if (this.state.questions.type == "multi_choice") {
         return (
           <View style={styles.container}>
@@ -79,6 +100,9 @@ export default class Quiz extends Component {
             </View>
           </View>
         );
+        /**
+         * Render the UI if the question type is Normal Answer
+         */
       } else if (this.state.questions.type == "normal_answer") {
         return (
           <View style={styles.container}>
@@ -108,6 +132,9 @@ export default class Quiz extends Component {
       }
     } else {
       return (
+        /**
+         * Question is being loaded
+         */
         <View> 
           <ActivityIndicator />
           <Text>Loading Question.....This may take unknown time.</Text>

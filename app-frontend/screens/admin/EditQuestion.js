@@ -4,10 +4,10 @@ import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import { createBottomTabNavigator } from 'react-navigation-tabs';
 import { createMaterialTopTabNavigator } from 'react-navigation-tabs';
-import { SearchBar, CheckBox, Button, ListItem, Slider, Input } from 'react-native-elements';
+import { SearchBar, CheckBox, Button, ListItem, Slider } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Linking } from 'expo';
-import { ApplicationProvider, Select, Text, Card, Datepicker, TopNavigation, TabView} from '@ui-kitten/components';
+import { ApplicationProvider, Select, Text, Card, Datepicker, Input,TopNavigation, TabView} from '@ui-kitten/components';
 import { mapping, light } from '@eva-design/eva';
 import { ContributionGraph, StackedBarChart, ProgressChart } from "react-native-chart-kit";
 import styles from '../../style/styles';
@@ -44,6 +44,12 @@ export default class EditQuestion extends Component {
     }
   }
 
+
+  /********************************************* */
+  /** Sets state to equal all question variables */
+  /** with temp variables (these are the values  */
+  /** that are edited in the Edit Question form  */
+  /********************************************* */
   async componentDidMount() {
     this.setState({
       id: this.props.navigation.getParam("Question")._id,
@@ -62,6 +68,9 @@ export default class EditQuestion extends Component {
       difficulty: this.props.navigation.getParam("Question").difficulty,
       tempDifficulty: this.props.navigation.getParam("Question").difficulty,
     }, () => {
+      /**
+       * Types are set once question loaded into state
+      */
       switch (this.state.type) {
         case "true_false":
           this.setState({selectedType: "True-False"});
@@ -100,6 +109,11 @@ export default class EditQuestion extends Component {
   }
 
   async editQuestion() {
+    /**
+     * Set the options in the Options array if True False or Multi Choice
+     * Validate each field to check whether empty
+     * If not then send a Request with all fields in the body.
+     */
     this.checkTypes();
     let name = (this.state.tempName !="") ? this.state.tempName : this.state.name; 
     let question = (this.state.tempQuestion != "") ? this.state.tempQuestion : this.state.question;
@@ -110,7 +124,7 @@ export default class EditQuestion extends Component {
     let solution = (this.state.tempSolution != "") ? this.state.tempSolution : this.state.solution;
     let adminToken = await AsyncStorage.getItem("admin");
     let response = await fetch('http://192.168.0.12:3000/admin/edit', {
-      method: 'POST',
+      method: 'PUT',
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
@@ -129,17 +143,28 @@ export default class EditQuestion extends Component {
       })
     });
     let res = await response.json();
+    /**
+     * Successful, navigate back to Questions page.
+     */
     if (res.success === true) {
       alert("Done");
       this.props.navigation.goBack();
     } else {
       if (res.typ == "token") {
+        /**
+         * Token has expired - navigate back to Login
+         * and remove token.
+         */
         await AsyncStorage.removeItem("admin");
         this.props.navigation.navigate("Login");
       }
     }
   }
 
+  /**
+   * Validates whether option choices have not
+   * been left empty - for Multi Choice questions
+   */
   checkTempArray() {
     if (this.state.tempOptions == [] && this.state.tempType == "multi_choice") {
       return false;
@@ -151,6 +176,12 @@ export default class EditQuestion extends Component {
     } return true;
   }
   
+  /**
+   * Checks whether the type is
+   * True-False, if so then populate
+   * options with true/false, otherwise if 
+   * Normal Answer then empty array.
+   */
   checkTypes() {
     if (this.state.tempType == "true_false") {
       this.setState({tempOptions: [true, false]});
@@ -161,6 +192,11 @@ export default class EditQuestion extends Component {
     }
   }
 
+  /**
+   * Same as Make Questions - creates an object of options
+   * from 4 options provided and sets object for Dropdown when
+   * selecting answers.
+   */
   async addToArray() {
     var objectArray = [];
     var array = [this.state.tempOption1, this.state.tempOption2, this.state.tempOption3, this.state.tempOption4];
@@ -177,12 +213,21 @@ export default class EditQuestion extends Component {
     );
   }
   
+  /**
+   * Extracts text field from Dropdown entry - used for 
+   * selecting answer from a Drop Down when the question
+   * is of type Multi Choice
+   */
   async removeObject(item) {
     var entry = item.text;
     console.log(item.text);
     this.setState({answer: entry});
   }
-
+  /**
+   * Sets answer from True False Dropdown 
+   * within state by converting entry to 
+   * boolean
+   */
   async booleanToObject(item) {
     var entry = item.text;
     var boolean = false; 
@@ -194,6 +239,13 @@ export default class EditQuestion extends Component {
     this.setState({tempAnswer: boolean});
   }
 
+  /**
+   * Sets the Question type to be the type
+   * selected within the Drop down by extracting
+   * the text field from the Selected option then
+   * performing a switch on the type selected (DB 
+   * has different names for types). 
+   */
   async addType(item) {
     var entry = item.text;
     this.setState({selectedType: entry});
@@ -213,6 +265,10 @@ export default class EditQuestion extends Component {
         break;
     }
   }
+
+  /**
+   * Renders the UI.
+   */
   render() {
     const types = [
       {text: "True-False"},
@@ -253,7 +309,7 @@ export default class EditQuestion extends Component {
           <Input placeholder="Please input option" onChangeText={(text) => this.setState({tempOption2: text})} />
           <Input placeholder="Please input option" onChangeText={(text) => this.setState({tempOption3: text})} />
           <Input placeholder="Please input option" onChangeText={(text) => this.setState({tempOption4: text})} />
-          <Button raised type="outline" title="Set your options here!" onPress={() => this.addToArray()} />
+          <Button type="outline" title="Set your options here!" onPress={() => this.addToArray()} />
           <Text>Select your answer here!</Text>
           {/* <Text>{this.state.optionList[0].text}</Text>
           <Text>{this.state.optionList[1].text}</Text>
@@ -287,9 +343,11 @@ export default class EditQuestion extends Component {
       <View style={styles.container}>
         <Input placeholder={this.state.solution} multiline={true} numberOfLines={5} maxLength={1000} onChangeText={(text) => this.setState({solution: text})} />
       </View>
+      <View style={{padding: 20}}>
       <Slider maximumValue={5} minimumValue={1} step={1} value={this.state.difficulty} onSlidingComplete={(value) => this.setState({difficulty: value})} />
       <Text>Difficulty: {this.state.difficulty}</Text>
-      <Button raised type="outline" style={styles.button} title="Submit question!" onPress={() => this.editQuestion()} />
+      </View>
+      <Button type="outline" style={styles.button} title="Submit question!" onPress={() => this.editQuestion()} />
     </ScrollView>
   );
   }

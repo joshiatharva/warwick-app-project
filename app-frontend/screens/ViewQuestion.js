@@ -15,11 +15,18 @@ export default class ViewQuestion extends Component {
     };
   }
 
+  /******************************** */
+  /** Loads the question into state */
+  /******************************** */
   async componentDidMount() {
     var question = this.props.navigation.getParam('id');
     this.setState({question: question}); 
   }
 
+  /************************************************** */
+  /** Sends the question ID to the /save endpoint and */
+  /** adds the ID to the user's saved_questions array */
+  /************************************************** */
   async saveQuestion(id) {
     try {
       const token = await AsyncStorage.getItem("id");
@@ -35,18 +42,38 @@ export default class ViewQuestion extends Component {
         })
       });
       let res = await response.json();
+      /**
+       * If successful, then return the 
+       * appropriate message.
+       */
       if (res.success == true) {
         alert("Question has been saved to Favourites!");
         this.setState({status: "success"});
       } else {
+        /**
+         * Token has expired - remove the token 
+         * and redirect to Login page
+         */
+        if (res.msg == "Token expired") {
+          await AsyncStorage.removeItem("id");
+          this.props.navigation.navigate("Login");
+          alert()
+        }
         this.setState({status: "failure"});
       }
       // console.log(res.message);
     } catch (err) {
-      // console.log(err);
+      /**
+       * Server error
+       * 
+       */
+      alert("The server seems to be down - please try again later");
     }
   }
 
+  /**
+   * Render the UI
+   */
   render() {
     return (
       <View style={styles.container}>

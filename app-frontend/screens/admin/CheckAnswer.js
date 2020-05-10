@@ -25,51 +25,19 @@ export default class CheckAnswer extends Component {
       }
     }
   
+    /**
+     * Loads Question, provided answer and flag for correctness into state. 
+     * Unlike Data Upload, NO DATA IS SENT HERE.
+     */
     async componentDidMount() {  
-      // console.log("chosenAnswer" + this.props.navigation.getParam("chosenAnswer"));
-      // console.log(this.props.navigation.getParam("Question"));
-      // console.log(this.props.navigation.getParam("Question").options[0] + "This is the answer");
       this.setState({
         question: this.props.navigation.getParam("Question"),
         correct: this.props.navigation.getParam("correct"),
         selectedAnswer: this.props.navigation.getParam("chosenAnswer")
       }, () => console.log(this.props.navigation.getParam("chosenAnswer") + "=" + this.state.selectedAnswer));
-      // const setParamsAction = NavigationActions.setParams({
-      //   params: {hideTabBar: true},
-      //   key: 'tab-name'
-      // });
-      // this.props.navigation.dispatch(setParamsAction);
-      // console.log("isSending: " + this.state.isSending);
-      // console.log("id: " + this.state.question._id);
-      // let token = await AsyncStorage.getItem("id");
-      // try {
-      //   let response = await fetch('http://192.168.0.16:3000/questions/marks', {
-      //     method: "POST",
-      //     headers: {
-      //       Accept: 'application/json',
-      //       "Content-Type": 'application/json',
-      //       "Authorization": "Bearer " + token,
-      //     },
-      //     body: JSON.stringify({
-      //       question_id: this.state.question._id,
-      //       correct: this.state.correct,
-      //       answer: this.state.answer
-      //     }),
-      //   });
-      //   let res = await response.json();
-      //   if (res.success === true) {
-      //     this.setState({isSending: false}); 
-      //   // } else {
-      //   //   this.props.navigation.navigate("Questions");
-      //   //   alert("Not done");
-      //   }
-      //   // }
-      // } catch (err) {
-      //   // console.log(err);
-      //   // console.log("Error occurred");
-      // }
     }
   
+    /** Highlights the chosen and (if chosen answer is incorrect) correct answer */
     selectedStyle(value) {
       const styles = {};
       if (value == this.state.selectedAnswer) {
@@ -85,6 +53,9 @@ export default class CheckAnswer extends Component {
       return styles;
     }
   
+    /**
+     * Renders the Data Upload UI.
+     */
     render() {
       if (this.state.question.type === "true_false") {
         return (
